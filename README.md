@@ -1,13 +1,14 @@
 <div align="center">
-  <img src="docs/banner.svg" alt="Seduley Banner" width="100%"/>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg"></a>
-  <a href="https://kotlinlang.org"><img src="https://img.shields.io/badge/Language-Kotlin-orange.svg"></a>
-  <a href="https://developer.android.com/jetpack/compose"><img src="https://img.shields.io/badge/UI-Jetpack%20Compose-4285F4.svg"></a>
-  <a href="https://developer.android.com/topic/architecture"><img src="https://img.shields.io/badge/Architecture-Clean%20Architecture-blueviolet.svg"></a>
-  <a href="https://github.com/ci-eytools/ey-wfu-schedule/stargazers"><img src="https://img.shields.io/github/stars/ci-eytools/ey-wfu-schedule.svg?style=flat&color=yellow"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/github/license/ci-eytools/ey-wfu-schedule.svg"></a>
-
+  <img src="docs/banner.svg" alt="Seduley Banner" width="80%" style="margin-bottom: 10px;"/>
+  <p>
+    <a href="LICENSE"><img src="https://img.shields.io/badge/License-NonCommercial-red.svg" alt="License: Non-Commercial"></a>
+    <a href="https://kotlinlang.org"><img src="https://img.shields.io/badge/Language-Kotlin-orange.svg" alt="Language: Kotlin"></a>
+    <a href="https://developer.android.com/jetpack/compose"><img src="https://img.shields.io/badge/UI-Jetpack%20Compose-4285F4.svg" alt="UI: Jetpack Compose"></a>
+    <a href="https://developer.android.com/topic/architecture"><img src="https://img.shields.io/badge/Architecture-Clean%20Architecture-blueviolet.svg" alt="Architecture: Clean Architecture"></a>
+    <a href="https://github.com/ci-eytools/ey-wfu-schedule/stargazers"><img src="https://img.shields.io/github/stars/ci-eytools/ey-wfu-schedule.svg?style=flat&color=yellow" alt="GitHub Stars"></a>
+  </p>
 </div>
+
 
 ---
 
@@ -52,6 +53,12 @@
 | 每日视图 | 设置页面 |
 | :---: | :---: |
 | ![Daily View](docs/screenshot_daily_schedule.png) | ![Settings](docs/screenshot_settings.png) |
+
+---
+
+### 📸 图片来源 / Image Credits
+
+**开屏与封面** : [@MaidCode1023/www.bilibili.com](https://space.bilibili.com/85754376)
 
 ---
 
@@ -180,7 +187,6 @@ com.atri.seduley
 
 ## 📄 许可证
 
-本项目基于 **MIT License** 开源。
-详情请查阅 [LICENSE](LICENSE) 文件。
+详情请查阅 [![License: Non-Commercial](https://img.shields.io/badge/License-NonCommercial-red.svg)](LICENSE) 文件。
 
 ---

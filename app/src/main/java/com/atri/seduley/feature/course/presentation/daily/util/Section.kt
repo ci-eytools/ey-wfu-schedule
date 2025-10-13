@@ -7,9 +7,9 @@ data class Section(val start: LocalTime, val end: LocalTime)
 
 val sectionMap = mapOf(
     1 to Section(LocalTime.of(8, 0), LocalTime.of(9, 50)),
-    2 to Section(LocalTime.of(10, 0), LocalTime.of(12, 0)),
+    2 to Section(LocalTime.of(10, 10), LocalTime.of(12, 0)),
     3 to Section(LocalTime.of(14, 0), LocalTime.of(15, 50)),
-    4 to Section(LocalTime.of(16, 0), LocalTime.of(18, 0)),
+    4 to Section(LocalTime.of(16, 10), LocalTime.of(18, 0)),
     5 to Section(LocalTime.of(19, 0), LocalTime.of(20, 50))
 )
 

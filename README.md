@@ -1,0 +1,186 @@
+<div align="center">
+  <img src="docs/banner.svg" alt="Seduley Banner" width="100%"/>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg"></a>
+  <a href="https://kotlinlang.org"><img src="https://img.shields.io/badge/Language-Kotlin-orange.svg"></a>
+  <a href="https://developer.android.com/jetpack/compose"><img src="https://img.shields.io/badge/UI-Jetpack%20Compose-4285F4.svg"></a>
+  <a href="https://developer.android.com/topic/architecture"><img src="https://img.shields.io/badge/Architecture-Clean%20Architecture-blueviolet.svg"></a>
+  <a href="https://github.com/ci-eytools/ey-wfu-schedule/stargazers"><img src="https://img.shields.io/github/stars/ci-eytools/ey-wfu-schedule.svg?style=flat&color=yellow"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/ci-eytools/ey-wfu-schedule.svg"></a>
+
+</div>
+
+---
+
+> **Seduley** 是一款专为学生打造的、功能强大的现代化 Android 校园课表应用。  
+> 它旨在提供一个美观、简洁且高效的方式来查看和管理课程表，  
+> 并采用了业界最新的 Android 技术栈与 Clean Architecture 设计思想，实现高可维护性与扩展性。
+
+---
+
+## ✨ 核心功能
+
+- **智能数据同步**  
+  自动登录教务系统，安全抓取并解析课程表数据。
+
+- **AI 验证码识别**  
+  集成本地 TensorFlow Lite 模型，自动识别验证码，登录过程更便捷。
+
+- **响应式课程视图**  
+  基于 Jetpack Compose 构建的动态课程 UI，支持每日 / 每周视图与流畅动画。
+
+- **离线优先体验**  
+  所有课程、班级与设置信息持久化到本地 Room 数据库，无网络也可使用。
+
+- **顶级安全保障**
+  - **硬件级加密**：使用 Android KeyStore + Jetpack Security (Crypto) 对凭证加密存储。
+  - **安全网络通信**：全程 HTTPS 加密传输，保障数据安全。
+
+- **个性化主题**
+  - 支持浅色 / 深色模式，智能跟随系统。
+  - Android 12+ 支持 Material You 动态取色，与系统壁纸联动。
+
+- **全面课程信息管理**  
+  自动解析课程名称、时间、地点、教师等信息，清晰展示。
+
+- **设置中心**  
+  提供用户友好的偏好设置、账户管理与缓存清理界面。
+
+---
+
+## 📸 应用截图
+
+| 每日视图 | 设置页面 |
+| :---: | :---: |
+| ![Daily View](docs/screenshot_daily_schedule.png) | ![Settings](docs/screenshot_settings.png) |
+
+---
+
+## 🛠 技术栈与架构
+
+Seduley 基于 Google 官方推荐的 Android 现代化技术栈构建，严格遵循 Clean Architecture 设计思想。
+
+### 🌿 核心语言
+- **Kotlin** — 100% Kotlin 编写，使用 **Coroutines** 与 **Flow** 实现响应式数据流。
+
+### 🎨 UI 层
+- **Jetpack Compose** — 声明式 UI，支持动画、动态主题与可组合组件。
+
+### 🧩 架构模式
+- **MVVM** — 将 UI 与业务逻辑分离，便于维护与测试。  
+- **Clean Architecture** — 分为 `data` / `domain` / `presentation` 三层，实现高度解耦。
+
+### ⚙️ 依赖注入
+- **Hilt (Dagger)** — 管理依赖生命周期，简化组件注入。
+
+### 🗃 数据存储
+- **Room** — 本地结构化课程数据存储，支持编译时 SQL 校验。  
+- **DataStore (Proto)** — 安全高效地存储偏好设置，替代 SharedPreferences。
+
+### 🔒 安全
+- **Android KeyStore + Jetpack Security Crypto** — 硬件加密存储登录凭证。  
+
+### 🌐 网络与解析
+- **自定义网络层 + Jsoup** — 高效抓取与解析教务系统 HTML 页面。  
+
+### 🤖 机器学习
+- **TensorFlow Lite** — 设备端运行轻量级验证码识别模型。  
+
+### 🕒 日期与时间
+- **ThreeTenABP** — 在旧版 Android 上提供与 `java.time` 兼容的 API。
+
+---
+
+## 🧱 项目结构
+
+```
+
+com.atri.seduley
+├─ core                # 核心模块 (网络、加密、ML模型、工具类、基础实体等)
+├─ di                  # Hilt 依赖注入配置模块
+├─ feature             # 按功能划分的业务模块
+│  ├─ course           # 课程功能模块 (课表、登录、数据同步)
+│  │  ├─ data          # 数据层: Repository 实现、DAO、DTO、网络源
+│  │  ├─ domain        # 领域层: UseCases 与核心模型
+│  │  └─ presentation  # 表现层: Compose UI、ViewModel、UI State
+│  ├─ setting          # 设置模块
+│  └─ ...              # 可扩展功能模块
+└─ ui
+└─ theme            # 全局主题与样式定义
+
+````
+
+### 分层说明
+
+- **presentation 层**：负责 UI 展示与用户交互，响应 ViewModel 状态。  
+- **domain 层**：封装业务逻辑与模型，不依赖 Android 框架，可单元测试。  
+- **data 层**：屏蔽数据来源差异（网络 / 本地），提供统一接口给上层。
+
+---
+
+## 🚀 构建与运行
+
+### 环境要求
+- **Android Studio Iguana | 2023.2.1** 或更高版本  
+- **JDK 17**  
+- **Gradle 8+**
+
+### 构建步骤
+
+1. **克隆项目**
+```bash
+   git clone https://github.com/ci-eytools/ey-wfu-schedule.git
+   cd ey-wfu-schedule
+````
+
+2. **导入工程**
+   使用最新稳定版 Android Studio 打开项目根目录。
+
+3. **构建与运行**
+
+   * 在工具栏选择 `app` 配置。
+   * 点击 ▶️ `Run 'app'` 启动模拟器或真机调试。
+
+### ⚠️ 注意事项
+
+> 本应用的登录与数据解析逻辑适用于特定教务系统。
+> 若需适配其他系统，请调整以下内容：
+
+1. 修改 `core/network/ApiUrls.kt` 的接口端点。
+2. 调整 `feature/course/data/repository/InitInfoRepositoryImpl.kt` 中的 `parseCourseHtml()` 方法以适配新 HTML。
+3. 若验证码样式不同，请重新训练或替换 `core/ml/CaptchaModel`。
+
+---
+
+## 🤝 贡献指南
+
+欢迎任何形式的贡献！
+如发现 Bug 或有新功能建议，请在 [Issues](https://github.com/ci-eytools/ey-wfu-schedule/issues) 中提出。
+
+### 提交流程
+
+1. Fork 本仓库
+2. 新建分支
+
+   ```bash
+   git checkout -b feature/YourAmazingFeature
+   ```
+3. 提交修改
+
+   ```bash
+   git commit -m 'feat: Add some amazing feature'
+   ```
+4. 推送分支
+
+   ```bash
+   git push origin feature/YourAmazingFeature
+   ```
+5. 创建 Pull Request 并说明变更内容
+
+---
+
+## 📄 许可证
+
+本项目基于 **MIT License** 开源。
+详情请查阅 [LICENSE](LICENSE) 文件。
+
+---

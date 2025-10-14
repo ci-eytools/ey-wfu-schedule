@@ -21,7 +21,7 @@ import com.atri.seduley.R
 import org.threeten.bp.LocalDate
 
 @Composable
-fun NowTimeTopBar(
+fun NowDateTopBar(
     selected: LocalDate,
     modifier: Modifier = Modifier
 ) {
@@ -46,7 +46,11 @@ fun NowTimeTopBar(
             )
             Spacer(modifier = Modifier.height(5.dp))
             Text(
-                text = if (selected == now) "Today" else selected.toString(),
+                text = when (selected) {
+                    now -> "Today"
+                    now.plusDays(1) -> "Tomorrow"
+                    else -> selected.toString()
+                },
                 modifier = Modifier
                     .padding(start = 16.dp),
                 style = MaterialTheme.typography.titleLarge,
@@ -59,8 +63,8 @@ fun NowTimeTopBar(
 
 @Preview
 @Composable
-fun NowTimeTopBarPreview() {
-    NowTimeTopBar(
+fun NowDateTopBarPreview() {
+    NowDateTopBar(
         selected = LocalDate.of(2025, 9, 8)
     )
 }

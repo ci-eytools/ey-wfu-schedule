@@ -9,20 +9,26 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import javax.inject.Qualifier
 import javax.inject.Singleton
 
-
-private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(
-    name = "user_prefs"
-)
+private val Context.userDataStore: DataStore<Preferences> by preferencesDataStore(name = "user_prefs")
 
 @Module
 @InstallIn(SingletonComponent::class)
-object DataStoreModel {
+object DataStoreModule {
 
+    @Qualifier
+    @Retention(AnnotationRetention.BINARY)
+    annotation class UserPrefs
+
+    /**
+     * 用户信息
+     */
     @Provides
     @Singleton
-    fun providesDataStore(@ApplicationContext context: Context): DataStore<Preferences> {
-        return context.dataStore
+    @UserPrefs
+    fun provideUserDataStore(@ApplicationContext context: Context): DataStore<Preferences> {
+        return context.userDataStore
     }
 }

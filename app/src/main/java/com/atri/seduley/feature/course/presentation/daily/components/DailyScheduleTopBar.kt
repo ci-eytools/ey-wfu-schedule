@@ -31,7 +31,7 @@ fun DailyScheduleTopBar(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.Bottom
         ) {
-            NowTimeTopBar(
+            NowDateTopBar(
                 selected = selectedDate
             )
             SwitchWeekTopBar(

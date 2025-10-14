@@ -13,15 +13,18 @@ import com.atri.seduley.core.util.TimeUtil
 import com.atri.seduley.feature.course.domain.repository.BaseInfoRepository
 import com.atri.seduley.feature.course.domain.use_case.DailyUseCase
 import com.atri.seduley.feature.course.presentation.daily.components.SwitchWeekWay
+import com.atri.seduley.feature.course.presentation.daily.util.sectionToTime
 import com.atri.seduley.feature.setting.domain.repository.UserCredentialRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import org.threeten.bp.LocalDate
+import org.threeten.bp.LocalTime
 import javax.inject.Inject
 
 @HiltViewModel
@@ -52,7 +55,7 @@ class DailyScheduleViewModel @Inject constructor(
                 startDate = TimeUtil.fromTimestampToLocalDate(baseInfoRepository.getBaseInfo().startDate),
                 endDate = TimeUtil.fromTimestampToLocalDate(baseInfoRepository.getBaseInfo().endDate)
             )
-            loadInitData()
+            loadInitData(getInitSelectedDate())
         }
     }
 
@@ -140,6 +143,22 @@ class DailyScheduleViewModel @Inject constructor(
                 password = password,
                 date = date
             )
+        }
+    }
+
+    private suspend fun getInitSelectedDate(): LocalDate {
+        val endTime = dailyUseCase
+            .getCourseDetails(
+                startDate = dateCache.startDate,
+                selectDate = LocalDate.now()
+            ).first()
+            .filter { it.dayOfWeek == LocalDate.now().dayOfWeek.value }
+            .map { sectionToTime(it.section).end }
+            .firstOrNull()
+        return if (endTime != null && endTime.isBefore(LocalTime.now())) {
+            LocalDate.now().plusDays(1)
+        } else {
+            LocalDate.now()
         }
     }
 

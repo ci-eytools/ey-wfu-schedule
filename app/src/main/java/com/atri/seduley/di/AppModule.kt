@@ -58,7 +58,7 @@ object AppModule {
     @Provides
     @Singleton
     fun provideUserCredentialRepository(
-        dataStore: DataStore<Preferences>,
+        @DataStoreModule.UserPrefs dataStore: DataStore<Preferences>,
         cryptoManager: CryptoManager
     ): UserCredentialRepository {
         return UserCredentialRepositoryImpl(dataStore, cryptoManager)
@@ -67,7 +67,7 @@ object AppModule {
     @Provides
     @Singleton
     fun provideBaseInfoRepository(
-        dataStore: DataStore<Preferences>
+        @DataStoreModule.UserPrefs dataStore: DataStore<Preferences>
     ): BaseInfoRepository {
         return BaseInfoRepositoryImpl(dataStore)
     }

@@ -1,8 +1,13 @@
 package com.atri.seduley
 
+import android.app.AlarmManager
 import android.app.Application
 import android.content.Context
+import android.content.Intent
+import android.os.Build
+import android.provider.Settings
 import android.util.Log
+import androidx.core.content.ContextCompat
 import com.atri.seduley.core.exception.CredentialException
 import com.atri.seduley.core.ml.CaptchaModel
 import com.atri.seduley.core.util.IdUtil

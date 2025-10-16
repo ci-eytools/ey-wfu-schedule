@@ -31,7 +31,7 @@ import javax.inject.Inject
 class DailyScheduleViewModel @Inject constructor(
     private val dailyUseCase: DailyUseCase,
     private val baseInfoRepository: BaseInfoRepository,
-    private val userCredentialRepository: UserCredentialRepository
+    private val userCredentialRepository: UserCredentialRepository,
 ) : ViewModel() {
 
     private val _uiState = mutableStateOf<DailyScheduleUiState>(DailyScheduleUiState.Loading)

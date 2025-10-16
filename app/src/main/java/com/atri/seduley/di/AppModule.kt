@@ -4,6 +4,9 @@ import android.app.Application
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.room.Room
+import com.atri.seduley.core.alarm.data.AlarmDatabase
+import com.atri.seduley.core.alarm.data.repository.AlarmRepositoryImpl
+import com.atri.seduley.core.alarm.domain.repository.AlarmRepository
 import com.atri.seduley.core.security.CryptoManager
 import com.atri.seduley.feature.course.data.data_score.ClazzDatabase
 import com.atri.seduley.feature.course.data.data_score.CourseDatabase
@@ -70,5 +73,20 @@ object AppModule {
         @DataStoreModule.UserPrefs dataStore: DataStore<Preferences>
     ): BaseInfoRepository {
         return BaseInfoRepositoryImpl(dataStore)
+    }
+
+    @Provides
+    @Singleton
+    fun provideAlarmDatabase(app: Application): AlarmDatabase {
+        return Room.databaseBuilder(
+            app,
+            AlarmDatabase::class.java,
+            AlarmDatabase.DATABASE_NAME
+        ).build()
+    }
+    @Provides
+    @Singleton
+    fun provideAlarmRepository(db: AlarmDatabase): AlarmRepository {
+        return AlarmRepositoryImpl(db.alarmDao)
     }
 }

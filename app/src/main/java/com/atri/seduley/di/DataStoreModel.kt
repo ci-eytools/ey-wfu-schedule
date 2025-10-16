@@ -23,7 +23,7 @@ object DataStoreModule {
     annotation class UserPrefs
 
     /**
-     * 用户信息
+     * 用户相关
      */
     @Provides
     @Singleton

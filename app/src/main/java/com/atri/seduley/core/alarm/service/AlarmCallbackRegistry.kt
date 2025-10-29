@@ -1,20 +1,25 @@
 package com.atri.seduley.core.alarm.service
 
-import android.util.Log
 import com.atri.seduley.core.alarm.domain.model.AlarmType
+import com.atri.seduley.core.alarm.util.AppLogger
 import javax.inject.Inject
 
+/**
+ * 闹钟回调注册表
+ * 用于根据闹钟类型获取相应的回调策略
+ */
 class AlarmCallbackRegistry @Inject constructor(
-    systemNotificationCallback: SystemNotificationCallback,
+    dailyClazzNotificationCallback: DailyClazzNotificationCallback,
+    updateScheduleCallback: UpdateScheduleCallback
 ) {
 
     private val strategies: Map<AlarmType, AlarmCallback> = mapOf(
-        AlarmType.SCHEDULED to systemNotificationCallback,
-        AlarmType.MESSAGE to systemNotificationCallback
+        AlarmType.DAILY_CLAZZ_NOTIFICATION to dailyClazzNotificationCallback,
+        AlarmType.DAILY_UPDATE_SCHEDULE to updateScheduleCallback
     )
 
     fun getCallback(alarmType: AlarmType): AlarmCallback? {
-        Log.d("MyAlarm", "getCallback: $alarmType")
+        AppLogger.d("getCallback: $alarmType")
         return strategies[alarmType]
     }
 }

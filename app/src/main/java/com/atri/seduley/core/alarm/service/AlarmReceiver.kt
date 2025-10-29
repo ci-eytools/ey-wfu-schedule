@@ -4,10 +4,11 @@ import android.Manifest
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.util.Log
 import androidx.annotation.RequiresPermission
 import com.atri.seduley.core.alarm.domain.model.AlarmState
 import com.atri.seduley.core.alarm.domain.repository.AlarmRepository
+import com.atri.seduley.core.alarm.util.AppLogger
+import com.atri.seduley.feature.setting.domain.use_case.CourseUseCase
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
@@ -17,12 +18,15 @@ import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
+/**
+ * 闹钟广播接收器
+ */
 class AlarmReceiver : BroadcastReceiver() {
 
     @OptIn(DelicateCoroutinesApi::class)
     @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
     override fun onReceive(context: Context?, intent: Intent?) {
-        Log.d("MyAlarm", "AlarmReceiver onReceive")
+        AppLogger.d("AlarmReceiver onReceive")
         val alarmId = intent?.getLongExtra("alarmId", -1) ?: return
 
         val pendingResult = goAsync()
@@ -43,9 +47,14 @@ class AlarmReceiver : BroadcastReceiver() {
             AlarmReceiverEntryPoint::class.java
         ).alarmManagerService()
 
+        val courseUseCase = EntryPointAccessors.fromApplication(
+            context.applicationContext,
+            AlarmReceiverEntryPoint::class.java
+        ).courseUseCase()
+
         CoroutineScope(Dispatchers.IO).launch {
             val alarm = repository.getAlarmById(alarmId) ?: return@launch
-            Log.d("MyAlarm", "AlarmReceiver onReceive: $alarm")
+            AppLogger.d("AlarmReceiver onReceive: $alarm")
             val callback = callbackRegistry.getCallback(alarm.type) ?: return@launch
             callback.onAlarmTriggered(alarm)
             alarmManagerService.updateAlarm(alarm.copy(state = AlarmState.DONE))
@@ -60,4 +69,5 @@ interface AlarmReceiverEntryPoint {
     fun alarmRepository(): AlarmRepository
     fun alarmManagerService(): AlarmManagerService
     fun alarmCallbackRegistry(): AlarmCallbackRegistry
+    fun courseUseCase(): CourseUseCase
 }

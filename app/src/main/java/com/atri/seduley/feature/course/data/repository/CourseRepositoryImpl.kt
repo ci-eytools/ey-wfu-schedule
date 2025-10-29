@@ -5,6 +5,9 @@ import com.atri.seduley.feature.course.domain.entity.model.Course
 import com.atri.seduley.feature.course.domain.repository.CourseRepository
 import kotlinx.coroutines.flow.Flow
 
+/**
+ * 科目存储库实现
+ */
 class CourseRepositoryImpl(
     private val dao: CourseDao
 ) : CourseRepository {

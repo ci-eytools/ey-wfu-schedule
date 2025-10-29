@@ -19,8 +19,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.net.toUri
 import coil.compose.rememberAsyncImagePainter
 import com.atri.seduley.R
-import com.atri.seduley.feature.setting.presentation.util.Assets
+import com.atri.seduley.core.util.Const
 import com.atri.seduley.feature.setting.presentation.util.rememberImageCropper
+import com.atri.seduley.ui.theme.components.ConfirmDialog
 import com.atri.seduley.ui.theme.util.ThemePreference
 import com.atri.seduley.ui.theme.util.ThemeRepository
 import kotlinx.coroutines.flow.firstOrNull
@@ -34,7 +35,7 @@ fun FlowBackground(
 ) {
     val context = LocalContext.current
     val activity = context as Activity
-    val coverFile = File(activity.cacheDir, Assets.COVER_IMAGE_NAME) // 本地缓存文件
+    val coverFile = File(activity.cacheDir, Const.COVER_IMAGE_NAME) // 本地缓存文件
 
     // imageUri 用于显示图片, version 用于强制 Coil 刷新
     var imageUri by remember { mutableStateOf<Uri?>(null) }
@@ -67,7 +68,7 @@ fun FlowBackground(
 
     val startCrop = rememberImageCropper(
         activity = activity,
-        imageName = Assets.COVER_IMAGE_NAME, // 裁剪后保存到本地缓存的文件名
+        imageName = Const.COVER_IMAGE_NAME, // 裁剪后保存到本地缓存的文件名
         aspectRatioX = 16f,
         aspectRatioY = 9f,
         onSuccess = { newUri -> // 裁剪成功
@@ -85,11 +86,20 @@ fun FlowBackground(
         model = imageUri?.toString()?.plus("?v=$version") ?: R.drawable.default_cover
     )
 
+    var showUpdateCoverDialog by remember { mutableStateOf(false) }
     Image(
         painter = painter,
         contentDescription = "Cover",
         contentScale = ContentScale.Crop,
-        modifier = modifier.clickable { startCrop() }
+        modifier = modifier.clickable { showUpdateCoverDialog = true }
+    )
+    ConfirmDialog(
+        text = "是否读取相册更新封面",
+        showDialog = showUpdateCoverDialog,
+        onDismiss = { showUpdateCoverDialog = false },
+        onConfirm = {
+            startCrop()
+        }
     )
 }
 

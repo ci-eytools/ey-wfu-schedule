@@ -1,6 +1,8 @@
 package com.atri.seduley.feature.setting.presentation
 
 import android.annotation.SuppressLint
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -31,6 +33,7 @@ import androidx.navigation.NavController
 import com.atri.seduley.feature.setting.presentation.components.NestScroll
 import kotlinx.coroutines.flow.collectLatest
 
+@RequiresApi(Build.VERSION_CODES.S)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
@@ -40,14 +43,17 @@ fun SettingsScreen(
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
 
-    // 收集一次性事件
+    // 从 ViewModel 中收集响应式状态
+    val studentId by viewModel.studentIdState.collectAsState()
+    val systemConfiguration by viewModel.systemConfigState.collectAsState()
+    val externalResetTrigger by viewModel.externalResetTrigger.collectAsState()
+
     LaunchedEffect(Unit) {
         viewModel.event.collectLatest { event ->
             when (event) {
                 is SettingUiEvent.ShowMessage -> {
                     snackbarHostState.showSnackbar(event.message)
                 }
-
                 SettingUiEvent.NavigateBack -> {
                     navController.popBackStack()
                 }
@@ -60,33 +66,16 @@ fun SettingsScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         bottomBar = { }
     ) { _ ->
-        when (uiState) {
-            is SettingUiState.Loading -> {
-                Box {
-                    LoadingDialog()
-                    NestScroll(
-                        externalResetTrigger = viewModel.externalResetTrigger,
-                        studentId = viewModel.studentId,
-                        onEvent = { viewModel.onEvent(it) }
-                    )
-                }
-            }
+        Box {
+            NestScroll(
+                externalResetTrigger = externalResetTrigger,
+                studentId = studentId,
+                systemConfiguration = systemConfiguration,
+                onEvent = viewModel::onEvent
+            )
 
-            is SettingUiState.Success -> {
-                val studentId = (uiState as SettingUiState.Success).studentId
-                NestScroll(
-                    externalResetTrigger = viewModel.externalResetTrigger,
-                    studentId = studentId,
-                    onEvent = { viewModel.onEvent(it) }
-                )
-            }
-
-            SettingUiState.Idle -> {
-                NestScroll(
-                    externalResetTrigger = viewModel.externalResetTrigger,
-                    studentId = viewModel.studentId,
-                    onEvent = { viewModel.onEvent(it) }
-                )
+            if (uiState is SettingUiState.Loading) {
+                LoadingDialog((uiState as SettingUiState.Loading).message)
             }
         }
     }
@@ -118,4 +107,3 @@ fun LoadingDialog(
         }
     }
 }
-

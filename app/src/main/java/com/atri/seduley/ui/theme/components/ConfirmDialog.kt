@@ -21,6 +21,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 
+/**
+ * 确认框
+ *
+ * @param text 确认框内容
+ * @param showDialog 是否显示弹窗
+ * @param onDismiss 关闭弹窗时调用
+ * @param onConfirm 确认时调用
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ConfirmDialog(

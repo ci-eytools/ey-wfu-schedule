@@ -32,6 +32,9 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import com.atri.seduley.navigation.Screen
 import com.atri.seduley.navigation.safeNavigate
 
+/**
+ * 底部导航栏
+ */
 @Composable
 fun BottomNavigationBar(
     navController: NavController,

@@ -1,5 +1,8 @@
 package com.atri.seduley.core.alarm.domain.model
 
+/**
+ * 闹钟状态
+ */
 enum class AlarmState(val value: Int) {
     AWAIT(0),
     PAUSED(1),

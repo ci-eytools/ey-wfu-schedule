@@ -32,7 +32,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
+import com.atri.seduley.feature.setting.domain.entity.SystemConfiguration
 import com.atri.seduley.feature.setting.presentation.SettingEvent
+import java.time.LocalDateTime
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
@@ -41,6 +43,7 @@ import kotlin.math.roundToInt
 @Composable
 fun NestScroll(
     studentId: String,
+    systemConfiguration: SystemConfiguration,
     externalResetTrigger: Int,
     onEvent: (SettingEvent) -> Unit,
     modifier: Modifier = Modifier,
@@ -55,7 +58,7 @@ fun NestScroll(
     val maxHeight = (screenWidthPx / maxAspectRatio)  // px
     val minHeight = (screenWidthPx / minAspectRatio)  // px
 
-    val scrollableState = remember { MyScrollableState(minHeight.toInt(), maxHeight.toInt()) }
+    val scrollableState = remember { CoverScrollableState(minHeight.toInt(), maxHeight.toInt()) }
     ScrollableDefaults.flingBehavior()
 
     // 计算当前比例：1 表示最大高度，0 表示最小高度
@@ -137,13 +140,14 @@ fun NestScroll(
                 }
                 .clip(RoundedCornerShape(topStart = 15.dp, topEnd = 15.dp)),
             studentId = studentId,
+            systemConfiguration = systemConfiguration,
             onEvent = { onEvent(it) },
         )
     }
 }
 
 
-class MyScrollableState(
+class CoverScrollableState(
     val minValue: Int,
     val maxValue: Int
 ) : ScrollableState {

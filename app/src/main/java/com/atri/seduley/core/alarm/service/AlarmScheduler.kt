@@ -4,13 +4,11 @@ import android.annotation.SuppressLint
 import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
-import android.content.Intent
-import android.util.Log
 import com.atri.seduley.core.alarm.domain.model.Alarm
-import com.atri.seduley.core.alarm.domain.model.MessageAlarm
-import com.atri.seduley.core.alarm.domain.model.ScheduledAlarm
+import com.atri.seduley.core.alarm.domain.model.TriggerMode
 import dagger.hilt.android.qualifiers.ApplicationContext
 import org.threeten.bp.ZoneId
+import java.util.Calendar
 import javax.inject.Inject
 
 /**
@@ -27,29 +25,37 @@ class AlarmScheduler @Inject constructor(
      */
     @SuppressLint("ScheduleExactAlarm")
     fun scheduleAlarm(alarm: Alarm, pendingIntent: PendingIntent) {
-        Log.d("MyAlarm", "scheduleAlarm: $alarm")
         val triggerAtMillis = alarm.time.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
-        when (alarm) {
-            is ScheduledAlarm -> {
-                if (alarm.allowInexact) {
-                    // 容忍不精确，可被省电模式推迟
-                    alarmManager.set(AlarmManager.RTC_WAKEUP, triggerAtMillis, pendingIntent)
-                } else {
-                    // 精确闹钟
-                    alarmManager.setExactAndAllowWhileIdle(
-                        AlarmManager.RTC_WAKEUP,
-                        triggerAtMillis,
-                        pendingIntent
-                    )
+        when(alarm.triggerMode) {
+
+            TriggerMode.UNKNOWN_ALARM -> {}
+
+            TriggerMode.EXACT_ALARM -> {
+                alarmManager.setExactAndAllowWhileIdle(
+                    AlarmManager.RTC_WAKEUP,
+                    triggerAtMillis,
+                    pendingIntent
+                )
+            }
+            TriggerMode.INACCURATE_ALARM -> {}
+
+            TriggerMode.DAILY_ALARM -> {
+                val calendar: Calendar = Calendar.getInstance().apply {
+                    timeInMillis = System.currentTimeMillis()
+                    set(Calendar.HOUR_OF_DAY, alarm.time.hour)
                 }
+                alarmManager.setInexactRepeating(
+                    AlarmManager.RTC_WAKEUP,
+                    calendar.timeInMillis,
+                    AlarmManager.INTERVAL_DAY,
+                    pendingIntent
+                )
             }
 
-            is MessageAlarm -> {
-                Log.d("MyAlarm", "scheduleAlarm: $alarm")
-                alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAtMillis, pendingIntent)
-            }
+            TriggerMode.JOB -> {}
+
+            TriggerMode.WORK -> {}
         }
-
     }
 
     /**
@@ -57,18 +63,5 @@ class AlarmScheduler @Inject constructor(
      */
     fun cancelAlarm(pendingIntent: PendingIntent) {
         alarmManager.cancel(pendingIntent)
-    }
-
-    /**
-     * 检查闹钟是否存在（通过 PendingIntent）
-     */
-    fun isAlarmSet(alarm: Alarm): Boolean {
-        val intent = Intent(context, AlarmReceiver::class.java)
-        return PendingIntent.getBroadcast(
-            context,
-            alarm.requestCode,
-            intent,
-            PendingIntent.FLAG_NO_CREATE or PendingIntent.FLAG_IMMUTABLE
-        ) != null
     }
 }

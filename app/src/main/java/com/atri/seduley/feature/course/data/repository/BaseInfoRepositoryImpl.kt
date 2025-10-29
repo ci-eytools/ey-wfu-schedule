@@ -7,28 +7,18 @@ import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.atri.seduley.core.util.TimeUtil
 import com.atri.seduley.feature.course.domain.entity.dto.BaseInfoDTO
-import com.atri.seduley.feature.course.domain.entity.model.BaseInfo
 import com.atri.seduley.feature.course.domain.repository.BaseInfoRepository
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import org.threeten.bp.LocalDate
 import javax.inject.Inject
 
+/**
+ * 基础信息存储库实现
+ */
 class BaseInfoRepositoryImpl @Inject constructor(
     private val dataStore: DataStore<Preferences>
 ) : BaseInfoRepository {
-
-    private lateinit var cachedBaseInfo: BaseInfo
-
-    override suspend fun init() {
-        cachedBaseInfo = BaseInfo(
-            id = 0,
-            college = getBaseInfo().college,
-            major = getBaseInfo().major,
-            startDate = getBaseInfo().startDate,
-            endDate = getBaseInfo().endDate,
-            enterMark = getBaseInfo().enterMark.toLong()
-        )
-    }
 
     private object Keys {
         val COLLEGE = stringPreferencesKey("college")
@@ -38,6 +28,9 @@ class BaseInfoRepositoryImpl @Inject constructor(
         val ENTER_MARK = longPreferencesKey("enterMark")
     }
 
+    /**
+     * 保存基础信息
+     */
     override suspend fun saveBaseInfo(baseInfo: BaseInfoDTO) {
         dataStore.edit { prefs ->
             prefs[Keys.COLLEGE] =
@@ -48,26 +41,30 @@ class BaseInfoRepositoryImpl @Inject constructor(
             prefs[Keys.END_DATE] = baseInfo.endDate
             prefs[Keys.ENTER_MARK] = baseInfo.enterMark.toLong()
         }
-        init()
     }
 
-    override suspend fun getBaseInfo(): BaseInfoDTO {
-        val prefs = dataStore.data.first()
-        return BaseInfoDTO(
-            college = prefs[Keys.COLLEGE] ?: "",
-            major = prefs[Keys.MAJOR] ?: "",
-            startDate = prefs[Keys.START_DATE]
-                ?: TimeUtil.localDateToTimestamp(LocalDate.of(LocalDate.now().year, 1, 1)),
-            endDate = prefs[Keys.END_DATE]
-                ?: TimeUtil.localDateToTimestamp(LocalDate.of(LocalDate.now().year, 12, 31)),
-            enterMark = prefs[Keys.ENTER_MARK]?.toInt() ?: 0
-        )
-    }
+    /**
+     * 获取基础信息
+     */
+    override fun getBaseInfoDTO(): Flow<BaseInfoDTO> =
+        dataStore.data.map {
+            BaseInfoDTO(
+                college = it[Keys.COLLEGE] ?: "",
+                major = it[Keys.MAJOR] ?: "",
+                startDate = it[Keys.START_DATE]
+                    ?: TimeUtil.localDateToTimestamp(LocalDate.of(LocalDate.now().year, 1, 1)),
+                endDate = it[Keys.END_DATE]
+                    ?: TimeUtil.localDateToTimestamp(LocalDate.of(LocalDate.now().year, 12, 31)),
+                enterMark = it[Keys.ENTER_MARK]?.toInt() ?: 0
+            )
+        }
 
+    /**
+     * 更新周课表拉取标志位
+     */
     override suspend fun updateEnterMark(enterMark: Int) {
         dataStore.edit { prefs ->
             prefs[Keys.ENTER_MARK] = enterMark.toLong()
         }
-        cachedBaseInfo.copy(enterMark = enterMark.toLong())
     }
 }

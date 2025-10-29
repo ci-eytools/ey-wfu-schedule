@@ -1,7 +1,7 @@
 package com.atri.seduley.feature.setting.domain.use_case
 
-import android.util.Log
 import androidx.room.Transaction
+import com.atri.seduley.core.alarm.util.AppLogger
 import com.atri.seduley.core.util.IdUtil
 import com.atri.seduley.core.util.TimeUtil.calculateWeeks
 import com.atri.seduley.feature.course.domain.entity.model.Clazz
@@ -11,13 +11,22 @@ import com.atri.seduley.feature.course.domain.repository.ClazzRepository
 import com.atri.seduley.feature.course.domain.repository.CourseRepository
 import com.atri.seduley.feature.course.domain.repository.InitInfoRepository
 import com.atri.seduley.feature.setting.domain.repository.UserCredentialRepository
+import kotlinx.coroutines.flow.Flow
+import org.threeten.bp.LocalDate
 import javax.inject.Inject
 
+/**
+ * 课程用例
+ */
 data class CourseUseCase @Inject constructor(
     val clearSchedules: ClearSchedules,
-    val enterSchedules: EnterSchedules
+    val enterSchedules: EnterSchedules,
+    val getClazzes: GetClazzes,
 )
 
+/**
+ * 清除所有课程、科目信息
+ */
 class ClearSchedules @Inject constructor(
     private val clazzRepository: ClazzRepository,
     private val courseRepository: CourseRepository,
@@ -31,6 +40,9 @@ class ClearSchedules @Inject constructor(
     }
 }
 
+/**
+ * 拉取所有课程、科目信息
+ */
 class EnterSchedules @Inject constructor(
     private val initInfoRepository: InitInfoRepository,
     private val userCredentialRepository: UserCredentialRepository
@@ -81,11 +93,22 @@ class EnterSchedules @Inject constructor(
             )
             enterMark = enterMark or (1 shl (parsedCourse.weekly - 1))
         }
-        Log.d("EnterSchedules", clazzes.toString())
+        AppLogger.d(clazzes.toString())
         initInfoRepository.insertOverallInfo(
             courses = courseMap.values.toList(),
             clazzes = clazzes,
             enterMark = enterMark
         )
+    }
+}
+
+/**
+ * 获取指定日期的课程信息
+ */
+class GetClazzes @Inject constructor(
+    private val clazzRepository: ClazzRepository
+) {
+    operator fun invoke(date: LocalDate): Flow<List<Clazz>> {
+        return clazzRepository.getClazzByDate(date)
     }
 }

@@ -4,7 +4,7 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.os.Build
-import android.util.Log
+import com.atri.seduley.core.alarm.util.AppLogger
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 
@@ -16,7 +16,7 @@ class NotificationChannelManager @Inject constructor(
 ) {
 
     fun createChannel(id: String, name: String, importance: Int) {
-        Log.d("MyAlarm", "createChannel: $id, $name, $importance")
+        AppLogger.d("createChannel: $id, $name, $importance")
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(id, name, importance)
             val manager =

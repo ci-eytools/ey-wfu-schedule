@@ -8,52 +8,49 @@ import com.atri.seduley.core.exception.CredentialException
 import com.atri.seduley.core.security.CryptoManager
 import com.atri.seduley.feature.setting.domain.entity.UserCredential
 import com.atri.seduley.feature.setting.domain.repository.UserCredentialRepository
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
+/**
+ * 用户凭证存储库实现
+ */
 class UserCredentialRepositoryImpl @Inject constructor(
     private val dataStore: DataStore<Preferences>,
     private val cryptoManager: CryptoManager
 ) : UserCredentialRepository {
 
-    private var cachedStudentId: String? = null
-    private var cachedEncryptPassword: String? = null
-
-    override suspend fun init() {
-        cachedStudentId = getStudentId()
-        cachedEncryptPassword = getEncryptPassword()
-    }
-
     private object Keys {
-        val STUDENT_ID = stringPreferencesKey("studentId")
-        val EncryptPassword = stringPreferencesKey("encryptPassword")
+        val STUDENT_ID = stringPreferencesKey("cacheStudentId")
+        val ENCRYPT_PASSWORD = stringPreferencesKey("encryptPassword")
     }
 
+    /**
+     * 保存用户凭证
+     */
     override suspend fun saveCredential(credential: UserCredential) {
         dataStore.edit { prefs ->
-            if (!credential.studentId.isNullOrEmpty())
-                credential.studentId.let { prefs[Keys.STUDENT_ID] = it }
-            if (!credential.password.isNullOrEmpty())
-                credential.password.let {
-                    prefs[Keys.EncryptPassword] = cryptoManager.encrypt(it)
-                }
+            if (!credential.studentId.isNullOrEmpty()) {
+                prefs[Keys.STUDENT_ID] = credential.studentId
+            }
+            if (!credential.password.isNullOrEmpty()) {
+                prefs[Keys.ENCRYPT_PASSWORD] = cryptoManager.encrypt(credential.password)
+            }
         }
-        cachedStudentId = credential.studentId
-        cachedEncryptPassword = credential.password
     }
 
-    override suspend fun getStudentId(): String {
-        val studentId = cachedStudentId.takeIf { !it.isNullOrEmpty() }
-            ?: dataStore.data.first()[Keys.STUDENT_ID]
-        if (studentId.isNullOrEmpty()) throw CredentialException()
-        return studentId
-    }
+    /**
+     * 获取学号
+     */
+    override fun getStudentId(): Flow<String> =
+        dataStore.data.map { prefs ->
+            prefs[Keys.STUDENT_ID] ?: ""
+        }
 
     private suspend fun getEncryptPassword(): String {
-        val encryptPassword = cachedEncryptPassword.takeIf { !it.isNullOrEmpty() }
-            ?: dataStore.data.first()[Keys.EncryptPassword]
-        if (encryptPassword.isNullOrEmpty()) throw CredentialException()
-        return encryptPassword
+        val encryptPassword = dataStore.data.first()[Keys.ENCRYPT_PASSWORD]
+        return encryptPassword ?: throw CredentialException()
     }
 
     /**
@@ -61,7 +58,7 @@ class UserCredentialRepositoryImpl @Inject constructor(
      * 由于后端必须使用 String 类型的密码格式, 必须生成 String, 故为了方便使用直接在此处生成
      */
     override suspend fun <T> login(block: suspend (String, String) -> T): T {
-        val studentId = getStudentId()
+        val studentId = getStudentId().first()
         val encrypted = getEncryptPassword()
         val plain = cryptoManager.decrypt(encrypted)
         return try {
@@ -71,7 +68,10 @@ class UserCredentialRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun clearCredential() {
+    /**
+     * 清除登录凭证
+     */
+    override suspend fun clear() {
         dataStore.edit {
             it.clear()
         }

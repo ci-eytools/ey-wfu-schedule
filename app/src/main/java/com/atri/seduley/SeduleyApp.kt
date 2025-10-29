@@ -1,71 +1,59 @@
 package com.atri.seduley
 
-import android.app.AlarmManager
 import android.app.Application
-import android.content.Context
-import android.content.Intent
-import android.os.Build
-import android.provider.Settings
-import android.util.Log
-import androidx.core.content.ContextCompat
-import com.atri.seduley.core.exception.CredentialException
+import com.atri.seduley.core.alarm.domain.repository.AlarmRepository
+import com.atri.seduley.core.exception.GlobalExceptionHandler
 import com.atri.seduley.core.ml.CaptchaModel
+import com.atri.seduley.core.network.HttpClient
+import com.atri.seduley.core.util.Const
 import com.atri.seduley.core.util.IdUtil
-import com.atri.seduley.core.util.checkAssetDatabase
-import com.atri.seduley.feature.course.data.data_score.ClazzDatabase
-import com.atri.seduley.feature.course.data.data_score.CourseDatabase
-import com.atri.seduley.feature.course.domain.repository.BaseInfoRepository
-import com.atri.seduley.feature.setting.domain.repository.UserCredentialRepository
 import com.jakewharton.threetenabp.AndroidThreeTen
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.util.TimeZone
 import javax.inject.Inject
 
 @HiltAndroidApp
 class SeduleyApp : Application() {
 
     @Inject
-    lateinit var baseInfoRepository: BaseInfoRepository
-
-    @Inject
-    lateinit var userCredentialRepository: UserCredentialRepository
+    lateinit var alarmRepository: AlarmRepository
 
     override fun onCreate() {
         super.onCreate()
+
+        // 获取系统默认的异常处理器
+        val defaultHandler = Thread.getDefaultUncaughtExceptionHandler()
+        // 设置全局异常处理器
+        Thread.setDefaultUncaughtExceptionHandler(
+            GlobalExceptionHandler(
+                this,
+                defaultHandler ?: Thread.UncaughtExceptionHandler { _, _ -> })
+        )
+
+        // 固定时区
         AndroidThreeTen.init(this)
+        TimeZone.setDefault(TimeZone.getTimeZone("Asia/Shanghai"))
+
         CaptchaModel.init(applicationContext)   // 初始化加载模型
 
-        IdUtil.init(this)   // 初始化 Id 生成器兜底
+
+        IdUtil.init(this)   // 初始化 Id 生成器
 
         CoroutineScope(Dispatchers.IO).launch {
-            baseInfoRepository.init()
-            try {
-                userCredentialRepository.init()
-            } catch (e: CredentialException) {
-                Log.e("SeduleyApp", "CredentialException: ${e.message}")
+            val allAlarmsNum = alarmRepository.getAllAlarmsCount()
+            if (allAlarmsNum > Const.DELECT_ALARM_NUM) {
+                val deleteNum =
+                    alarmRepository.deleteCompletedScheduledAlarms()
+                if (allAlarmsNum - deleteNum > Const.DELECT_ALARM_NUM) {
+                    val deleteThanNum = alarmRepository.deleteAlarmsOlderThan(30)
+                    if (deleteNum - (deleteThanNum.first + deleteThanNum.second) > Const.DELECT_ALARM_NUM) {
+                        alarmRepository.deleteAllAlarms()
+                    }
+                }
             }
         }
     }
-}
-
-// 开发使用, 加载预制数据库
-@Suppress("unused")
-fun initDatabase(context: Context, dbName: String) {
-    checkAssetDatabase(context, dbName)
-    context.deleteDatabase(dbName)
-    val db = when (dbName) {
-        ClazzDatabase.DATABASE_NAME -> ClazzDatabase.getDatabase(context)
-        CourseDatabase.DATABASE_NAME -> CourseDatabase.getDatabase(context)
-        else -> null
-    }
-    db?.openHelper?.readableDatabase // 强制触发数据库创建
-    val dbFile = context.getDatabasePath(dbName)
-    Log.d(
-        "DB_CHECK",
-        "DB Path: ${dbFile.absolutePath}, " +
-                "Exists: ${dbFile.exists()}, " +
-                "Size: ${dbFile.length()}"
-    )
 }

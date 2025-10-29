@@ -3,9 +3,10 @@ package com.atri.seduley.core.ml
 import android.content.Context
 import android.graphics.BitmapFactory
 import android.graphics.Color
-import android.util.Log
 import androidx.core.graphics.get
 import androidx.core.graphics.scale
+import com.atri.seduley.core.alarm.util.AppLogger
+import com.atri.seduley.core.exception.BaseException
 import org.tensorflow.lite.Interpreter
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
@@ -33,9 +34,9 @@ object CaptchaModel {
                 rewind()
             }
             interpreter = Interpreter(byteBuffer)
-            Log.d("CaptchaModel", "解释器成功初始化")
+            AppLogger.d("解释器成功初始化")
         } catch (e: Exception) {
-            Log.e("CaptchaModel", "无法初始化Tflite解释器", e)
+            AppLogger.e("无法初始化Tflite解释器", e)
         }
     }
 
@@ -89,8 +90,7 @@ object CaptchaModel {
         try {
             interpreter.runForMultipleInputsOutputs(inputs, outputsMap)
         } catch (e: Exception) {
-            Log.e("CaptchaModel", "Tflite推断期间的错误", e)
-            throw e
+            throw BaseException("Tflite推断期间的错误: $e")
         }
     }
 
@@ -113,7 +113,7 @@ object CaptchaModel {
         }
 
         // 如果不是4位，按原始顺序返回
-        Log.w("CaptchaModel", "解码的数组大小不是 $NUM_OUTPUTS, 按原始顺序返回")
+        AppLogger.w("解码的数组大小不是 $NUM_OUTPUTS, 按原始顺序返回")
         return arr.joinToString("")
     }
 }

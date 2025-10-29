@@ -2,7 +2,6 @@ package com.atri.seduley.core.alarm.domain.repository
 
 import com.atri.seduley.core.alarm.domain.model.Alarm
 import com.atri.seduley.core.alarm.domain.model.AlarmType
-import kotlinx.coroutines.flow.Flow
 
 /**
  * 闹钟仓库接口
@@ -18,7 +17,17 @@ interface AlarmRepository {
 
     suspend fun deleteAlarm(alarm: Alarm)
 
-    fun getAllAlarms(): Flow<List<Alarm>>
+    suspend fun restartAlarm(alarm: Alarm)
 
-    fun getAlarmsByType(type: AlarmType): Flow<List<Alarm>>
+    suspend fun getAllAlarms(): List<Alarm>
+
+    suspend fun getAllAlarmsCount(): Int
+
+    suspend fun getAlarmsByType(type: AlarmType): List<Alarm>
+
+    suspend fun deleteCompletedScheduledAlarms(): Int
+
+    suspend fun deleteAlarmsOlderThan(day: Int): Pair<Int, Int>
+
+    suspend fun deleteAllAlarms(): Int
 }

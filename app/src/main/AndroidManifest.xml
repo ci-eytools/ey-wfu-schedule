@@ -8,8 +8,8 @@
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="29" />
+<!--     开发测试验证码模型时使用 -->
+<!--    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />-->
     <uses-permission android:name="android.permission.CAMERA" />
 
     <application
@@ -47,11 +47,18 @@
                 android:theme="@style/Theme.SeduleyApp"
                 android:exported="false" />
 
+        <!-- Job 服务 -->
+        <service
+                android:name=".core.alarm.service.JobManagerService"
+                android:permission="android.permission.BIND_JOB_SERVICE"
+                android:enabled="true"
+                android:exported="false" />
+
         <!-- 闹钟广播 -->
         <receiver
                 android:name=".core.alarm.service.AlarmReceiver"
                 android:enabled="true"
-                android:exported="true" />
+                android:exported="false" />
         <receiver
                 android:name=".core.alarm.service.BootReceiver"
                 android:enabled="true"

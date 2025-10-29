@@ -6,6 +6,9 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.atri.seduley.feature.course.domain.entity.model.Course
 
+/**
+ * 科目数据库
+ */
 @Database(
     entities = [Course::class],
     version = 1

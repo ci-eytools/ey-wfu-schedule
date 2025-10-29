@@ -12,6 +12,7 @@ sealed class Alarm(
     open val title: String,
     open val time: LocalDateTime,
     open val type: AlarmType,
+    open val triggerMode: TriggerMode,
     open val state: AlarmState
 ) {
     abstract fun copy(
@@ -20,6 +21,7 @@ sealed class Alarm(
         title: String = this.title,
         time: LocalDateTime = this.time,
         type: AlarmType = this.type,
+        triggerMode: TriggerMode = this.triggerMode,
         state: AlarmState = this.state
     ): Alarm
 }

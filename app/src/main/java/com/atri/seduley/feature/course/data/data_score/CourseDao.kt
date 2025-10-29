@@ -7,6 +7,9 @@ import androidx.room.Query
 import com.atri.seduley.feature.course.domain.entity.model.Course
 import kotlinx.coroutines.flow.Flow
 
+/**
+ * 科目数据库操作接口
+ */
 @Dao
 interface CourseDao {
 

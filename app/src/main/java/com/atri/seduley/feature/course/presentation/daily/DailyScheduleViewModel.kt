@@ -1,14 +1,18 @@
 package com.atri.seduley.feature.course.presentation.daily
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.atri.seduley.core.alarm.util.AppLogger
 import com.atri.seduley.core.exception.CredentialException
 import com.atri.seduley.core.exception.LoginException
 import com.atri.seduley.core.exception.NetworkException
+import com.atri.seduley.core.util.Const
 import com.atri.seduley.core.util.TimeUtil
 import com.atri.seduley.feature.course.domain.repository.BaseInfoRepository
 import com.atri.seduley.feature.course.domain.use_case.DailyUseCase
@@ -19,7 +23,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -27,15 +31,18 @@ import org.threeten.bp.LocalDate
 import org.threeten.bp.LocalTime
 import javax.inject.Inject
 
+@RequiresApi(Build.VERSION_CODES.S)
 @HiltViewModel
 class DailyScheduleViewModel @Inject constructor(
     private val dailyUseCase: DailyUseCase,
-    private val baseInfoRepository: BaseInfoRepository,
-    private val userCredentialRepository: UserCredentialRepository,
+    baseInfoRepository: BaseInfoRepository,
+    private val userCredentialRepository: UserCredentialRepository
 ) : ViewModel() {
 
     private val _uiState = mutableStateOf<DailyScheduleUiState>(DailyScheduleUiState.Loading)
     val uiState: State<DailyScheduleUiState> = _uiState
+
+    private val baseInfoFlow = baseInfoRepository.getBaseInfoDTO()
 
     var dateCache: DateCache by mutableStateOf(
         DateCache(
@@ -49,21 +56,26 @@ class DailyScheduleViewModel @Inject constructor(
     var getDailyScheduleJob: Job? = null
 
     init {
-        viewModelScope.launch {
-            dateCache = DateCache(
-                selectedDate = LocalDate.now(),
-                startDate = TimeUtil.fromTimestampToLocalDate(baseInfoRepository.getBaseInfo().startDate),
-                endDate = TimeUtil.fromTimestampToLocalDate(baseInfoRepository.getBaseInfo().endDate)
-            )
-            loadInitData(getInitSelectedDate())
-        }
+        baseInfoFlow.onEach { baseInfo ->
+            val newStartDate = TimeUtil.fromTimestampToLocalDate(baseInfo.startDate)
+            val newEndDate = TimeUtil.fromTimestampToLocalDate(baseInfo.endDate)
+            dateCache = dateCache.copy(startDate = newStartDate, endDate = newEndDate)
+            val dateToLoad = if (dateCache.selectedDate == LocalDate.now()) {
+                getInitSelectedDate()
+            } else {
+                dateCache.selectedDate
+            }
+            loadData(dateToLoad)
+        }.catch { e ->
+            handleException(e)
+        }.launchIn(viewModelScope)
     }
 
     fun onEvent(event: DailyScheduleEvent) {
         when (event) {
 
             is DailyScheduleEvent.SwitchDate -> {
-                loadInitData(event.date)
+                loadData(event.date)
             }
 
             is DailyScheduleEvent.SwitchWeek -> {
@@ -77,8 +89,7 @@ class DailyScheduleViewModel @Inject constructor(
 
                     SwitchWeekWay.NOW -> LocalDate.now()
                 }
-                dateCache.selectedDate = newDate
-                loadInitData(dateCache.selectedDate)
+                loadData(newDate)
             }
 
             is DailyScheduleEvent.SelectCourse -> {
@@ -92,22 +103,27 @@ class DailyScheduleViewModel @Inject constructor(
         }
     }
 
-    private fun loadInitData(dataToLoad: LocalDate = LocalDate.now()) {
-        dateCache.selectedDate = dataToLoad
+    /**
+     * 加载边界日期
+     */
+    private fun loadData(dataToLoad: LocalDate) {
+        dateCache = dateCache.copy(selectedDate = dataToLoad)
         launchWithDelayedLoading {
             try {
-                try {
-                    enterWeekInfo(dateCache.selectedDate)
-                } catch (_: NetworkException) {
-                    getSchedules(dateCache.selectedDate)
-                }
-                getSchedules(dateCache.selectedDate)
+                enterWeekInfo(dataToLoad)
+            } catch (_: NetworkException) {
+                AppLogger.d("网络请求失败, 从数据库加载")
             } catch (e: Exception) {
                 handleException(e)
+                return@launchWithDelayedLoading
             }
+            getSchedules(dataToLoad)
         }
     }
 
+    /**
+     * 获取课表信息
+     */
     private fun getSchedules(date: LocalDate = LocalDate.now()) {
         getDailyScheduleJob?.cancel()
         getDailyScheduleJob = dailyUseCase
@@ -116,26 +132,23 @@ class DailyScheduleViewModel @Inject constructor(
                 selectDate = date
             )
             .onEach { courses ->
-                val startDate =
-                    TimeUtil.fromTimestampToLocalDate(baseInfoRepository.getBaseInfo().startDate)
-                val endDate =
-                    TimeUtil.fromTimestampToLocalDate(baseInfoRepository.getBaseInfo().endDate)
                 _uiState.value = DailyScheduleUiState.Success(
                     selectedDate = date,
                     courses = courses,
                     isOrderSectionVisible = (_uiState.value as? DailyScheduleUiState.Success)
                         ?.isOrderSectionVisible ?: false,
-                    startDate = startDate,
-                    endDate = endDate
+                    startDate = dateCache.startDate,
+                    endDate = dateCache.endDate
                 )
-                dateCache.startDate = startDate
-                dateCache.endDate = endDate
             }.catch { e ->
                 handleException(e)
             }
             .launchIn(viewModelScope)
     }
 
+    /**
+     * 向服务器拉取周信息
+     */
     private suspend fun enterWeekInfo(date: LocalDate = LocalDate.now()) {
         userCredentialRepository.login { studentId, password ->
             dailyUseCase.enterWeekInfo(
@@ -146,22 +159,44 @@ class DailyScheduleViewModel @Inject constructor(
         }
     }
 
+    /**
+     * 计算开屏后展示的课表日期
+     */
     private suspend fun getInitSelectedDate(): LocalDate {
-        val endTime = dailyUseCase
-            .getCourseDetails(
-                startDate = dateCache.startDate,
-                selectDate = LocalDate.now()
-            ).first()
-            .filter { it.dayOfWeek == LocalDate.now().dayOfWeek.value }
-            .map { sectionToTime(it.section).end }
-            .firstOrNull()
-        return if (endTime != null && endTime.isBefore(LocalTime.now())) {
-            LocalDate.now().plusDays(1)
-        } else {
-            LocalDate.now()
+        val today = LocalDate.now()
+        val tomorrow = today.plusDays(1)
+
+        val weekCourses = dailyUseCase.getCourseDetails(
+            startDate = dateCache.startDate,
+            selectDate = today
+        ).firstOrNull().orEmpty()
+
+        val todaySections = weekCourses.filter { it.dayOfWeek == today.dayOfWeek.value }
+        val hasTodayCourses = todaySections.isNotEmpty()
+        val latestEndTime = todaySections
+            .maxByOrNull { it.section }
+            ?.let { sectionToTime(it.section).end }
+
+        val result = when {
+            // 今天没有课程, 且在下午 6 点之后 -> 返回明天
+            !hasTodayCourses && LocalTime.now().isAfter(Const.SWITCH_SELECTED_DATE_TOMORROW) -> tomorrow
+
+            // 今天有课程, 且所有课程都已结束 -> 立即返回明天
+            hasTodayCourses && latestEndTime?.isBefore(LocalTime.now()) == true -> tomorrow
+
+            // 其他情况 -> 返回今天
+            else -> today
         }
+
+        AppLogger.d("今天是否有课: $hasTodayCourses, 最晚结束时间: $latestEndTime, 最终选择日期: $result")
+        return result
     }
 
+    /**
+     * 启动延迟加载, 若加载时间大于 [delayMillis] 显示加载组件
+     *
+     * @param delayMillis 延迟加载组件出现时间
+     */
     private fun launchWithDelayedLoading(
         delayMillis: Long = 300,
         block: suspend () -> Unit
@@ -179,6 +214,9 @@ class DailyScheduleViewModel @Inject constructor(
         }
     }
 
+    /**
+     * 集中异常处理
+     */
     private fun handleException(e: Throwable) {
         _uiState.value = when (e) {
             is LoginException -> {

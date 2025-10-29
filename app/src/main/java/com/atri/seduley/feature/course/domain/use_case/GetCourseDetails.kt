@@ -1,6 +1,6 @@
 package com.atri.seduley.feature.course.domain.use_case
 
-import android.util.Log
+import com.atri.seduley.core.alarm.util.AppLogger
 import com.atri.seduley.core.util.TimeUtil
 import com.atri.seduley.feature.course.domain.entity.dto.CourseDetail
 import com.atri.seduley.feature.course.domain.repository.ClazzRepository
@@ -10,6 +10,9 @@ import kotlinx.coroutines.flow.combine
 import org.threeten.bp.LocalDate
 import javax.inject.Inject
 
+/**
+ * 获取详细科目信息
+ */
 class GetCourseDetails @Inject constructor(
     private val courseRepository: CourseRepository,
     private val clazzRepository: ClazzRepository,
@@ -24,13 +27,13 @@ class GetCourseDetails @Inject constructor(
             startDate = startDate,
             targetDate = selectDate
         )
-        Log.d("GetCourseDetails", "$weekly")
+        AppLogger.d("$weekly")
         return combine(
             courseRepository.getCoursesByWeekly(weekly),
             clazzRepository.getClazzByDate(selectDate)
         ) { courses, clazzes ->
-            Log.d("GetCourseDetails", "selectDate: $selectDate")
-            Log.d("GetCourseDetails", "courses: $courses clazzes: $clazzes")
+            AppLogger.d("selectDate: $selectDate")
+            AppLogger.d("courses: $courses clazzes: $clazzes")
             clazzes.mapNotNull { clazz ->
                 val course = courses.find { it.id == clazz.courseId }
                 course?.let {

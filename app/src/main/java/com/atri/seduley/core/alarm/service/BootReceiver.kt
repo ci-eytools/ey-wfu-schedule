@@ -13,6 +13,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
+/**
+ * 设备重启时通知该闹钟广播接收器, 重设闹钟
+ */
 class BootReceiver : BroadcastReceiver() {
     @SuppressLint("UnsafeProtectedBroadcastReceiver")
     override fun onReceive(context: Context, intent: Intent) {
@@ -21,12 +24,10 @@ class BootReceiver : BroadcastReceiver() {
             AlarmSchedulerEntryPoint::class.java
         ).alarmManagerService()
         CoroutineScope(Dispatchers.IO).launch {
-            val alarmsFlow = alarmManagerService.getAllAlarms()
-            alarmsFlow.collect { alarmList ->
-                alarmList.forEach { alarm ->
-                    if (alarm.state == AlarmState.AWAIT) {
-                        alarmManagerService.restartAlarm(alarm)
-                    }
+            val alarms = alarmManagerService.getAllAlarms()
+            alarms.forEach { alarm ->
+                if (alarm.state == AlarmState.AWAIT) {
+                    alarmManagerService.restartAlarm(alarm)
                 }
             }
         }

@@ -1,6 +1,8 @@
 package com.atri.seduley.navigation
 
 import android.annotation.SuppressLint
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.LinearOutSlowInEasing
@@ -21,6 +23,7 @@ import com.atri.seduley.ui.theme.components.BottomNavigationBar
 import com.google.accompanist.navigation.animation.AnimatedNavHost
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 
+@RequiresApi(Build.VERSION_CODES.S)
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun AppNav() {

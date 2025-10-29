@@ -42,9 +42,13 @@ android {
 
     buildTypes {
         getByName("release") {
-            isMinifyEnabled = false
-            isShrinkResources = false
-            proguardFiles.clear()
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+            isCrunchPngs = true
             signingConfig = signingConfigs.findByName("release")
         }
 
@@ -58,6 +62,7 @@ android {
         compose = true
         viewBinding = true
         dataBinding = true
+        buildConfig = true
     }
 
     compileOptions {

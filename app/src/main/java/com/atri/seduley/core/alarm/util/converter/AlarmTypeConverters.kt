@@ -4,6 +4,9 @@ import androidx.room.TypeConverter
 import com.atri.seduley.core.alarm.domain.model.AlarmState
 import com.atri.seduley.core.alarm.domain.model.AlarmType
 
+/**
+ * 闹钟类型转换器
+ */
 class AlarmEnumConverters {
 
     @TypeConverter

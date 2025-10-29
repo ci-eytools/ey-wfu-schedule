@@ -28,8 +28,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -51,6 +53,7 @@ import com.atri.seduley.R
 import com.atri.seduley.feature.course.domain.entity.dto.CourseDetail
 import com.atri.seduley.feature.course.presentation.daily.util.sectionToTimeStr
 import com.atri.seduley.feature.course.presentation.daily.util.timeToSection
+import kotlinx.coroutines.delay
 import org.threeten.bp.LocalDate
 import org.threeten.bp.LocalTime
 
@@ -87,6 +90,7 @@ fun DateDisplay(
 fun TimeLine(
     selectedDate: LocalDate,
     section: Int,
+    nowSection: Int,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -123,14 +127,13 @@ fun TimeLine(
                 topLeft = topLeft,
                 size = arcSize
             )
-
             if (LocalDate.now() == selectedDate &&
-                (timeToSection(LocalTime.now()) ?: -1) == section
+                nowSection == section
             ) {
                 // 内圈（实心圆）
                 drawCircle(
                     color = primaryColor,
-                    radius = 16f
+                    radius = 24f
                 )
             }
         }
@@ -222,6 +225,7 @@ fun MaskedSlideIn(
 fun DetailCard(
     selectedDate: LocalDate,
     courseDetail: CourseDetail,
+    nowSection: Int,
     modifier: Modifier = Modifier
 ) {
     MaskedSlideIn(
@@ -235,7 +239,6 @@ fun DetailCard(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Top
         ) {
-            val nowSection = timeToSection(LocalTime.now()) ?: -1
             Card(
                 modifier = Modifier
                     .fillMaxSize(),
@@ -291,6 +294,16 @@ fun DailyScheduleItem(
             )
         }
 
+        // 动随时间态更新当前小节
+        var nowSection by remember { mutableIntStateOf(timeToSection(LocalTime.now()) ?: -1) }
+
+        LaunchedEffect(Unit) {
+            while (true) {
+                nowSection = timeToSection(LocalTime.now()) ?: -1
+                delay(10_000L)  // 每 10 秒更新一次
+            }
+        }
+
         DateDisplay(
             section = courseDetail.section,
             modifier = Modifier
@@ -300,11 +313,13 @@ fun DailyScheduleItem(
         TimeLine(
             selectedDate = selectedDate,
             section = courseDetail.section,
+            nowSection = nowSection,
             modifier = Modifier.weight(1f)
         )
         DetailCard(
             selectedDate = selectedDate,
             courseDetail = courseDetail,
+            nowSection = nowSection,
             modifier = Modifier.weight(2f)
         )
     }
@@ -366,10 +381,12 @@ fun InfoText(
         offsetY.snapTo(20f)
         alpha.animateTo(
             1f,
-            animationSpec = tween(500, easing = FastOutSlowInEasing))
+            animationSpec = tween(500, easing = FastOutSlowInEasing)
+        )
         offsetY.animateTo(
             0f,
-            animationSpec = tween(500, easing = FastOutSlowInEasing))
+            animationSpec = tween(500, easing = FastOutSlowInEasing)
+        )
     }
 
     Column(
@@ -391,9 +408,9 @@ fun InfoText(
 @Preview
 @Composable
 fun InfoTextPreview() {
-/*    InfoText(
-        selectedDate = LocalDate.now(),
-        text = "√ 今日无课, 好好休息吧~",
-        color = MaterialTheme.colorScheme.onPrimary
-    )*/
+    /*    InfoText(
+            selectedDate = LocalDate.now(),
+            text = "√ 今日无课, 好好休息吧~",
+            color = MaterialTheme.colorScheme.onPrimary
+        )*/
 }

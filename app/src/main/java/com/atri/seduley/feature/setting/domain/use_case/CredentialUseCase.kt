@@ -1,19 +1,27 @@
 package com.atri.seduley.feature.setting.domain.use_case
 
 import com.atri.seduley.core.exception.CredentialException
+import com.atri.seduley.core.exception.LoginException
 import com.atri.seduley.feature.course.domain.entity.dto.BaseInfoDTO
 import com.atri.seduley.feature.course.domain.repository.BaseInfoRepository
 import com.atri.seduley.feature.course.domain.repository.InitInfoRepository
 import com.atri.seduley.feature.setting.domain.entity.UserCredential
 import com.atri.seduley.feature.setting.domain.repository.UserCredentialRepository
+import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
+/**
+ * 用户凭证用例
+ */
 data class CredentialUseCases @Inject constructor(
     val saveCredential: SaveCredential,
     val getStudentId: GetStudentId,
     val clearCredential: ClearCredential
 )
 
+/**
+ * 保存用户凭证
+ */
 class SaveCredential @Inject constructor(
     private val userCredentialRepository: UserCredentialRepository,
     private val initInfoRepository: InitInfoRepository,
@@ -41,14 +49,20 @@ class SaveCredential @Inject constructor(
     }
 }
 
+/**
+ * 获取学号
+ */
 class GetStudentId @Inject constructor(
     private val repository: UserCredentialRepository
 ) {
-    suspend operator fun invoke(): String = repository.getStudentId()
+    operator fun invoke(): Flow<String> = repository.getStudentId()
 }
 
+/**
+ * 清除用户凭证
+ */
 class ClearCredential @Inject constructor(
     private val repository: UserCredentialRepository
 ) {
-    suspend operator fun invoke() = repository.clearCredential()
+    suspend operator fun invoke() = repository.clear()
 }

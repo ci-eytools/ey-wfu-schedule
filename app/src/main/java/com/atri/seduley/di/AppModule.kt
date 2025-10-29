@@ -16,7 +16,9 @@ import com.atri.seduley.feature.course.data.repository.CourseRepositoryImpl
 import com.atri.seduley.feature.course.domain.repository.BaseInfoRepository
 import com.atri.seduley.feature.course.domain.repository.ClazzRepository
 import com.atri.seduley.feature.course.domain.repository.CourseRepository
+import com.atri.seduley.feature.setting.data.repository.SystemConfigurationRepositoryImpl
 import com.atri.seduley.feature.setting.data.repository.UserCredentialRepositoryImpl
+import com.atri.seduley.feature.setting.domain.repository.SystemConfigurationRepository
 import com.atri.seduley.feature.setting.domain.repository.UserCredentialRepository
 import dagger.Module
 import dagger.Provides
@@ -73,6 +75,14 @@ object AppModule {
         @DataStoreModule.UserPrefs dataStore: DataStore<Preferences>
     ): BaseInfoRepository {
         return BaseInfoRepositoryImpl(dataStore)
+    }
+
+    @Provides
+    @Singleton
+    fun provideSystemRepository(
+        @DataStoreModule.System dataStore: DataStore<Preferences>
+    ): SystemConfigurationRepository {
+        return SystemConfigurationRepositoryImpl(dataStore)
     }
 
     @Provides

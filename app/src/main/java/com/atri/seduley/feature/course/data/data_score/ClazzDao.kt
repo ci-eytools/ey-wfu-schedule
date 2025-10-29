@@ -7,6 +7,9 @@ import androidx.room.Query
 import com.atri.seduley.feature.course.domain.entity.model.Clazz
 import kotlinx.coroutines.flow.Flow
 
+/**
+ * 课程数据库操作接口
+ */
 @Dao
 interface ClazzDao {
 
@@ -28,6 +31,12 @@ interface ClazzDao {
         WHERE date = :date 
     """)
     fun getClazzByDate(date: Long): Flow<List<Clazz>>
+
+    @Query("""
+       SELECT * FROM clazz 
+        WHERE date = :date 
+    """)
+    suspend fun getClazzByDateOnce(date: Long): List<Clazz>
 
     @Query("""
         SELECT COUNT(*) FROM clazz

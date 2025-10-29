@@ -1,8 +1,8 @@
 package com.atri.seduley.feature.course.data.repository
 
 import android.content.Context
-import android.util.Log
 import androidx.room.Transaction
+import com.atri.seduley.core.alarm.util.AppLogger
 import com.atri.seduley.core.exception.BaseException
 import com.atri.seduley.core.exception.CredentialException
 import com.atri.seduley.core.exception.LoginException
@@ -21,6 +21,7 @@ import com.atri.seduley.feature.course.domain.repository.BaseInfoRepository
 import com.atri.seduley.feature.course.domain.repository.ClazzRepository
 import com.atri.seduley.feature.course.domain.repository.CourseRepository
 import com.atri.seduley.feature.course.domain.repository.InitInfoRepository
+import kotlinx.coroutines.flow.first
 import org.jsoup.Jsoup
 import org.threeten.bp.DayOfWeek
 import org.threeten.bp.LocalDate
@@ -30,6 +31,9 @@ import java.io.FileOutputStream
 import java.io.IOException
 import javax.inject.Inject
 
+/**
+ * 初始化信息实现, 向服务器拉取相关信息
+ */
 class InitInfoRepositoryImpl @Inject constructor(
     private val courseRepository: CourseRepository,
     private val clazzRepository: ClazzRepository,
@@ -52,7 +56,7 @@ class InitInfoRepositoryImpl @Inject constructor(
         password: String,
         captcha: String?
     ) {
-        initNetReq(username, password, headers)
+        initNetReq(username, password, NetworkUtils.defaultHeaders())
     }
 
     /**
@@ -65,13 +69,14 @@ class InitInfoRepositoryImpl @Inject constructor(
         captcha: String?
     ): List<ParsedCourse> {
         initNetReq(username, password, headers)
-        val start = TimeUtil.fromTimestampToLocalDate(baseInfoRepository.getBaseInfo().startDate)
+        val start = TimeUtil.fromTimestampToLocalDate(
+            baseInfoRepository.getBaseInfoDTO().first().startDate)
         val end = start.plusMonths(8)
 
         var result = mutableListOf<ParsedCourse>()
         for (date in generateSequence(start)
         { it.plusWeeks(1) }.takeWhile { !it.isAfter(end) }) {
-            Log.d("InitInfoRepositoryImpl_Overall", "date: $date")
+            AppLogger.d("date: $date")
             result = parseCourseHtml(
                 startDate = start,
                 html = getCourseHTML(
@@ -120,8 +125,8 @@ class InitInfoRepositoryImpl @Inject constructor(
             LocalDate.of(2025, 9, 1),
             courseHtml
         )
-        Log.d("InitInfoRepositoryImpl", "courseHtml: $courseHtml")
-        Log.d("InitInfoRepositoryImpl", "parsedCourses: $parsedCourses")
+        AppLogger.d("courseHtml: $courseHtml")
+        AppLogger.d("parsedCourses: $parsedCourses")
 
         return parsedCourses
     }
@@ -146,7 +151,7 @@ class InitInfoRepositoryImpl @Inject constructor(
                 startDate = estimateStartDate,
                 html = getCourseHTML(date, headers)
             )
-            Log.d("InitInfoRepositoryImpl_Date", "date: $date, parsedCourses: $parsedCourses")
+            AppLogger.d("date: $date, parsedCourses: $parsedCourses")
             if (parsedCourses.isNotEmpty()) {
                 // 归一到周一
                 startDate = TimeUtil.localDateToTimestamp(date.with(DayOfWeek.MONDAY))
@@ -168,7 +173,7 @@ class InitInfoRepositoryImpl @Inject constructor(
             }
         }
 
-        Log.d("InitInfoRepositoryImpl_Date", "startDate: $startDate, endDate: $endDate")
+        AppLogger.d("startDate: $startDate, endDate: $endDate")
         if (startDate != null && endDate != null) {
             return BaseInfoDTO(startDate = startDate, endDate = endDate)
         }
@@ -196,7 +201,7 @@ class InitInfoRepositoryImpl @Inject constructor(
     override suspend fun insertInfo(courses: List<Course>, clazzes: List<Clazz>) {
         courseRepository.insertCourses(courses)
         clazzRepository.insertClazzes(clazzes)
-        val enterMark = baseInfoRepository.getBaseInfo().enterMark
+        val enterMark = baseInfoRepository.getBaseInfoDTO().first().enterMark
         val enterWeekly = clazzes[0].weekly
         baseInfoRepository.updateEnterMark(enterMark or (1 shl (enterWeekly - 1)))
     }
@@ -228,7 +233,7 @@ class InitInfoRepositoryImpl @Inject constructor(
         // 如果已经登录，直接返回
         synchronized(loginLock) {
             if (isLoggedIn) {
-                Log.d("InitInfoRepositoryImpl", "已登录, 直接返回")
+                AppLogger.d("已登录, 直接返回")
                 return
             }
         }
@@ -243,14 +248,14 @@ class InitInfoRepositoryImpl @Inject constructor(
         val encoded = getEncoded(username, password, sessResp)
 
         var isLoginSuccess = false
-        // 连续尝试三次
-        for (i in 1..3) {
+        // 连续尝试五次
+        for (i in 1..5) {
             // 3. 获取验证码图片
             val bytes = RequestHelper.getBytes(ApiUrls.CAPTCHA, headers)
 
             // 送入模型预测
             val captcha = recognizeCaptcha(bytes)
-            Log.d("InitInfoRepositoryImpl", "第 $i 次识别验证码: $captcha")
+            AppLogger.d("第 $i 次识别验证码: $captcha")
 
             // 4. 提交登录表单
             val loginResultResp = RequestHelper.post(
@@ -263,18 +268,18 @@ class InitInfoRepositoryImpl @Inject constructor(
                 ), headers
             )
 
-            Log.d("InitInfoRepositoryImpl", "第 $i 次登录loginResultResp: $loginResultResp")
+            AppLogger.d("第 $i 次登录loginResultResp: $loginResultResp")
             if (isCaptchaError(loginResultResp)) {
-                Log.d("InitInfoRepositoryImpl", "第 $i 次登录失败: 验证码错误, 正在重试 $i/3")
+                AppLogger.d("第 $i 次登录失败: 验证码错误, 正在重试 $i/5")
                 continue
             }
             if (isLoginSuccess(loginResultResp)) {
                 isLoginSuccess = true
-                Log.d("InitInfoRepositoryImpl", "第 $i 次登录loginResultResp: 登录成功")
+                AppLogger.d("第 $i 次登录loginResultResp: 登录成功")
                 break
             }
             if (isAccountOrPasswordError(loginResultResp)) {
-                Log.d("InitInfoRepositoryImpl", "登录失败: 账号或密码错误")
+                AppLogger.d("登录失败: 账号或密码错误")
                 throw CredentialException("账号或密码错误")
             }
             throw LoginException()
@@ -458,13 +463,10 @@ class InitInfoRepositoryImpl @Inject constructor(
         fileNamePrefix: String = "captcha_debug"
     ): File? {
         val storageDir: File = context.getDir("my_debug_images", Context.MODE_PRIVATE)
-        Log.d(
-            "SaveImageInternal",
-            "开始保存图片 size: ${byteArray.size} 到内部存储目录: ${storageDir.absolutePath}"
-        )
+        AppLogger.d("开始保存图片 size: ${byteArray.size} 到内部存储目录: ${storageDir.absolutePath}")
 
         if (!storageDir.exists() && !storageDir.mkdirs()) {
-            Log.e("SaveImageInternal", "无法创建或访问内部存储目录: $storageDir")
+            AppLogger.e("无法创建或访问内部存储目录: $storageDir")
             return null
         }
 
@@ -476,10 +478,10 @@ class InitInfoRepositoryImpl @Inject constructor(
             FileOutputStream(imageFile).use { fos ->
                 fos.write(byteArray)
             }
-            Log.d("SaveImageInternal", "图片已保存到内部存储: ${imageFile.absolutePath}")
+            AppLogger.d("图片已保存到内部存储: ${imageFile.absolutePath}")
             return imageFile
         } catch (e: IOException) {
-            Log.e("SaveImageInternal", "保存图片到内部存储失败", e)
+            AppLogger.e("保存图片到内部存储失败", e)
             return null
         }
     }

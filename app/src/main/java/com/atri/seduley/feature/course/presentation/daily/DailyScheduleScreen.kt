@@ -1,5 +1,7 @@
 package com.atri.seduley.feature.course.presentation.daily
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -21,6 +23,7 @@ import com.atri.seduley.feature.course.presentation.daily.components.InfoText
 import com.atri.seduley.feature.course.presentation.daily.components.ToTodayButton
 import com.atri.seduley.navigation.Screen
 
+@RequiresApi(Build.VERSION_CODES.S)
 @Composable
 fun DailyScheduleScreen(
     navController: NavController,

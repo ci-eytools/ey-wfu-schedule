@@ -1,6 +1,6 @@
 package com.atri.seduley.feature.course.domain.use_case
 
-import android.util.Log
+import com.atri.seduley.core.alarm.util.AppLogger
 import com.atri.seduley.core.util.IdUtil
 import com.atri.seduley.core.util.TimeUtil
 import com.atri.seduley.core.util.TimeUtil.calculateWeeks
@@ -9,9 +9,13 @@ import com.atri.seduley.feature.course.domain.entity.model.Course
 import com.atri.seduley.feature.course.domain.repository.BaseInfoRepository
 import com.atri.seduley.feature.course.domain.repository.CourseRepository
 import com.atri.seduley.feature.course.domain.repository.InitInfoRepository
+import kotlinx.coroutines.flow.first
 import org.threeten.bp.LocalDate
 import javax.inject.Inject
 
+/**
+ * 拉取传入周课程信息
+ */
 class EnterWeekInfo @Inject constructor(
     private val baseInfoRepository: BaseInfoRepository,
     private val initInfoRepository: InitInfoRepository,
@@ -23,13 +27,12 @@ class EnterWeekInfo @Inject constructor(
         password: String,
         date: LocalDate,
     ) {
-        val startDate =
-            baseInfoRepository.getBaseInfo().startDate
-        val weekly = TimeUtil.getWeekly(TimeUtil.fromTimestampToLocalDate(startDate), date)
+        val baseInfo = baseInfoRepository.getBaseInfoDTO().first()
+        val weekly = TimeUtil.getWeekly(TimeUtil.fromTimestampToLocalDate(baseInfo.startDate), date)
         val mask = 1 shl (weekly - 1)
-        val enterMark = baseInfoRepository.getBaseInfo().enterMark
+        val enterMark = baseInfo.enterMark
         if ((mask and enterMark) != 0) {
-            Log.d("InitInfoRepositoryImpl", "日期: $date 已有数据, 跳过")
+            AppLogger.d("日期: $date 已有数据, 跳过")
             return
         }
         val parsedCourses = initInfoRepository.enterInfo(

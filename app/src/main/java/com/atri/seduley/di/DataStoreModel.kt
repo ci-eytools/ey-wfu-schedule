@@ -13,6 +13,7 @@ import javax.inject.Qualifier
 import javax.inject.Singleton
 
 private val Context.userDataStore: DataStore<Preferences> by preferencesDataStore(name = "user_prefs")
+private val Context.systemDataStore: DataStore<Preferences> by preferencesDataStore(name = "settings_prefs")
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -22,6 +23,10 @@ object DataStoreModule {
     @Retention(AnnotationRetention.BINARY)
     annotation class UserPrefs
 
+    @Qualifier
+    @Retention(AnnotationRetention.BINARY)
+    annotation class System
+
     /**
      * 用户相关
      */
@@ -30,5 +35,15 @@ object DataStoreModule {
     @UserPrefs
     fun provideUserDataStore(@ApplicationContext context: Context): DataStore<Preferences> {
         return context.userDataStore
+    }
+
+    /**
+     * 系统配置相关
+     */
+    @Provides
+    @Singleton
+    @System
+    fun provideSystemDataStore(@ApplicationContext context: Context): DataStore<Preferences> {
+        return context.systemDataStore
     }
 }

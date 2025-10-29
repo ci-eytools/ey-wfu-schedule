@@ -10,6 +10,9 @@ import com.atri.seduley.core.alarm.domain.model.ScheduledAlarm
 import com.atri.seduley.core.alarm.util.converter.AlarmEnumConverters
 import com.atri.seduley.core.alarm.util.converter.DateTimeConverter
 
+/**
+ * 闹钟数据库
+ */
 @Database(
     entities = [
         ScheduledAlarm::class,

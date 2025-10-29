@@ -24,6 +24,11 @@ interface ClazzRepository {
     fun getClazzByDate(date: LocalDate): Flow<List<Clazz>>
 
     /**
+     * 根据日期查找上课信息 (获取一次)
+     */
+    suspend fun getClazzByDateOnce(date: LocalDate): List<Clazz>
+
+    /**
      * 插入 clazzes
      */
     suspend fun insertClazzes(clazzes: List<Clazz>)

@@ -10,14 +10,17 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import coil.compose.rememberAsyncImagePainter
 import com.atri.seduley.R
-import com.atri.seduley.feature.setting.presentation.util.Assets
+import com.atri.seduley.core.util.Const
 import java.io.File
 
+/**
+ * 开屏页
+ */
 @Composable
 fun SplashBackground(modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val activity = context as Activity
-    val splash = File(activity.cacheDir, Assets.SPLASH_IMAGE_NAME)
+    val splash = File(activity.cacheDir, Const.SPLASH_IMAGE_NAME)
 
     val painter = rememberAsyncImagePainter(
         model = splash.takeIf { splash.exists() } ?: R.drawable.default_splash_background

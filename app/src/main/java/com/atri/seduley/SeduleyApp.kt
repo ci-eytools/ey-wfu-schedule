@@ -4,7 +4,6 @@ import android.app.Application
 import com.atri.seduley.core.alarm.domain.repository.AlarmRepository
 import com.atri.seduley.core.exception.GlobalExceptionHandler
 import com.atri.seduley.core.ml.CaptchaModel
-import com.atri.seduley.core.network.HttpClient
 import com.atri.seduley.core.util.Const
 import com.atri.seduley.core.util.IdUtil
 import com.jakewharton.threetenabp.AndroidThreeTen

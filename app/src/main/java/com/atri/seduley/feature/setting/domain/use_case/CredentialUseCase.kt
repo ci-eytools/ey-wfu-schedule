@@ -1,7 +1,6 @@
 package com.atri.seduley.feature.setting.domain.use_case
 
 import com.atri.seduley.core.exception.CredentialException
-import com.atri.seduley.core.exception.LoginException
 import com.atri.seduley.feature.course.domain.entity.dto.BaseInfoDTO
 import com.atri.seduley.feature.course.domain.repository.BaseInfoRepository
 import com.atri.seduley.feature.course.domain.repository.InitInfoRepository

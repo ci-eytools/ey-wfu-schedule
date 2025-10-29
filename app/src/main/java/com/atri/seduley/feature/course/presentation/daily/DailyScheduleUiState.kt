@@ -1,7 +1,6 @@
 package com.atri.seduley.feature.course.presentation.daily
 
 import com.atri.seduley.feature.course.domain.entity.dto.CourseDetail
-import kotlinx.coroutines.flow.Flow
 import org.threeten.bp.LocalDate
 
 /**

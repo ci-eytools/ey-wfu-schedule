@@ -34,7 +34,6 @@ import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import com.atri.seduley.feature.setting.domain.entity.SystemConfiguration
 import com.atri.seduley.feature.setting.presentation.SettingEvent
-import java.time.LocalDateTime
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt

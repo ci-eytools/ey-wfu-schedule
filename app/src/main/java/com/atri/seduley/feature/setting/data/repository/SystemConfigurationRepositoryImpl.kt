@@ -1,7 +1,6 @@
 package com.atri.seduley.feature.setting.data.repository
 
 import androidx.datastore.core.DataStore
-import androidx.datastore.dataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
@@ -11,9 +10,7 @@ import com.atri.seduley.core.util.TimeUtil
 import com.atri.seduley.feature.setting.domain.entity.SystemConfiguration
 import com.atri.seduley.feature.setting.domain.repository.SystemConfigurationRepository
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
-import org.threeten.bp.LocalDateTime
 import javax.inject.Inject
 
 /**

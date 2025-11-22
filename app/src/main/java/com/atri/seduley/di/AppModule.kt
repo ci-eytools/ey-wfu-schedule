@@ -5,6 +5,7 @@ import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.room.Room
+import com.atri.seduley.core.network.interceptors.LoggingInterceptor
 import com.atri.seduley.data.local.datastore.SystemConfigurationDatastore
 import com.atri.seduley.data.local.datastore.UserCredentialDatastore
 import com.atri.seduley.data.local.datastore.security.CryptoManager
@@ -15,6 +16,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import okhttp3.OkHttpClient
 import javax.inject.Singleton
 
 @Module
@@ -50,4 +52,17 @@ class AppModule {
         @ApplicationContext context: Context
     ) = TFLiteCaptchaRecognizer(context)
 
+    @Provides
+    @Singleton
+    fun provideLoggingInterceptor(): LoggingInterceptor = LoggingInterceptor()
+
+    @Provides
+    @Singleton
+    fun provideOkHttpClient(
+        loggingInterceptor: LoggingInterceptor
+    ): OkHttpClient {
+        return OkHttpClient.Builder()
+            .addInterceptor(loggingInterceptor)
+            .build()
+    }
 }

@@ -1,4 +1,4 @@
-package com.atri.seduley.data.datastore.entity
+package com.atri.seduley.data.local.datastore.entity
 
 import java.time.LocalDateTime
 

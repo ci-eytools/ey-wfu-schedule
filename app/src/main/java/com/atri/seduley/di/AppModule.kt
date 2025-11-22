@@ -5,10 +5,10 @@ import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.room.Room
-import com.atri.seduley.data.datastore.SystemConfigurationDatastore
-import com.atri.seduley.data.datastore.UserCredentialDatastore
-import com.atri.seduley.data.datastore.security.CryptoManager
-import com.atri.seduley.data.local.StudentDatabase
+import com.atri.seduley.data.local.datastore.SystemConfigurationDatastore
+import com.atri.seduley.data.local.datastore.UserCredentialDatastore
+import com.atri.seduley.data.local.datastore.security.CryptoManager
+import com.atri.seduley.data.local.db.StudentDatabase
 import com.atri.seduley.data.ml.TFLiteCaptchaRecognizer
 import dagger.Module
 import dagger.Provides

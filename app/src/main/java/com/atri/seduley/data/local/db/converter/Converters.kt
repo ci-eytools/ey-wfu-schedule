@@ -1,8 +1,8 @@
-package com.atri.seduley.data.local.converter
+package com.atri.seduley.data.local.db.converter
 
 import androidx.room.TypeConverter
-import com.atri.seduley.data.local.entity.Course
-import com.atri.seduley.data.local.entity.Semester
+import com.atri.seduley.data.local.db.entity.Course
+import com.atri.seduley.data.local.db.entity.Semester
 import kotlinx.serialization.json.Json
 import java.time.Instant
 import java.time.LocalDate

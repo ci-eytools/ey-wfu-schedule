@@ -1,12 +1,12 @@
-package com.atri.seduley.data.datastore
+package com.atri.seduley.data.local.datastore
 
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.atri.seduley.core.exception.CredentialException
-import com.atri.seduley.data.datastore.entity.UserCredential
-import com.atri.seduley.data.datastore.security.CryptoManager
+import com.atri.seduley.data.local.datastore.entity.UserCredential
+import com.atri.seduley.data.local.datastore.security.CryptoManager
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map

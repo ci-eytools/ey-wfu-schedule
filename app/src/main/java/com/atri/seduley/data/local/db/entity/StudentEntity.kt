@@ -1,4 +1,4 @@
-package com.atri.seduley.data.local.entity
+package com.atri.seduley.data.local.db.entity
 
 import androidx.room.Entity
 import androidx.room.Index

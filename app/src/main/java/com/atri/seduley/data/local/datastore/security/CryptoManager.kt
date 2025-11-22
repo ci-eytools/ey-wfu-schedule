@@ -1,4 +1,4 @@
-package com.atri.seduley.data.datastore.security
+package com.atri.seduley.data.local.datastore.security
 
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties

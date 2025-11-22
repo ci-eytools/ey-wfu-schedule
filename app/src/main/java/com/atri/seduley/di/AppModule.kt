@@ -1,6 +1,7 @@
 package com.atri.seduley.di
 
 import android.app.Application
+import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.room.Room
@@ -8,9 +9,11 @@ import com.atri.seduley.data.datastore.SystemConfigurationDatastore
 import com.atri.seduley.data.datastore.UserCredentialDatastore
 import com.atri.seduley.data.datastore.security.CryptoManager
 import com.atri.seduley.data.local.StudentDatabase
+import com.atri.seduley.data.ml.TFLiteCaptchaRecognizer
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
@@ -40,4 +43,11 @@ class AppModule {
     fun provideSystemConfigurationDatastore(
         @DataStoreModule.System dataStore: DataStore<Preferences>
     ) = SystemConfigurationDatastore(dataStore)
+
+    @Provides
+    @Singleton
+    fun provideCaptchaRecognizer(
+        @ApplicationContext context: Context
+    ) = TFLiteCaptchaRecognizer(context)
+
 }

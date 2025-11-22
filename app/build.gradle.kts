@@ -108,6 +108,7 @@ dependencies {
     implementation(libs.okhttp3.okhttp)
     implementation(libs.okhttp.urlconnection)
     implementation(libs.jsoup)
+    implementation(libs.kotlinx.serialization.json)
     implementation(libs.tensorflow.lite)
     implementation(libs.tensorflow.lite.gpu)
     implementation(libs.androidx.datastore.preferences)

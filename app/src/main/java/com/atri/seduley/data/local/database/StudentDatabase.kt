@@ -1,10 +1,10 @@
-package com.atri.seduley.data.local.db
+package com.atri.seduley.data.local.database
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
-import com.atri.seduley.data.local.db.converter.Converters
-import com.atri.seduley.data.local.db.entity.StudentEntity
+import com.atri.seduley.data.local.database.converter.Converters
+import com.atri.seduley.data.local.database.entity.StudentEntity
 
 @Database(
     entities = [StudentEntity::class],

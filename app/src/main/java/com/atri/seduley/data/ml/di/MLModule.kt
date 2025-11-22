@@ -1,6 +1,7 @@
-package com.atri.seduley.di
+package com.atri.seduley.data.ml.di
 
 import android.content.Context
+import com.atri.seduley.data.ml.TFLiteCaptchaRecognizer
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -10,9 +11,11 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-class AppModule {
+class MLModule {
 
     @Provides
     @Singleton
-    fun provideAppContext(@ApplicationContext context: Context): Context = context
+    fun provideCaptchaRecognizer(
+        @ApplicationContext context: Context
+    ) = TFLiteCaptchaRecognizer(context)
 }

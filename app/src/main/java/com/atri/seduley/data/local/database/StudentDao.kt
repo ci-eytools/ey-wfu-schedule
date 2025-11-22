@@ -1,11 +1,11 @@
-package com.atri.seduley.data.local.db
+package com.atri.seduley.data.local.database
 
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import com.atri.seduley.data.local.db.entity.Course
-import com.atri.seduley.data.local.db.entity.StudentEntity
+import com.atri.seduley.data.local.database.entity.Course
+import com.atri.seduley.data.local.database.entity.StudentEntity
 import kotlinx.serialization.json.Json
 
 @Dao

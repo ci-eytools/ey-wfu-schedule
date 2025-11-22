@@ -1,4 +1,4 @@
-package com.atri.seduley.core.network.util
+package com.atri.seduley.core.util
 
 /**
  * 网络请求工具类
@@ -19,7 +19,7 @@ object NetworkUtils {
     /**
      * 随机生成 headers
      */
-    fun defaultHeaders(): Map<String, String> {
+    fun randomHeaders(): Map<String, String> {
         return mapOf(
             "User-Agent" to randomUserAgent(),
             "Accept" to "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",

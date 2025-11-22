@@ -7,15 +7,17 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.longPreferencesKey
 import com.atri.seduley.core.util.Const
 import com.atri.seduley.core.util.TimeUtil
-import com.atri.seduley.data.local.datastore.entity.SystemConfiguration
+import com.atri.seduley.data.local.datastore.entity.SystemConfInfo
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
+import javax.inject.Singleton
 
 /**
- * 系统设置存储库实现
+ * 系统设置信息存储库实现
  */
-class SystemConfigurationDatastore @Inject constructor(
+@Singleton
+class SystemDatastore @Inject constructor(
     private val dataStore: DataStore<Preferences>
 ) {
 
@@ -25,10 +27,8 @@ class SystemConfigurationDatastore @Inject constructor(
         val LAST_UPDATED_COURSE_TIME = longPreferencesKey("last_updated_course_time")
     }
 
-    /**
-     * 保存系统设置
-     */
-    suspend fun saveSystemConfiguration(systemConfiguration: SystemConfiguration) {
+    /** 保存系统设置信息 */
+    suspend fun saveSystemConfInfo(systemConfiguration: SystemConfInfo) {
         dataStore.edit { prefs ->
             prefs[Keys.IS_NEED_NOTIFICATION] = systemConfiguration.isNeedNotification
             prefs[Keys.IS_NEED_UPDATE_COURSE] = systemConfiguration.isNeedUpdateCourse
@@ -37,23 +37,20 @@ class SystemConfigurationDatastore @Inject constructor(
         }
     }
 
-    /**
-     * 获取系统设置
-     */
-    fun getSystemConfiguration(): Flow<SystemConfiguration> =
+    /** 获取系统设置信息 */
+    fun getSystemConfInfo(): Flow<SystemConfInfo> =
         dataStore.data.map {
-            SystemConfiguration(
+            SystemConfInfo(
                 isNeedNotification = it[Keys.IS_NEED_NOTIFICATION] ?: false,
                 isNeedUpdateCourse = it[Keys.IS_NEED_UPDATE_COURSE] ?: false,
                 lastUpdatedCourseDate = TimeUtil.fromTimestampToLocalDateTime(
-                    it[Keys.LAST_UPDATED_COURSE_TIME])
+                    it[Keys.LAST_UPDATED_COURSE_TIME]
+                )
                     ?: Const.NO_LAST_UPDATE_SELECTED_DATE
             )
         }
 
-    /**
-     * 清除系统设置
-     */
+    /** 清除系统设置信息 */
     suspend fun clear() {
         dataStore.edit {
             it.clear()

@@ -12,8 +12,8 @@ import dagger.hilt.components.SingletonComponent
 import javax.inject.Qualifier
 import javax.inject.Singleton
 
-private val Context.userDataStore: DataStore<Preferences> by preferencesDataStore(name = "user_prefs")
-private val Context.systemDataStore: DataStore<Preferences> by preferencesDataStore(name = "settings_prefs")
+private val Context.credentialDataStore: DataStore<Preferences> by preferencesDataStore(name = "credential_prefs")
+private val Context.systemDataStore: DataStore<Preferences> by preferencesDataStore(name = "system_prefs")
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -21,19 +21,19 @@ object DataStoreModule {
 
     @Qualifier
     @Retention(AnnotationRetention.BINARY)
-    annotation class User
+    annotation class Credential
 
     @Qualifier
     @Retention(AnnotationRetention.BINARY)
     annotation class System
 
     /**
-     * 用户相关
+     * 凭证相关
      */
     @Provides
     @Singleton
-    @User
-    fun provideUserDataStore(@ApplicationContext context: Context) = context.userDataStore
+    @Credential
+    fun provideCredentialDataStore(@ApplicationContext context: Context) = context.credentialDataStore
 
     /**
      * 系统配置相关

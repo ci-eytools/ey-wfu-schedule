@@ -9,10 +9,12 @@ import javax.crypto.SecretKey
 import javax.crypto.spec.GCMParameterSpec
 import android.util.Base64
 import javax.inject.Inject
+import javax.inject.Singleton
 
 /**
  * 使用 Android KeyStore 安全管理 AES/GCM 密钥
  */
+@Singleton
 class CryptoManager @Inject constructor() {
 
     private val keyAlias = "seduley_aes_key"

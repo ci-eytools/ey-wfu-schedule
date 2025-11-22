@@ -1,6 +1,6 @@
 package com.atri.seduley.data.local.datastore.entity
 
-data class UserCredential(
+data class Credential(
     val studentId: String,
     val password: String
 )

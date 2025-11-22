@@ -2,8 +2,8 @@ package com.atri.seduley.data.local.datastore.di
 
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
-import com.atri.seduley.data.local.datastore.SystemConfigurationDatastore
-import com.atri.seduley.data.local.datastore.UserCredentialDatastore
+import com.atri.seduley.data.local.datastore.CredentialDatastore
+import com.atri.seduley.data.local.datastore.SystemDatastore
 import com.atri.seduley.data.local.datastore.security.CryptoManager
 import com.atri.seduley.di.DataStoreModule
 import dagger.Module
@@ -18,14 +18,14 @@ class DatastoreModule {
 
     @Provides
     @Singleton
-    fun provideUserCredentialDatastore(
-        @DataStoreModule.User dataStore: DataStore<Preferences>,
+    fun provideCredentialDatastore(
+        @DataStoreModule.Credential dataStore: DataStore<Preferences>,
         cryptoManager: CryptoManager
-    ) = UserCredentialDatastore(dataStore, cryptoManager)
+    ) = CredentialDatastore(dataStore, cryptoManager)
 
     @Provides
     @Singleton
-    fun provideSystemConfigurationDatastore(
+    fun provideSystemDatastore(
         @DataStoreModule.System dataStore: DataStore<Preferences>
-    ) = SystemConfigurationDatastore(dataStore)
+    ) = SystemDatastore(dataStore)
 }

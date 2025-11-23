@@ -5,7 +5,7 @@ import java.time.LocalDateTime
 /**
  * 系统设置信息
  */
-data class SystemConfInfoEntity(
+data class SystemConfEntity(
 
     /** 是否需要每日课程提醒 */
     val isNeedNotification: Boolean,

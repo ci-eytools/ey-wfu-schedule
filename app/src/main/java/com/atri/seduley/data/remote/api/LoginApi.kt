@@ -2,7 +2,7 @@ package com.atri.seduley.data.remote.api
 
 import com.atri.seduley.core.network.RequestHelper
 import com.atri.seduley.core.network.url.ApiUrls
-import com.atri.seduley.data.remote.entity.LoginReq
+import com.atri.seduley.data.remote.model.LoginReq
 import javax.inject.Inject
 
 /**

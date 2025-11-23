@@ -1,4 +1,4 @@
-package com.atri.seduley.data.remote.entity
+package com.atri.seduley.data.remote.model
 
 data class LoginReq(
     val studentId: String,

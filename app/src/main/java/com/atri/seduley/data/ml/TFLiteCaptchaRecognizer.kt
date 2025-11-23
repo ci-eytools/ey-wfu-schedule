@@ -7,6 +7,7 @@ import androidx.core.graphics.get
 import androidx.core.graphics.scale
 import com.atri.seduley.core.exception.BaseException
 import com.atri.seduley.core.util.AppLogger
+import com.atri.seduley.domain.ml.CaptchaRecognizer
 import dagger.hilt.android.qualifiers.ApplicationContext
 import org.tensorflow.lite.Interpreter
 import java.nio.ByteBuffer

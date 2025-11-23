@@ -3,7 +3,7 @@ package com.atri.seduley.domain.model.mapper
 import com.atri.seduley.data.local.database.entity.CourseEntity
 import com.atri.seduley.domain.model.Course
 
-// CourseEntity → Course
+/** CourseEntity -> Course */
 fun CourseEntity.toDomain(): Course =
     Course(
         name = name,
@@ -16,7 +16,7 @@ fun CourseEntity.toDomain(): Course =
         section = section
     )
 
-// Course → CourseEntity
+/** Course → CourseEntity */
 fun Course.toEntity(): CourseEntity =
     CourseEntity(
         name = name,

@@ -16,7 +16,8 @@ class SystemConfRepositoryImpl @Inject constructor(
 ): SystemConfRepository {
 
     /** 保存系统设置信息 */
-    override suspend fun saveSystemConfInfo(systemConfiguration: SystemConfEntity) = systemDatastore.saveSystemConfInfo(systemConfiguration)
+    override suspend fun saveSystemConfInfo(systemConfiguration: SystemConfEntity) =
+        systemDatastore.saveSystemConfInfo(systemConfiguration)
 
     /** 获取系统设置信息 */
     override fun getSystemConfInfo(): Flow<SystemConfEntity> = systemDatastore.getSystemConfInfo()

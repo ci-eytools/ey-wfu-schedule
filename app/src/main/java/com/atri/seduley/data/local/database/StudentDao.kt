@@ -43,4 +43,7 @@ interface StudentDao {
     suspend fun updateSemester(studentId: String, semester: SemesterEntity) {
         updateSemester(studentId, Json.encodeToString(semester))
     }
+
+    @Query("DELETE FROM students WHERE studentId = :studentId")
+    suspend fun clearByStudentId(studentId: String)
 }

@@ -31,30 +31,13 @@ class CourseRepositoryImpl @Inject constructor(
         return studentDao.getCoursesByStudentId(studentId).map { it -> it.toDomain() }
     }
 
-    /** 从远端获取课表
-     *
-     * @param date 返回该参数所在周的课表
-     * @param courses 支持重复传入自动去重
-     */
-    override suspend fun getWeekCoursesFromRemote(
-        date: LocalDate,
-        courses: MutableList<Course>
-    ): MutableList<Course> {
-        val monDate = date.toMonday()
-        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
-        val dateStr = monDate.format(formatter)
-        val html = courseApi.getCoursePageHTML(dateStr)
-        courses.addAll(parseCourseHtml(monDate, html))
-        return courses
-    }
-
     /** 从远端获取本学期所有课表 */
-    override suspend fun getAllCoursesFromRemote(studentId: String): List<Course> {
+    override suspend fun getCoursesFromRemote(studentId: String): List<Course> {
         val courses = mutableListOf<Course>()
         val monDate = LocalDate.now().toMonday()
-        val html = courseApi.getCoursePageHTML(monDate.formatter())
         var semester = studentDao.getSemesterByStudentId(studentId)
         if (semester == null) {
+            val html = courseApi.getCoursePageHTML(monDate.formatter())
             semester = parseSemesterInfo(html)
             // 本地为空就更新一下数据
             studentDao.updateSemester(studentId, semester)

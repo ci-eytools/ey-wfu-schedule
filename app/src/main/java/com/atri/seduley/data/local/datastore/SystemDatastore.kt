@@ -7,7 +7,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.longPreferencesKey
 import com.atri.seduley.core.util.Const
 import com.atri.seduley.core.util.TimeUtil
-import com.atri.seduley.data.local.datastore.entity.SystemConfInfo
+import com.atri.seduley.data.local.datastore.entity.SystemConfInfoEntity
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
@@ -28,7 +28,7 @@ class SystemDatastore @Inject constructor(
     }
 
     /** 保存系统设置信息 */
-    suspend fun saveSystemConfInfo(systemConfiguration: SystemConfInfo) {
+    suspend fun saveSystemConfInfo(systemConfiguration: SystemConfInfoEntity) {
         dataStore.edit { prefs ->
             prefs[Keys.IS_NEED_NOTIFICATION] = systemConfiguration.isNeedNotification
             prefs[Keys.IS_NEED_UPDATE_COURSE] = systemConfiguration.isNeedUpdateCourse
@@ -38,9 +38,9 @@ class SystemDatastore @Inject constructor(
     }
 
     /** 获取系统设置信息 */
-    fun getSystemConfInfo(): Flow<SystemConfInfo> =
+    fun getSystemConfInfo(): Flow<SystemConfInfoEntity> =
         dataStore.data.map {
-            SystemConfInfo(
+            SystemConfInfoEntity(
                 isNeedNotification = it[Keys.IS_NEED_NOTIFICATION] ?: false,
                 isNeedUpdateCourse = it[Keys.IS_NEED_UPDATE_COURSE] ?: false,
                 lastUpdatedCourseDate = TimeUtil.fromTimestampToLocalDateTime(

@@ -85,7 +85,6 @@ class CourseRepositoryImpl @Inject constructor(
      *
      * @param monDate 归一化到周一的日期
      * @param html 课表页 html
-     * @param courses 支持重复传入自动去重
      */
     private fun parseCourseHtml(
         monDate: LocalDate,

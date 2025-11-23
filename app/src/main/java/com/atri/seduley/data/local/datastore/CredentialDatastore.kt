@@ -5,7 +5,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.atri.seduley.core.exception.CredentialException
-import com.atri.seduley.data.local.datastore.entity.Credential
+import com.atri.seduley.data.local.datastore.entity.CredentialEntity
 import com.atri.seduley.data.local.datastore.security.CryptoManager
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -46,14 +46,14 @@ class CredentialDatastore @Inject constructor(
         dataStore.data.map { prefs -> prefs[currentStudentKey] }
 
     /** 保存用户凭证 */
-    suspend fun saveCredential(credential: Credential) {
-        val studentId = credential.studentId
+    suspend fun saveCredential(credentialEntity: CredentialEntity) {
+        val studentId = credentialEntity.studentId
         if (studentId.isEmpty()) return
 
         dataStore.edit { prefs ->
             prefs[studentIdKey(studentId)] = studentId
-            if (credential.password.isNotEmpty()) {
-                prefs[encryptPasswordKey(studentId)] = cryptoManager.encrypt(credential.password)
+            if (credentialEntity.password.isNotEmpty()) {
+                prefs[encryptPasswordKey(studentId)] = cryptoManager.encrypt(credentialEntity.password)
             }
         }
     }

@@ -7,7 +7,7 @@ import com.atri.seduley.core.exception.NetworkException
 import com.atri.seduley.core.util.AppLogger
 import com.atri.seduley.core.util.NetworkUtils
 import com.atri.seduley.data.local.datastore.CredentialDatastore
-import com.atri.seduley.data.local.datastore.entity.Credential
+import com.atri.seduley.data.local.datastore.entity.CredentialEntity
 import com.atri.seduley.data.remote.api.CaptchaApi
 import com.atri.seduley.data.remote.api.InitApi
 import com.atri.seduley.data.remote.api.LoginApi
@@ -81,7 +81,7 @@ class AuthRepositoryImpl @Inject constructor(
                 }
                 if (isLoginSuccess(loginResultResp)) {
                     AppLogger.d("第 $i 次登录loginResultResp: 登录成功")
-                    credentialDatastore.saveCredential(Credential(studentId, password))
+                    credentialDatastore.saveCredential(CredentialEntity(studentId, password))
                     break
                 }
                 if (isAccountOrPasswordError(loginResultResp)) {

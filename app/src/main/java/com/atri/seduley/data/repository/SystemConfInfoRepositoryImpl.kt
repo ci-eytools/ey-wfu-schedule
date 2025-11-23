@@ -1,7 +1,7 @@
 package com.atri.seduley.data.repository
 
 import com.atri.seduley.data.local.datastore.SystemDatastore
-import com.atri.seduley.data.local.datastore.entity.SystemConfInfo
+import com.atri.seduley.data.local.datastore.entity.SystemConfInfoEntity
 import com.atri.seduley.domain.repository.SystemConfInfoRepository
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
@@ -16,10 +16,10 @@ class SystemConfInfoRepositoryImpl @Inject constructor(
 ): SystemConfInfoRepository {
 
     /** 保存系统设置信息 */
-    override suspend fun saveSystemConfInfo(systemConfiguration: SystemConfInfo) = systemDatastore.saveSystemConfInfo(systemConfiguration)
+    override suspend fun saveSystemConfInfo(systemConfiguration: SystemConfInfoEntity) = systemDatastore.saveSystemConfInfo(systemConfiguration)
 
     /** 获取系统设置信息 */
-    override fun getSystemConfInfo(): Flow<SystemConfInfo> = systemDatastore.getSystemConfInfo()
+    override fun getSystemConfInfo(): Flow<SystemConfInfoEntity> = systemDatastore.getSystemConfInfo()
 
     /** 清除系统设置信息 */
     override suspend fun clear() = systemDatastore.clear()

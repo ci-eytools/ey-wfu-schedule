@@ -1,5 +1,7 @@
 package com.atri.seduley.data.repository
 
+import com.atri.seduley.core.util.TimeUtil.toMonday
+import com.atri.seduley.core.util.TimeUtil.weekDate
 import com.atri.seduley.data.local.database.StudentDao
 import com.atri.seduley.data.local.database.entity.SemesterEntity
 import com.atri.seduley.data.remote.api.CourseApi
@@ -183,14 +185,6 @@ class CourseRepositoryImpl @Inject constructor(
 
         return SemesterEntity(startDate, endDate, totalWeeks)
     }
-
-    /** 归一化到当前周周一日期 */
-    private fun LocalDate.toMonday(): LocalDate =
-        this.with(DayOfWeek.MONDAY)
-
-    /** 根据周次与星期数计算当日日期 */
-    private fun LocalDate.weekDate(week: Int, dayOfWeek: Int): LocalDate =
-        this.plusDays(((week - 1) * 7L) + (dayOfWeek - 1))
 
     /** 格式化日期为 yyyy-MM-dd */
     private fun LocalDate.formatter(): String =

@@ -1,6 +1,7 @@
 package com.atri.seduley.core.util
 
 import com.atri.seduley.core.exception.BaseException
+import java.time.DayOfWeek
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -13,6 +14,14 @@ import java.util.concurrent.TimeUnit
 object TimeUtil {
 
     private val zoneId: ZoneId = ZoneId.systemDefault()
+
+    /** 归一化到当前周周一日期 */
+    fun LocalDate.toMonday(): LocalDate =
+        this.with(DayOfWeek.MONDAY)
+
+    /** 根据周次与星期数计算当日日期 */
+    fun LocalDate.weekDate(week: Int, dayOfWeek: Int): LocalDate =
+        this.plusDays(((week - 1) * 7L) + (dayOfWeek - 1))
 
     /**
      * 获取当年指定 mouth, day 的时间戳

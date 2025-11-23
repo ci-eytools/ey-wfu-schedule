@@ -15,14 +15,14 @@ data class StudentEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
     val studentId: String = "",  // 唯一索引
-    val courses: List<Course> = emptyList(),
-    val semester: Semester = Semester(),
+    val courses: List<CourseEntity> = emptyList(),
+    val semester: SemesterEntity = SemesterEntity(),
     val createdAt: LocalDateTime = LocalDateTime.now(),
     val updatedAt: LocalDateTime = LocalDateTime.now()
 )
 
 @Serializable
-data class Course(
+data class CourseEntity(
     val name: String = "",
     val credit: Int = 0,        // * 100 存 int
     val type: String = "",
@@ -34,7 +34,7 @@ data class Course(
 )
 
 @Serializable
-data class Semester(
+data class SemesterEntity(
     val startDate: LocalDate = LocalDate.now(),
     val endDate: LocalDate = LocalDate.now(),
     val totalWeeks: Int = 0

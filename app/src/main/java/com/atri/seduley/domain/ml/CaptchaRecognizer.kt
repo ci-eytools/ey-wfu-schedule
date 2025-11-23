@@ -1,4 +1,4 @@
-package com.atri.seduley.data.ml
+package com.atri.seduley.domain.ml
 
 interface CaptchaRecognizer {
 

@@ -15,10 +15,16 @@ interface StudentDao {
     suspend fun insert(student: StudentEntity)
 
     @Query("SELECT * FROM students WHERE studentId = :studentId")
-    suspend fun getStudentByStudentId(studentId: String): List<StudentEntity>
+    suspend fun getStudentByStudentId(studentId: String): StudentEntity
+
+    @Query("SELECT courses FROM students WHERE studentId = :studentId")
+    suspend fun getCoursesByStudentId(studentId: String): List<Course>
 
     @Query("UPDATE students SET courses = '' WHERE studentId = :studentId")
     suspend fun clearCoursesByStudentId(studentId: String)
+
+    @Query("UPDATE students SET courses = ''")
+    suspend fun clearAllCourses()
 
     @Query("UPDATE students SET courses = :courses WHERE studentId = :studentId")
     suspend fun updateCourses(studentId: String, courses: String)

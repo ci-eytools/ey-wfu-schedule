@@ -1,11 +1,13 @@
 package com.atri.seduley.data.repository
 
+import com.atri.seduley.core.exception.BaseException
 import com.atri.seduley.core.exception.CredentialException
 import com.atri.seduley.core.exception.LoginException
 import com.atri.seduley.core.exception.NetworkException
 import com.atri.seduley.core.util.AppLogger
 import com.atri.seduley.core.util.NetworkUtils
 import com.atri.seduley.data.local.datastore.CredentialDatastore
+import com.atri.seduley.data.local.datastore.entity.Credential
 import com.atri.seduley.domain.ml.CaptchaRecognizer
 import com.atri.seduley.data.remote.api.CaptchaApi
 import com.atri.seduley.data.remote.api.InitApi
@@ -35,7 +37,7 @@ class AuthRepositoryImpl @Inject constructor(
         }
     }
 
-    /** 发起登录 */
+    /** 使用指定用户发起登录，成功后自动保存 */
     override suspend fun loginAs(studentId: String, password: String) {
         try {
             // 1.初始化登录，固定 session，headers
@@ -72,6 +74,7 @@ class AuthRepositoryImpl @Inject constructor(
                 }
                 if (isLoginSuccess(loginResultResp)) {
                     AppLogger.d("第 $i 次登录loginResultResp: 登录成功")
+                    credentialDatastore.saveCredential(Credential(studentId, password))
                     break
                 }
                 if (isAccountOrPasswordError(loginResultResp)) {
@@ -80,8 +83,10 @@ class AuthRepositoryImpl @Inject constructor(
                 }
                 throw LoginException()
             }
-        }catch (_: IOException){
+        } catch (_: IOException) {
             throw NetworkException()
+        } catch (_: Exception) {
+            throw BaseException()
         }
     }
 

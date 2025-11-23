@@ -22,7 +22,9 @@ data class CourseUseCase @Inject constructor(
         val coursesDB = courseRepository.getCoursesFromDB(currStudentId)
         if (coursesDB.isNotEmpty()) return coursesDB
 
-        courseRepository.getAllCoursesFromRemote()
+        val coursesRemote = courseRepository.getCoursesFromRemote(currStudentId)
+        courseRepository.updateCourse(currStudentId, coursesRemote)
+        return coursesRemote
     }
 
     /** 更新课表 */
@@ -32,8 +34,7 @@ data class CourseUseCase @Inject constructor(
         return try {
             val currStudentId = parseStudentId(studentId)
             authRepository.loginAs(currStudentId)
-            val courses = courseRepository.getAllCoursesFromRemote(currStudentId)
-            courseRepository.clearCourses(currStudentId)
+            val courses = courseRepository.getCoursesFromRemote(currStudentId)
             courseRepository.updateCourse(currStudentId, courses)
             CourseResult.Success(courses)
         } catch (e: CredentialException) {

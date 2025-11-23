@@ -1,6 +1,6 @@
 package com.atri.seduley.domain.repository
 
-import com.atri.seduley.data.local.database.entity.Course
+import com.atri.seduley.domain.model.Course
 import java.time.LocalDate
 
 /**
@@ -14,15 +14,18 @@ interface CourseRepository {
     /** 从本地获取课表 */
     suspend fun getCoursesFromDB(studentId: String): List<Course>
 
-    /** 从远端获取课表
+    /** 从远端获取 date 所在周的课表
      *
      * @param date 返回该参数所在周的课表
      * @param courses 支持重复传入自动去重
      */
-    suspend fun getCoursesFromRemote(
+    suspend fun getWeekCoursesFromRemote(
         date: LocalDate,
         courses: MutableList<Course> = mutableListOf()
     ): MutableList<Course>
+
+    /** 从远端获取本学期所有课表 */
+    suspend fun getAllCoursesFromRemote(studentId: String): List<Course>
 
     /** 清除课表 */
     suspend fun clearCourses(studentId: String)

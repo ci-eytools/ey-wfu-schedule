@@ -68,7 +68,7 @@ fun AppNav() {
                 }
             ) {
                 Column(modifier = Modifier.padding(bottom = 77.dp)) {
-                    SettingsScreen(navController)
+//                    SettingsScreen(navController)
                 }
             }
         }

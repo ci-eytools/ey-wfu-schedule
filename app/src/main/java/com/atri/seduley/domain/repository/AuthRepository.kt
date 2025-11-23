@@ -7,11 +7,17 @@ interface AuthRepository {
     /** 使用当前用户发起登录请求 */
     suspend fun login()
 
-    /** 使用指定用户发起登录请求 */
+    /** 使用指定已存在用户发起登录请求 */
+    suspend fun loginAs(studentId: String)
+
+    /** 使用指定新用户发起登录请求 */
     suspend fun loginAs(studentId: String, password: String)
 
     /** 获取当前登录用户 id */
     fun getCurrentStudentId(): Flow<String?>
+
+    /** 获取所有用户 id */
+    fun getAllStudentId(): Flow<List<String>>
 
     /** 登出/删除当前用户 */
     suspend fun logout()

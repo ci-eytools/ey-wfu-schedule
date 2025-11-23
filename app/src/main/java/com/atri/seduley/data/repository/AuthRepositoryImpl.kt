@@ -8,12 +8,12 @@ import com.atri.seduley.core.util.AppLogger
 import com.atri.seduley.core.util.NetworkUtils
 import com.atri.seduley.data.local.datastore.CredentialDatastore
 import com.atri.seduley.data.local.datastore.entity.Credential
-import com.atri.seduley.domain.ml.CaptchaRecognizer
 import com.atri.seduley.data.remote.api.CaptchaApi
 import com.atri.seduley.data.remote.api.InitApi
 import com.atri.seduley.data.remote.api.LoginApi
 import com.atri.seduley.data.remote.api.SESSApi
 import com.atri.seduley.data.remote.model.LoginReq
+import com.atri.seduley.domain.ml.CaptchaRecognizer
 import com.atri.seduley.domain.repository.AuthRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -33,6 +33,13 @@ class AuthRepositoryImpl @Inject constructor(
     /** 使用当前用户发起登录请求 */
     override suspend fun login() {
         credentialDatastore.login { studentId, password ->
+            loginAs(studentId, password)
+        }
+    }
+
+    /** 使用指定已存在用户发起登录请求 */
+    override suspend fun loginAs(studentId: String) {
+        credentialDatastore.login(studentId) { studentId, password ->
             loginAs(studentId, password)
         }
     }
@@ -93,6 +100,11 @@ class AuthRepositoryImpl @Inject constructor(
     /** 获取当前登录用户 id */
     override fun getCurrentStudentId(): Flow<String?> {
         return credentialDatastore.getCurrentStudent()
+    }
+
+    /** 获取所有用户 id */
+    override fun getAllStudentId(): Flow<List<String>> {
+        return credentialDatastore.getAllStudentId()
     }
 
     /** 登出/删除当前用户 */

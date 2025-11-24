@@ -8,6 +8,18 @@ import kotlinx.coroutines.flow.Flow
  */
 interface SystemConfRepository {
 
+    /** 保存封面 uri */
+    suspend fun saveCoverUri(uri: String)
+
+    /** 开启封面 uri flow */
+    fun coverUriFlow(): Flow<String?>
+
+    /** 保存主题颜色 */
+    suspend fun saveSeedColor(color: Int)
+
+    /** 开启主题颜色 flow */
+    fun seedColorFlow(): Flow<Int>
+
     /** 保存系统设置信息 */
     suspend fun saveSystemConfInfo(systemConfiguration: SystemConfEntity)
 

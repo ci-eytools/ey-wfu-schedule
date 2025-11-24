@@ -14,6 +14,9 @@ object Const {
     /** 开屏页图片名 */
     const val SPLASH_IMAGE_NAME = "splash.jpg"
 
+    /** 默认主题颜色 */
+    const val DEFAULT_SEED_COLOR_INT = 0xFF6200EE.toInt()
+
     /** 每日课程提醒触发时间 */
     val DAILY_CLAZZ_NOTIFICATION_TIME: LocalTime = LocalTime.of(22, 0)
 

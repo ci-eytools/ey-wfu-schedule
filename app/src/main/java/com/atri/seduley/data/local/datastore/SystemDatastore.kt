@@ -11,6 +11,7 @@ import com.atri.seduley.core.util.Const
 import com.atri.seduley.core.util.TimeUtil
 import com.atri.seduley.data.local.datastore.entity.SystemConfEntity
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -64,7 +65,7 @@ class SystemDatastore @Inject constructor(
     }
 
     /** 获取系统设置信息 */
-    fun getSystemConfInfo(): Flow<SystemConfEntity> =
+    suspend fun getSystemConfInfo(): SystemConfEntity =
         dataStore.data.map {
             SystemConfEntity(
                 isNeedNotification = it[Keys.IS_NEED_NOTIFICATION] ?: false,
@@ -74,7 +75,7 @@ class SystemDatastore @Inject constructor(
                 )
                     ?: Const.NO_LAST_UPDATE_SELECTED_DATE
             )
-        }
+        }.first()
 
     /** 清除系统设置信息 */
     suspend fun clear() {

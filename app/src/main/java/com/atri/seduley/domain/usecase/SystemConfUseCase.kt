@@ -13,7 +13,6 @@ import com.atri.seduley.domain.repository.SystemConfRepository
 import com.atri.seduley.domain.result.SystemConfResult
 import com.atri.seduley.ui.theme.extractDominantColor
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import java.io.IOException
 import javax.inject.Inject
@@ -51,8 +50,8 @@ data class SystemConfUseCase @Inject constructor(
     }
 
     /** 获取系统设置信息 */
-    fun getSystemConfInfo(): SystemConfResult = SystemConfResult.Success(
-        systemConfRepository.getSystemConfInfo().map { it.toDomain() })
+    suspend fun getSystemConfInfo(): SystemConfResult = SystemConfResult.Success(
+        systemConfRepository.getSystemConfInfo().toDomain())
 
     /** 清除系统设置信息 */
     suspend fun clear() = toReturn { systemConfRepository.clear() }
@@ -61,7 +60,7 @@ data class SystemConfUseCase @Inject constructor(
     private suspend fun toReturn(block: suspend () -> Unit): SystemConfResult {
         return try {
             block()
-            SystemConfResult.Success<Unit>()
+            SystemConfResult.Success()
         } catch (e: Exception) {
             AppLogger.e(e)
             SystemConfResult.UnknownError

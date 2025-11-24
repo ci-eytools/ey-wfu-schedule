@@ -13,7 +13,7 @@ import javax.inject.Singleton
 @Singleton
 class SystemConfRepositoryImpl @Inject constructor(
     private val systemDatastore: SystemDatastore
-): SystemConfRepository {
+) : SystemConfRepository {
 
     /** 保存封面 uri */
     override suspend fun saveCoverUri(uri: String) = systemDatastore.saveCoverUri(uri)
@@ -32,7 +32,7 @@ class SystemConfRepositoryImpl @Inject constructor(
         systemDatastore.saveSystemConfInfo(systemConfiguration)
 
     /** 获取系统设置信息 */
-    override fun getSystemConfInfo(): Flow<SystemConfEntity> = systemDatastore.getSystemConfInfo()
+    override suspend fun getSystemConfInfo() = systemDatastore.getSystemConfInfo()
 
     /** 清除系统设置信息 */
     override suspend fun clear() = systemDatastore.clear()

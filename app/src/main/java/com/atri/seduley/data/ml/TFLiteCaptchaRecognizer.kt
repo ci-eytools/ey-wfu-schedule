@@ -47,7 +47,7 @@ class TFLiteCaptchaRecognizer @Inject constructor(
             Interpreter(buffer)
 
         } catch (e: Exception) {
-            AppLogger.e("初始化 TFLite 解释器失败", e)
+            AppLogger.e(e, "初始化 TFLite 解释器失败")
             throw BaseException("无法初始化 TFLite 模型: $e")
         }
     }

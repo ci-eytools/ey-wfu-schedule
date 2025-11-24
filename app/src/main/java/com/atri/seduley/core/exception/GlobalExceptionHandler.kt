@@ -28,12 +28,12 @@ class GlobalExceptionHandler(
     }
 
     override fun uncaughtException(thread: Thread, e: Throwable) {
-        AppLogger.e("发生未知错误!", e)
+        AppLogger.e(e, "发生未知错误!")
 
         try {
             writeExceptionToFile(e)
         } catch (ex: Exception) {
-            AppLogger.e("写入日志文件失败", ex)
+            AppLogger.e(ex, "写入日志文件失败")
         }
 
         Process.killProcess(Process.myPid())

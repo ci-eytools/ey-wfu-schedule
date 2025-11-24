@@ -37,7 +37,7 @@ object AppLogger {
     }
 
     /** Error 级别日志 */
-    fun e(message: String, throwable: Throwable? = null) {
+    fun e(throwable: Throwable, message: String? = null) {
         Log.e(tag(), message, throwable)
     }
 }

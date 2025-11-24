@@ -33,8 +33,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
-import com.atri.seduley.feature.setting.domain.entity.SystemConfiguration
-import com.atri.seduley.feature.setting.presentation.SettingEvent
+import com.atri.seduley.domain.model.SystemConf
+import com.atri.seduley.ui.screen.setting.SettingEvent
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
@@ -43,8 +43,7 @@ import kotlin.math.roundToInt
 @Composable
 fun NestScroll(
     studentId: String,
-    systemConfiguration: SystemConfiguration,
-    externalResetTrigger: Int,
+    systemConf: SystemConf,
     onEvent: (SettingEvent) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -111,7 +110,7 @@ fun NestScroll(
                 .aspectRatio(currentAspectRatio) // 动态宽高比
         ) {
             FlowBackground(
-                externalResetTrigger = externalResetTrigger,
+                onEvent = { onEvent(it) },
                 modifier = Modifier.matchParentSize()
             )
         }
@@ -140,7 +139,7 @@ fun NestScroll(
                 }
                 .clip(RoundedCornerShape(topStart = 15.dp, topEnd = 15.dp)),
             studentId = studentId,
-            systemConfiguration = systemConfiguration,
+            systemConf = systemConf,
             onEvent = { onEvent(it) },
         )
     }

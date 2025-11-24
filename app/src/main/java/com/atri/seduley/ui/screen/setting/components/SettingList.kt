@@ -53,19 +53,19 @@ import com.atri.seduley.R
 import com.atri.seduley.core.util.Const
 import com.atri.seduley.core.util.PermissionUtil
 import com.atri.seduley.core.util.PermissionUtil.hasPermission
-import com.atri.seduley.feature.setting.domain.entity.SystemConfiguration
-import com.atri.seduley.feature.setting.presentation.SettingEvent
-import com.atri.seduley.feature.setting.presentation.util.rememberImageCropper
-import com.atri.seduley.ui.theme.components.ConfirmDialog
-import com.atri.seduley.ui.theme.components.ListDialog
-import com.atri.seduley.ui.theme.components.SingleChoiceDialog
-import org.threeten.bp.LocalDateTime
-import org.threeten.bp.format.DateTimeFormatter
+import com.atri.seduley.domain.model.SystemConf
+import com.atri.seduley.ui.screen.setting.SettingEvent
+import com.atri.seduley.ui.components.ConfirmDialog
+import com.atri.seduley.ui.components.ListDialog
+import com.atri.seduley.ui.components.SingleChoiceDialog
+import com.atri.seduley.ui.screen.setting.util.rememberImageCropper
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 @Composable
 fun SettingList(
     studentId: String?,
-    systemConfiguration: SystemConfiguration,
+    systemConf: SystemConf,
     onEvent: (SettingEvent) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -98,7 +98,7 @@ fun SettingList(
         )
         Spacer(modifier = Modifier.height(15.dp))
         CourseInfo(
-            lastUpdatedCourseDate = systemConfiguration.lastUpdatedCourseDate,
+            lastUpdatedCourseDate = systemConf.lastUpdatedCourseDate,
             clearSchedules = { onEvent(SettingEvent.ClearSchedules) },
             enterSchedules = { onEvent(SettingEvent.EnterSchedules) }
         )
@@ -106,8 +106,8 @@ fun SettingList(
         BackgroundTaskOptions(
             switchNotificationDemand = { onEvent(SettingEvent.SwitchNotificationDemand(it)) },
             switchUpdateCourseDemand = { onEvent(SettingEvent.SwitchUpdateCourseDemand(it)) },
-            isNeedNotification = systemConfiguration.isNeedNotification,
-            isNeedUpdateCourse = systemConfiguration.isNeedUpdateCourse
+            isNeedNotification = systemConf.isNeedNotification,
+            isNeedUpdateCourse = systemConf.isNeedUpdateCourse
         )
         Spacer(modifier = Modifier.height(15.dp))
         PermissionOptions()

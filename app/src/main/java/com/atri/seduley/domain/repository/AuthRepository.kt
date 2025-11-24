@@ -1,7 +1,5 @@
 package com.atri.seduley.domain.repository
 
-import kotlinx.coroutines.flow.Flow
-
 interface AuthRepository {
 
     /** 使用当前用户发起登录请求 */
@@ -14,10 +12,10 @@ interface AuthRepository {
     suspend fun loginAs(studentId: String, password: String)
 
     /** 获取当前登录用户 id */
-    fun getCurrentStudentId(): Flow<String?>
+    suspend fun getCurrentStudentId(): String?
 
     /** 获取所有用户 id */
-    fun getAllStudentId(): Flow<List<String>>
+    suspend fun getAllStudentId(): List<String>
 
     /** 登出/删除当前用户 */
     suspend fun logout()

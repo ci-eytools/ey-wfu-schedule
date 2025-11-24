@@ -15,8 +15,6 @@ import com.atri.seduley.data.remote.api.SESSApi
 import com.atri.seduley.data.remote.model.LoginReq
 import com.atri.seduley.domain.ml.CaptchaRecognizer
 import com.atri.seduley.domain.repository.AuthRepository
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.first
 import org.jsoup.Jsoup
 import java.io.IOException
 import javax.inject.Inject
@@ -98,19 +96,19 @@ class AuthRepositoryImpl @Inject constructor(
     }
 
     /** 获取当前登录用户 id */
-    override fun getCurrentStudentId(): Flow<String?> {
+    override suspend fun getCurrentStudentId(): String? {
         return credentialDatastore.getCurrentStudent()
     }
 
     /** 获取所有用户 id */
-    override fun getAllStudentId(): Flow<List<String>> {
+    override suspend fun getAllStudentId(): List<String> {
         return credentialDatastore.getAllStudentId()
     }
 
     /** 登出/删除当前用户 */
     override suspend fun logout() {
-        val currStudentId = getCurrentStudentId().first()
-        if (currStudentId.isNullOrEmpty()) {
+        val currStudentId = getCurrentStudentId().orEmpty()
+        if (currStudentId.isEmpty()) {
             throw CredentialException("请先登录")
         }
         credentialDatastore.clear(currStudentId)

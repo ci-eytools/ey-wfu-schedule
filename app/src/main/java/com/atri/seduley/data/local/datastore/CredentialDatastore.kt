@@ -7,7 +7,6 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import com.atri.seduley.core.exception.CredentialException
 import com.atri.seduley.data.local.datastore.entity.CredentialEntity
 import com.atri.seduley.data.local.datastore.security.CryptoManager
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
@@ -42,8 +41,8 @@ class CredentialDatastore @Inject constructor(
     }
 
     /** 获取当前登录用户 */
-    fun getCurrentStudent(): Flow<String?> =
-        dataStore.data.map { prefs -> prefs[currentStudentKey] }
+    suspend fun getCurrentStudent(): String? =
+        dataStore.data.map { prefs -> prefs[currentStudentKey] }.first()
 
     /** 保存用户凭证 */
     suspend fun saveCredential(credentialEntity: CredentialEntity) {
@@ -59,7 +58,7 @@ class CredentialDatastore @Inject constructor(
     }
 
     /** 获取所有已保存的用户 id */
-    fun getAllStudentId(): Flow<List<String>> {
+    suspend fun getAllStudentId(): List<String> {
         return dataStore.data.map { prefs ->
             prefs.asMap()
                 .keys
@@ -70,7 +69,7 @@ class CredentialDatastore @Inject constructor(
                         name.removePrefix("student_id:")
                     } else null
                 }
-        }
+        }.first()
     }
 
     /**
@@ -80,8 +79,8 @@ class CredentialDatastore @Inject constructor(
      * - 默认使用当前用户
      */
     suspend fun <T> login(studentId: String? = null, block: suspend (String, String) -> T): T {
-        val actualStudentId = studentId ?: getCurrentStudent().first()
-        if (actualStudentId.isNullOrEmpty()) {
+        val actualStudentId = studentId ?: getCurrentStudent().orEmpty()
+        if (actualStudentId.isEmpty()) {
             throw CredentialException("未持有该用户的登录凭证: $studentId")
         }
 

@@ -1,8 +1,9 @@
 package com.atri.seduley.data.local.database.converter
 
 import androidx.room.TypeConverter
-import com.atri.seduley.data.local.database.entity.Course
-import com.atri.seduley.data.local.database.entity.Semester
+import com.atri.seduley.data.local.database.entity.CourseEntity
+import com.atri.seduley.data.local.database.entity.SemesterEntity
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.time.Instant
 import java.time.LocalDate
@@ -10,6 +11,11 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 
 class Converters {
+
+    private val json = Json {
+        ignoreUnknownKeys = true
+    }
+
     @TypeConverter
     fun fromLocalDateTime(value: LocalDateTime?): Long? =
         value?.atZone(ZoneId.systemDefault())?.toInstant()?.toEpochMilli()
@@ -27,14 +33,14 @@ class Converters {
         value?.let { Instant.ofEpochMilli(it).atZone(ZoneId.systemDefault()).toLocalDate() }
 
     @TypeConverter
-    fun fromCourses(courses: List<Course>): String = Json.encodeToString(courses)
+    fun fromCourses(courses: List<CourseEntity>): String = json.encodeToString(courses)
 
     @TypeConverter
-    fun toCourses(value: String): List<Course> = Json.decodeFromString<List<Course>>(value)
+    fun toCourses(value: String): List<CourseEntity> = json.decodeFromString<List<CourseEntity>>(value)
 
     @TypeConverter
-    fun fromSemester(semester: Semester): String = Json.encodeToString(semester)
+    fun fromSemester(semester: SemesterEntity): String = json.encodeToString(semester)
 
     @TypeConverter
-    fun toSemester(value: String): Semester = Json.decodeFromString<Semester>(value)
+    fun toSemester(value: String): SemesterEntity = json.decodeFromString<SemesterEntity>(value)
 }

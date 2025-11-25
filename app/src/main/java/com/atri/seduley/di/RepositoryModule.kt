@@ -1,9 +1,11 @@
 package com.atri.seduley.di
 
 import com.atri.seduley.data.repository.AuthRepositoryImpl
+import com.atri.seduley.data.repository.CourseRepositoryImpl
 import com.atri.seduley.data.repository.StudentRepositoryImpl
 import com.atri.seduley.data.repository.SystemConfRepositoryImpl
 import com.atri.seduley.domain.repository.AuthRepository
+import com.atri.seduley.domain.repository.CourseRepository
 import com.atri.seduley.domain.repository.StudentRepository
 import com.atri.seduley.domain.repository.SystemConfRepository
 import dagger.Binds
@@ -27,6 +29,12 @@ abstract class RepositoryModule {
     abstract fun bindAuthRepository(
         impl: AuthRepositoryImpl
     ): AuthRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindCourseRepository(
+        impl: CourseRepositoryImpl
+    ): CourseRepository
 
     @Binds
     @Singleton

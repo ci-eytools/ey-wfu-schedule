@@ -30,32 +30,30 @@ object DatastoreModule {
     @Retention(AnnotationRetention.BINARY)
     annotation class System
 
-    /**
-     * 凭证相关
-     */
     @Provides
     @Singleton
     @Credential
-    fun provideCredentialDataStore(@ApplicationContext context: Context) = context.credentialDataStore
+    fun provideCredentialPrefDataStore(
+        @ApplicationContext context: Context
+    ): DataStore<Preferences> = context.credentialDataStore
 
-    /**
-     * 系统配置相关
-     */
     @Provides
     @Singleton
     @System
-    fun provideSystemDataStore(@ApplicationContext context: Context) = context.systemDataStore
+    fun provideSystemPrefDataStore(
+        @ApplicationContext context: Context
+    ): DataStore<Preferences> = context.systemDataStore
 
     @Provides
     @Singleton
     fun provideCredentialDatastore(
         @Credential dataStore: DataStore<Preferences>,
         cryptoManager: CryptoManager
-    ) = CredentialDatastore(dataStore, cryptoManager)
+    ): CredentialDatastore = CredentialDatastore(dataStore, cryptoManager)
 
     @Provides
     @Singleton
     fun provideSystemDatastore(
         @System dataStore: DataStore<Preferences>
-    ) = SystemDatastore(dataStore)
+    ): SystemDatastore = SystemDatastore(dataStore)
 }

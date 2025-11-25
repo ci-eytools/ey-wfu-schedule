@@ -2,6 +2,7 @@ package com.atri.seduley.data.local.database.di
 
 import android.app.Application
 import androidx.room.Room
+import com.atri.seduley.data.local.database.StudentDao
 import com.atri.seduley.data.local.database.StudentDatabase
 import dagger.Module
 import dagger.Provides
@@ -12,6 +13,7 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 class DatabaseModule {
+
     @Provides
     @Singleton
     fun provideUserDatabase(app: Application): StudentDatabase {
@@ -20,5 +22,11 @@ class DatabaseModule {
             StudentDatabase::class.java,
             StudentDatabase.DATABASE_NAME
         ).build()
+    }
+
+    @Provides
+    @Singleton
+    fun provideStudentDao(db: StudentDatabase): StudentDao {
+        return db.studentDao
     }
 }

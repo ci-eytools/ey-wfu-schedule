@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.composable
 import com.atri.seduley.ui.components.BottomNavigationBar
 import com.atri.seduley.ui.screen.schedule.DailyScheduleScreen
+import com.atri.seduley.ui.screen.setting.SettingsScreen
 import com.google.accompanist.navigation.animation.AnimatedNavHost
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 
@@ -68,7 +69,7 @@ fun AppNav() {
                 }
             ) {
                 Column(modifier = Modifier.padding(bottom = 77.dp)) {
-//                    SettingsScreen(navController)
+                    SettingsScreen(navController)
                 }
             }
         }

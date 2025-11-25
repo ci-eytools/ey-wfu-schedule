@@ -7,8 +7,8 @@ sealed class SettingEvent {
 
     /** 保存用户凭证 */
     data class SaveCredential(
-        val studentId: String? = null,
-        val password: String? = null
+        val studentId: String,
+        val password: String
     ) : SettingEvent()
 
     /** 清除所有课表 */

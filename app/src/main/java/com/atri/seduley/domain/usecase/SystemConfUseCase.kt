@@ -13,6 +13,7 @@ import com.atri.seduley.domain.result.SystemConfResult
 import com.atri.seduley.ui.theme.extractDominantColor
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileInputStream
@@ -52,8 +53,8 @@ data class SystemConfUseCase @Inject constructor(
     }
 
     /** 获取系统设置信息 */
-    suspend fun getSystemConfInfo(): SystemConfResult = try {
-        SystemConfResult.Success(systemConfRepository.getSystemConfInfo().toDomain())
+    fun getSystemConfInfo(): SystemConfResult = try {
+        SystemConfResult.Success(systemConfRepository.getSystemConfInfo().map { it.toDomain() })
     } catch (_: Exception) {
         SystemConfResult.UnknownError
     }

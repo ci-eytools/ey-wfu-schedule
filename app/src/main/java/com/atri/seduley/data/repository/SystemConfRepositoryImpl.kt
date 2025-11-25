@@ -3,7 +3,6 @@ package com.atri.seduley.data.repository
 import com.atri.seduley.data.local.datastore.SystemDatastore
 import com.atri.seduley.data.local.datastore.entity.SystemConfEntity
 import com.atri.seduley.domain.repository.SystemConfRepository
-import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -23,7 +22,7 @@ class SystemConfRepositoryImpl @Inject constructor(
         systemDatastore.saveSystemConfInfo(systemConfiguration)
 
     /** 获取系统设置信息 */
-    override suspend fun getSystemConfInfo() = systemDatastore.getSystemConfInfo()
+    override fun getSystemConfInfo() = systemDatastore.getSystemConfInfo()
 
     /** 清除系统设置信息 */
     override suspend fun clear() = systemDatastore.clear()

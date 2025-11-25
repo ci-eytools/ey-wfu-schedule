@@ -8,7 +8,8 @@ import com.atri.seduley.data.local.database.entity.StudentEntity
 
 @Database(
     entities = [StudentEntity::class],
-    version = 1
+    version = 1,
+    exportSchema = false
 )
 @TypeConverters(Converters::class)
 abstract class StudentDatabase : RoomDatabase() {

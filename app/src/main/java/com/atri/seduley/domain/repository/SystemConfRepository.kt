@@ -15,7 +15,7 @@ interface SystemConfRepository {
     suspend fun saveSystemConfInfo(systemConfiguration: SystemConfEntity)
 
     /** 获取系统设置信息 */
-    suspend fun getSystemConfInfo(): SystemConfEntity
+    fun getSystemConfInfo(): Flow<SystemConfEntity>
 
     /** 清除系统设置信息 */
     suspend fun clear()

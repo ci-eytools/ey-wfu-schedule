@@ -4,7 +4,6 @@ import com.atri.seduley.core.exception.CredentialException
 import com.atri.seduley.domain.repository.AuthRepository
 import com.atri.seduley.domain.repository.StudentRepository
 import com.atri.seduley.domain.result.StudentResult
-import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 
 data class StudentUseCase @Inject constructor(
@@ -28,7 +27,7 @@ data class StudentUseCase @Inject constructor(
 
     /** 解析用户 id */
     private suspend fun parseStudentId(studentId: String?): String {
-        val allIds = authRepository.getAllStudentId().first()
+        val allIds = authRepository.getAllStudentId()
         return when {
             studentId != null && allIds.contains(studentId) -> studentId
             studentId == null && allIds.isNotEmpty() -> allIds.first()

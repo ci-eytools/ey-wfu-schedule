@@ -6,12 +6,10 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
-import androidx.datastore.preferences.core.stringPreferencesKey
 import com.atri.seduley.core.util.Const
 import com.atri.seduley.core.util.TimeUtil
 import com.atri.seduley.data.local.datastore.entity.SystemConfEntity
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -49,7 +47,7 @@ class SystemDatastore @Inject constructor(
     }
 
     /** 获取系统设置信息 */
-    suspend fun getSystemConfInfo(): SystemConfEntity =
+    fun getSystemConfInfo(): Flow<SystemConfEntity> =
         dataStore.data.map {
             SystemConfEntity(
                 seedColor = it[Keys.SEED_COLOR_KEY] ?: Const.DEFAULT_SEED_COLOR_INT,
@@ -60,7 +58,7 @@ class SystemDatastore @Inject constructor(
                 )
                     ?: Const.NO_LAST_UPDATE_SELECTED_DATE
             )
-        }.first()
+        }
 
     /** 清除系统设置信息 */
     suspend fun clear() {

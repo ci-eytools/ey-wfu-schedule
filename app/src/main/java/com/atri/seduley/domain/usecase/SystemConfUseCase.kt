@@ -2,7 +2,6 @@ package com.atri.seduley.domain.usecase
 
 import android.content.Context
 import android.graphics.BitmapFactory
-import android.net.Uri
 import androidx.compose.ui.graphics.toArgb
 import com.atri.seduley.core.util.AppLogger
 import com.atri.seduley.core.util.Const
@@ -12,35 +11,38 @@ import com.atri.seduley.domain.model.mapper.toEntity
 import com.atri.seduley.domain.repository.SystemConfRepository
 import com.atri.seduley.domain.result.SystemConfResult
 import com.atri.seduley.ui.theme.extractDominantColor
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import java.io.IOException
+import java.io.File
+import java.io.FileInputStream
 import javax.inject.Inject
 
 data class SystemConfUseCase @Inject constructor(
-    private val systemConfRepository: SystemConfRepository
+    private val systemConfRepository: SystemConfRepository,
+    @ApplicationContext private val context: Context
 ) {
 
     /**
-     * 根据 URI 更新封面图片的持久化存储，并从中提取、保存主题种子颜色。
-     * 如果 URI 为 null，则重置为默认主题色和空封面 URI。
+     * 根据 cover 文件更新主题种子颜色。如果 cover 文件为 不存在，则重置为默认主题色
      */
-    suspend fun updateCoverAndSeedColorInStore(context: Context, uri: Uri?) = toReturn {
-        val newUri = uri?.toString() ?: ""
+    suspend fun updateSeedColorByCover(): SystemConfResult = toReturn {
         val defColor = Const.DEFAULT_SEED_COLOR_INT
-        val newColorInt = try {
-            uri?.let {
+        val cover = File(context.cacheDir, Const.COVER_IMAGE_NAME)
+        val newColorInt = cover.let {
+            try {
                 withContext(Dispatchers.IO) {
-                    context.contentResolver.openInputStream(it)?.use { stream ->
+                    FileInputStream(it).use { stream ->
                         val bitmap = BitmapFactory.decodeStream(stream)
-                        extractDominantColor(bitmap, defColor).toArgb()
+                        val cover = extractDominantColor(bitmap, defColor).toArgb()
+                        bitmap.recycle()
+                        cover
                     }
                 }
-            } ?: defColor
-        } catch (_: IOException) {
-            defColor
+            } catch (_: Exception) {
+                defColor
+            }
         }
-        systemConfRepository.saveCoverUri(newUri)
         systemConfRepository.saveSeedColor(newColorInt)
     }
 
@@ -50,8 +52,11 @@ data class SystemConfUseCase @Inject constructor(
     }
 
     /** 获取系统设置信息 */
-    suspend fun getSystemConfInfo(): SystemConfResult = SystemConfResult.Success(
-        systemConfRepository.getSystemConfInfo().toDomain())
+    suspend fun getSystemConfInfo(): SystemConfResult = try {
+        SystemConfResult.Success(systemConfRepository.getSystemConfInfo().toDomain())
+    } catch (_: Exception) {
+        SystemConfResult.UnknownError
+    }
 
     /** 清除系统设置信息 */
     suspend fun clear() = toReturn { systemConfRepository.clear() }

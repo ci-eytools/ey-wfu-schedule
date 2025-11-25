@@ -15,17 +15,8 @@ class SystemConfRepositoryImpl @Inject constructor(
     private val systemDatastore: SystemDatastore
 ) : SystemConfRepository {
 
-    /** 保存封面 uri */
-    override suspend fun saveCoverUri(uri: String) = systemDatastore.saveCoverUri(uri)
-
-    /** 开启封面 uri flow */
-    override fun coverUriFlow(): Flow<String?> = systemDatastore.coverUriFlow()
-
     /** 保存主题颜色 */
     override suspend fun saveSeedColor(color: Int) = systemDatastore.saveSeedColor(color)
-
-    /** 开启主题颜色 flow */
-    override fun seedColorFlow(): Flow<Int> = systemDatastore.seedColorFlow()
 
     /** 保存系统设置信息 */
     override suspend fun saveSystemConfInfo(systemConfiguration: SystemConfEntity) =

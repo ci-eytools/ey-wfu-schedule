@@ -7,6 +7,7 @@ import java.time.LocalDateTime
 /** SystemConfEntity -> SystemConf */
 fun SystemConfEntity.toDomain(): SystemConf =
     SystemConf(
+        seedColor = seedColor,
         isNeedNotification = isNeedNotification,
         isNeedUpdateCourse = isNeedUpdateCourse,
         lastUpdatedCourseDate = lastUpdatedCourseDate
@@ -15,6 +16,7 @@ fun SystemConfEntity.toDomain(): SystemConf =
 /** SystemConf → SystemConfEntity */
 fun SystemConf.toEntity(): SystemConfEntity =
     SystemConfEntity(
+        seedColor = seedColor,
         isNeedNotification = isNeedNotification,
         isNeedUpdateCourse = isNeedUpdateCourse,
         lastUpdatedCourseDate = LocalDateTime.now()

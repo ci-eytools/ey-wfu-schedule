@@ -24,38 +24,22 @@ class SystemDatastore @Inject constructor(
     private val dataStore: DataStore<Preferences>
 ) {
 
-    companion object {
-        const val DEFAULT_SEED_COLOR_INT = 0xFF6200EE.toInt() // 默认颜色值
-    }
-
     private object Keys {
+        val SEED_COLOR_KEY = intPreferencesKey("seed_color")
         val IS_NEED_NOTIFICATION = booleanPreferencesKey("is_need_notification")
         val IS_NEED_UPDATE_COURSE = booleanPreferencesKey("is_need_update_course")
         val LAST_UPDATED_COURSE_TIME = longPreferencesKey("last_updated_course_time")
-
-        val COVER_URI_KEY = stringPreferencesKey("cover_uri")
-        val SEED_COLOR_KEY = intPreferencesKey("seed_color")
     }
 
-    suspend fun saveCoverUri(uri: String) {
-        dataStore.edit { it[Keys.COVER_URI_KEY] = uri }
-    }
-
-    fun coverUriFlow(): Flow<String?> =
-        dataStore.data.map { it[Keys.COVER_URI_KEY] }
-
+    /** 保存主题颜色 */
     suspend fun saveSeedColor(color: Int) {
         dataStore.edit { it[Keys.SEED_COLOR_KEY] = color }
     }
 
-    fun seedColorFlow(): Flow<Int> = // 返回非空 Int, 内部处理 null
-        dataStore.data.map { preferences ->
-            preferences[Keys.SEED_COLOR_KEY] ?: DEFAULT_SEED_COLOR_INT
-        }
-
     /** 保存系统设置信息 */
     suspend fun saveSystemConfInfo(systemConfiguration: SystemConfEntity) {
         dataStore.edit { prefs ->
+            prefs[Keys.SEED_COLOR_KEY] = systemConfiguration.seedColor
             prefs[Keys.IS_NEED_NOTIFICATION] = systemConfiguration.isNeedNotification
             prefs[Keys.IS_NEED_UPDATE_COURSE] = systemConfiguration.isNeedUpdateCourse
             prefs[Keys.LAST_UPDATED_COURSE_TIME] = TimeUtil.localDateTimeToTimestamp(
@@ -68,8 +52,9 @@ class SystemDatastore @Inject constructor(
     suspend fun getSystemConfInfo(): SystemConfEntity =
         dataStore.data.map {
             SystemConfEntity(
+                seedColor = it[Keys.SEED_COLOR_KEY] ?: Const.DEFAULT_SEED_COLOR_INT,
                 isNeedNotification = it[Keys.IS_NEED_NOTIFICATION] ?: false,
-                isNeedUpdateCourse = it[Keys.IS_NEED_UPDATE_COURSE] ?: false,
+                isNeedUpdateCourse = it[Keys.IS_NEED_UPDATE_COURSE] ?: true,
                 lastUpdatedCourseDate = TimeUtil.fromTimestampToLocalDateTime(
                     it[Keys.LAST_UPDATED_COURSE_TIME]
                 )

@@ -2,6 +2,7 @@ package com.atri.seduley.domain.usecase
 
 import com.atri.seduley.core.exception.CredentialException
 import com.atri.seduley.core.exception.NetworkException
+import com.atri.seduley.core.util.AppLogger
 import com.atri.seduley.domain.model.Credential
 import com.atri.seduley.domain.model.Student
 import com.atri.seduley.domain.repository.AuthRepository
@@ -61,7 +62,8 @@ data class AuthUseCase @Inject constructor(
             AuthResult.InvalidCredential(e.message)
         } catch (_: NetworkException) {
             AuthResult.NetworkError
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            AppLogger.e(e)
             AuthResult.UnknownError()
         }
     }

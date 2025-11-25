@@ -90,8 +90,9 @@ class AuthRepositoryImpl @Inject constructor(
             }
         } catch (_: IOException) {
             throw NetworkException()
-        } catch (_: Exception) {
-            throw BaseException()
+        } catch (e: Exception) {
+            AppLogger.e(e)
+            throw BaseException(e = e)
         }
     }
 

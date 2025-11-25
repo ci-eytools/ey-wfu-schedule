@@ -17,6 +17,7 @@ import com.atri.seduley.ui.screen.schedule.ScheduleEvent
 import com.atri.seduley.ui.screen.schedule.ScheduleUiState
 import com.atri.seduley.ui.screen.schedule.components.SwitchWeekWay
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -43,20 +44,37 @@ class ScheduleViewModel @Inject constructor(
         )
     )
 
+    private var updateJob: Job? = null
+    private var hasLoadedCourses = false
+
     init {
         viewModelScope.launch {
-            // 加载学期信息
-            loadSemester()
-            // 加载课表信息
-            loadCourses()
+            // TODO 需控制请求，仅保留第一次请求，知道请求返回后才可继续请求
+            if (!hasLoadedCourses && updateJob?.isActive != true) {
+                updateJob = launch {
+                    // 加载学期信息
+                    loadSemester()
+                    // 加载课表信息
+                    loadCourses()
+                    hasLoadedCourses = true
+                }
+            }
         }
     }
 
     fun onEvent(event: ScheduleEvent) {
         when (event) {
             is ScheduleEvent.SwitchDate -> {
-                launchWithDelayedLoading {
-                    if (courseCache.isEmpty()) loadCourses()
+                viewModelScope.launch {
+                    // 如果课程还没加载过，执行更新逻辑
+                    if (!hasLoadedCourses && updateJob?.isActive != true) {
+                        updateJob = launch {
+                            loadCourses()
+                            hasLoadedCourses = true
+                        }
+                    }
+
+                    // 无论如何都刷新UI
                     _uiState.value = ScheduleUiState.Success(
                         selectedDate = event.date,
                         courses = courseCache.filter { it.date == event.date }
@@ -123,7 +141,7 @@ class ScheduleViewModel @Inject constructor(
                 _uiState.value = ScheduleUiState.Error(c.msg)
             }
 
-            CourseResult.UnknownError -> {
+            is CourseResult.UnknownError -> {
                 _uiState.value = ScheduleUiState.Error("发生未知错误")
             }
         }

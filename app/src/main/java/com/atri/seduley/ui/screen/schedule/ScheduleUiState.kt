@@ -12,14 +12,14 @@ sealed class ScheduleUiState {
     object Loading : ScheduleUiState()
 
     /** 成功状态 */
-    data class Success(
+    class Success(
         val selectedDate: LocalDate,        // 当前选择日期
         val courses: List<Course>,          // 课程信息（周）
         val isOrderSectionVisible: Boolean = false  // 是否选中课程（留有状态，暂时无效）
     ) : ScheduleUiState()
 
     /** 错误状态 */
-    data class Error(val message: String) : ScheduleUiState()
+    class Error(val message: String) : ScheduleUiState()
 }
 
 /**

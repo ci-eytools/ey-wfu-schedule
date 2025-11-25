@@ -10,11 +10,11 @@ import java.time.LocalDate
 sealed class ScheduleEvent {
 
     /** 切换日期 */
-    class SwitchDate(val date: LocalDate) : ScheduleEvent()
+    data class SwitchDate(val date: LocalDate) : ScheduleEvent()
 
     /** 选择课程（留有事件，暂无效） */
-    class SelectCourse(val course: Course) : ScheduleEvent()
+    data class SelectCourse(val course: Course) : ScheduleEvent()
 
     /** 切换周 */
-    class SwitchWeek(val where: SwitchWeekWay): ScheduleEvent()
+    data class SwitchWeek(val where: SwitchWeekWay): ScheduleEvent()
 }

@@ -3,6 +3,7 @@ package com.atri.seduley.data.local.database.entity
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.atri.seduley.data.local.database.converter.LocalDateSerializer
 import kotlinx.serialization.Serializable
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -27,6 +28,7 @@ data class CourseEntity(
     val credit: Int = 0,        // * 100 存 int
     val type: String = "",
     val location: String = "",
+    @Serializable(with = LocalDateSerializer::class)
     val date: LocalDate = LocalDate.now(),
     val weekly: Int = 0,        // 周次
     val dayOfWeek: Int = 0,
@@ -35,7 +37,9 @@ data class CourseEntity(
 
 @Serializable
 data class SemesterEntity(
+    @Serializable(with = LocalDateSerializer::class)
     val startDate: LocalDate = LocalDate.now(),
+    @Serializable(with = LocalDateSerializer::class)
     val endDate: LocalDate = LocalDate.now(),
-    val totalWeeks: Int = 0
+    val totalWeeks: Int = -1
 )

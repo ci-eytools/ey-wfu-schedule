@@ -16,16 +16,22 @@ data class AuthUseCase @Inject constructor(
     private val authRepository: AuthRepository
 ) {
 
-    /** 登录 */
+    /**
+     * 登录
+     *
+     * @param block 当传入的 credential 不为空则运行 block()
+     */
     suspend fun login(
-        credential: Credential? = null
+        credential: Credential? = null,
+        block: suspend () -> Unit
     ) = toReturn {
         if (credential == null) {
             authRepository.login()
         } else {
             authRepository.loginAs(
                 studentId = credential.studentId,
-                password = credential.password
+                password = credential.password,
+                block
             )
         }
     }
@@ -50,7 +56,8 @@ data class AuthUseCase @Inject constructor(
         AuthResult.Success(Student(studentId = studentId))
     } catch (e: CredentialException) {
         AuthResult.UnknownError(e.message)
-    } catch (_: Exception) {
+    } catch (e: Exception) {
+        AppLogger.e(e)
         AuthResult.UnknownError()
     }
 

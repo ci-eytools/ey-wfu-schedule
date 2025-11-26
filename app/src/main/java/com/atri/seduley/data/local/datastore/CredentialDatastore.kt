@@ -52,7 +52,8 @@ class CredentialDatastore @Inject constructor(
         dataStore.edit { prefs ->
             prefs[studentIdKey(studentId)] = studentId
             if (credentialEntity.password.isNotEmpty()) {
-                prefs[encryptPasswordKey(studentId)] = cryptoManager.encrypt(credentialEntity.password)
+                prefs[encryptPasswordKey(studentId)] =
+                    cryptoManager.encrypt(credentialEntity.password)
             }
         }
     }

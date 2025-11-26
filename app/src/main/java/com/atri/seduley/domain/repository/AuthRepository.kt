@@ -9,13 +9,16 @@ interface AuthRepository {
     suspend fun loginAs(studentId: String)
 
     /** 使用指定新用户发起登录请求 */
-    suspend fun loginAs(studentId: String, password: String)
+    suspend fun loginAs(studentId: String, password: String, block: suspend () -> Unit)
 
     /** 获取当前登录用户 id */
     suspend fun getCurrentStudentId(): String?
 
     /** 获取所有用户 id */
     suspend fun getAllStudentId(): List<String>
+
+    /** 切换当前登录用户 */
+    suspend fun setCurrentStudent(studentId: String)
 
     /** 登出/删除当前用户 */
     suspend fun logout()

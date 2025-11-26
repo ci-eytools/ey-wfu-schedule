@@ -1,10 +1,12 @@
 package com.atri.seduley.data.repository
 
+import com.atri.seduley.core.util.AppLogger
 import com.atri.seduley.core.util.TimeUtil.toMonday
 import com.atri.seduley.core.util.TimeUtil.weekDate
 import com.atri.seduley.data.local.database.StudentDao
 import com.atri.seduley.data.local.database.entity.SemesterEntity
 import com.atri.seduley.data.remote.api.CourseApi
+import com.atri.seduley.data.remote.api.HomeApi
 import com.atri.seduley.domain.model.Course
 import com.atri.seduley.domain.model.mapper.toDomain
 import com.atri.seduley.domain.model.mapper.toEntity
@@ -20,7 +22,8 @@ import javax.inject.Inject
  */
 class CourseRepositoryImpl @Inject constructor(
     private val studentDao: StudentDao,
-    private val courseApi: CourseApi
+    private val courseApi: CourseApi,
+    private val homeApi: HomeApi
 ) : CourseRepository {
 
     /** 更新课表 */
@@ -36,17 +39,18 @@ class CourseRepositoryImpl @Inject constructor(
     /** 从远端获取本学期所有课表 */
     override suspend fun getCoursesFromRemote(studentId: String): List<Course> {
         val courses = mutableListOf<Course>()
-        val monDate = LocalDate.now().toMonday()
         var semester = studentDao.getSemesterByStudentId(studentId)
-        if (semester == null) {
-            val html = courseApi.getCoursePageHTML(monDate.formatter())
+        if (semester == null || semester.totalWeeks < 0) {
+            val html = homeApi.getHome()
             semester = parseSemesterInfo(html)
             // 本地为空就更新一下数据
             studentDao.updateSemester(studentId, semester)
         }
+        AppLogger.d("学期信息: $semester")
         val startDate = semester.startDate
         // 每次循环按周自增
-        for (i in 0..semester.totalWeeks) {
+        for (i in 0..semester.totalWeeks - 1) {
+            AppLogger.d("正在拉取第 ${i + 1} 周")
             val date = startDate.plusWeeks(i.toLong())
             val html = courseApi.getCoursePageHTML(date.formatter())
             courses.addAll(parseCourseHtml(date, html))

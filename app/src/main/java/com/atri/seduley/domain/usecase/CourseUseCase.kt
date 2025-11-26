@@ -2,6 +2,7 @@ package com.atri.seduley.domain.usecase
 
 import com.atri.seduley.core.exception.CredentialException
 import com.atri.seduley.core.exception.NetworkException
+import com.atri.seduley.core.util.AppLogger
 import com.atri.seduley.domain.repository.AuthRepository
 import com.atri.seduley.domain.repository.CourseRepository
 import com.atri.seduley.domain.result.CourseResult
@@ -17,9 +18,12 @@ data class CourseUseCase @Inject constructor(
         studentId: String? = null
     ): CourseResult {
         return try {
-            val currStudentId = parseStudentId(studentId)
+            val currStudentId = resolveStudentId(studentId)
             val coursesDB = courseRepository.getCoursesFromDB(currStudentId)
-            if (coursesDB.isNotEmpty()) CourseResult.Success(coursesDB)
+            if (coursesDB.isNotEmpty()) {
+                return CourseResult.Success(coursesDB)
+            }
+            authRepository.loginAs(currStudentId)
             val coursesRemote = courseRepository.getCoursesFromRemote(currStudentId)
             courseRepository.updateCourse(currStudentId, coursesRemote)
             CourseResult.Success(coursesRemote)
@@ -29,12 +33,13 @@ data class CourseUseCase @Inject constructor(
     }
 
     /** 更新课表 */
-    suspend fun updateCourse(
-        studentId: String? = null
+    suspend fun updateCourseFromRemote(
+        studentId: String? = null,
+        isNeedLogin: Boolean = true
     ): CourseResult {
         return try {
-            val currStudentId = parseStudentId(studentId)
-            authRepository.loginAs(currStudentId)
+            val currStudentId = resolveStudentId(studentId)
+            if (isNeedLogin) authRepository.loginAs(currStudentId)
             val courses = courseRepository.getCoursesFromRemote(currStudentId)
             courseRepository.updateCourse(currStudentId, courses)
             CourseResult.Success(courses)
@@ -48,7 +53,7 @@ data class CourseUseCase @Inject constructor(
         studentId: String? = null
     ): CourseResult {
         return try {
-            val currStudentId = parseStudentId(studentId)
+            val currStudentId = resolveStudentId(studentId)
             courseRepository.clearCourses(currStudentId)
             CourseResult.Success(emptyList())
         } catch (e: Exception) {
@@ -57,7 +62,7 @@ data class CourseUseCase @Inject constructor(
     }
 
     /** 解析用户 id */
-    private suspend fun parseStudentId(studentId: String?): String {
+    private suspend fun resolveStudentId(studentId: String?): String {
         val allIds = authRepository.getAllStudentId()
         return when {
             studentId != null && allIds.contains(studentId) -> studentId
@@ -76,6 +81,7 @@ data class CourseUseCase @Inject constructor(
                 CourseResult.AuthError(e.message)
             }
             else -> {
+                AppLogger.e(e)
                 CourseResult.UnknownError
             }
         }

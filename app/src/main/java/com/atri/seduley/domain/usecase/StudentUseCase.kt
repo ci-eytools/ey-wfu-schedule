@@ -1,6 +1,7 @@
 package com.atri.seduley.domain.usecase
 
 import com.atri.seduley.core.exception.CredentialException
+import com.atri.seduley.core.util.AppLogger
 import com.atri.seduley.domain.repository.AuthRepository
 import com.atri.seduley.domain.repository.StudentRepository
 import com.atri.seduley.domain.result.StudentResult
@@ -20,7 +21,8 @@ data class StudentUseCase @Inject constructor(
             StudentResult.Success(student)
         } catch (e: CredentialException) {
             return StudentResult.AuthError(e.message)
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            AppLogger.e(e)
             return StudentResult.UnknownError
         }
     }

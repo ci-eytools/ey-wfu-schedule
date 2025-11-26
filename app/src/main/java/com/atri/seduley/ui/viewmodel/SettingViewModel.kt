@@ -3,6 +3,7 @@ package com.atri.seduley.ui.viewmodel
 import android.content.Context
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.compose.ui.input.key.Key.Companion.I
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.atri.seduley.core.util.Const
@@ -73,6 +74,7 @@ class SettingViewModel @Inject constructor(
                         _systemConf.value = conf
                     } ?: emitErr()
                 }
+
                 is SystemConfResult.UnknownError -> emitErr()
             }
 
@@ -80,6 +82,7 @@ class SettingViewModel @Inject constructor(
                 is AuthResult.Success -> {
                     info.value?.let { studentId.value = it.studentId } ?: emitErr()
                 }
+
                 is AuthResult.UnknownError -> emitErr(info.msg)
                 else -> emitErr()
             }
@@ -96,23 +99,31 @@ class SettingViewModel @Inject constructor(
                         emitErr("请输入学号或密码")
                         return@launch
                     }
-                    when (val info =
-                        authUseCase.login(Credential(event.studentId, event.password))) {
-                        is AuthResult.Success -> {
-                            emitMsg("保存 ${event.studentId} 登录凭证成功，准备拉取课表信息...")
-                            delay(1000)  // 等待 1 秒，让用户看到提示
-                            _uiState.value =
-                                Loading(message = "正在拉取 ${event.studentId} 的课表信息，请稍后...")
-                            when (val info = courseUseCase.updateCourse(event.studentId)) {
-                                is CourseResult.Success -> emitMsg("拉取 ${event.studentId} 的课表信息成功")
-                                is CourseResult.AuthError -> emitErr(info.msg)
-                                is CourseResult.UnknownError -> emitErr()
-                            }
-                        }
 
-                        is AuthResult.InvalidCredential -> emitMsg(info.msg)
-                        is AuthResult.NetworkError -> emitErr("请检查您的网络连接")
-                        is AuthResult.UnknownError -> emitErr(info.msg)
+                    // 1.开始登录，立即显示加载框
+                    _uiState.value = Loading("正在验证 ${event.studentId} 的凭证...")
+
+                    // 2.调用登录
+                    authUseCase.login(Credential(event.studentId, event.password)) {
+                        // 3.登录成功，更新加载框文本，准备拉取课表
+                        emitMsg("登录凭证有效，准备拉取课表...")
+                        _uiState.value =
+                            Loading(message = "正在拉取 ${event.studentId} 的课表信息，请稍后...")
+
+                        // 4.开始拉取课表
+                        when (val courseInfo =
+                            courseUseCase.updateCourseFromRemote(event.studentId, false)) {
+                            is CourseResult.Success -> emitMsg("拉取 ${event.studentId} 的课表信息成功")
+                            is CourseResult.AuthError -> emitErr(courseInfo.msg)
+                            is CourseResult.UnknownError -> emitErr()
+                        }
+                    }.let { loginResult ->
+                        when (loginResult) {
+                            is AuthResult.Success -> _uiState.value = Idle
+                            is AuthResult.InvalidCredential -> emitMsg(loginResult.msg)
+                            is AuthResult.NetworkError -> emitErr("请检查您的网络连接")
+                            is AuthResult.UnknownError -> emitErr(loginResult.msg)
+                        }
                     }
                 }
             }
@@ -131,7 +142,7 @@ class SettingViewModel @Inject constructor(
             // 向服务器拉取当前用户的课表
             is SettingEvent.EnterSchedules -> {
                 launchWithDelayedLoading("正在拉取 ${studentId.value} 的课表信息") {
-                    when (val info = courseUseCase.updateCourse(studentId.value)) {
+                    when (val info = courseUseCase.updateCourseFromRemote(studentId.value)) {
                         is CourseResult.Success -> emitMsg("拉取 ${studentId.value} 的课表信息成功")
                         is CourseResult.AuthError -> emitErr(info.msg)
                         CourseResult.UnknownError -> emitErr()

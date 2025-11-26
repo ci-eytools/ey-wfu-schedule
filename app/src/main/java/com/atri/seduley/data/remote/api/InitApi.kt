@@ -11,8 +11,7 @@ class InitApi @Inject constructor(
     private val requestHelper: RequestHelper
 ) {
 
-    suspend fun init(header: Map<String, String>) {
-        requestHelper.init(header)
+    suspend fun init() {
         requestHelper.get(ApiUrls.LOGIN.toUrl())
     }
 }

@@ -12,6 +12,11 @@ enum class ApiUrls(val path: String) {
     SESS("Logon.do?method=logon&flag=sess"),
 
     /**
+     * GET
+     */
+    STUDENT_MAIN_PAGE("jsxsd/framework/xsMain_new.jsp"),
+
+    /**
      * POST
      * params={'rq': '2025-09-12'}
      */

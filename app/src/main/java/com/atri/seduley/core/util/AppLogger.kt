@@ -17,8 +17,13 @@ object AppLogger {
     /** 自动获取调用类名 */
     private fun tag(): String {
         val stackTrace = Throwable().stackTrace
-        val className = stackTrace.getOrNull(2)?.className ?: "Logger"
-        return className.substringAfterLast('.')
+        for (element in stackTrace) {
+            val className = element.className
+            if (!className.startsWith(AppLogger::class.java.name)) {
+                return className.substringAfterLast('.')
+            }
+        }
+        return "Logger"
     }
 
     /** Debug 级别日志 */
@@ -37,7 +42,7 @@ object AppLogger {
     }
 
     /** Error 级别日志 */
-    fun e(throwable: Throwable, message: String? = null) {
+    fun e(throwable: Throwable? = null, message: String? = null) {
         Log.e(tag(), message, throwable)
     }
 }

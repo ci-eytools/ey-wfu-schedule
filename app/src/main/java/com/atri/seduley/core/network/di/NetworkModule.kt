@@ -5,7 +5,10 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import okhttp3.JavaNetCookieJar
 import okhttp3.OkHttpClient
+import java.net.CookieManager
+import java.net.CookiePolicy
 import javax.inject.Singleton
 
 @Module
@@ -23,6 +26,9 @@ class NetworkModule {
     ): OkHttpClient {
         return OkHttpClient.Builder()
             .addInterceptor(loggingInterceptor)
+            .cookieJar(JavaNetCookieJar(CookieManager().apply {
+                setCookiePolicy(CookiePolicy.ACCEPT_ALL)
+            }))
             .build()
     }
 }

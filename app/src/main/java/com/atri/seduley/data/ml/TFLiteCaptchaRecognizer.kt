@@ -80,10 +80,10 @@ class TFLiteCaptchaRecognizer @Inject constructor(
             ?: throw IllegalArgumentException("无法解码图片")
         val scaled = bitmap.scale(WIDTH, HEIGHT)
 
+        AppLogger.d("预处理后的验证码 ASCII Art:\n${scaled.toAsciiArt()}")
         val buffer = ByteBuffer.allocateDirect(4 * WIDTH * HEIGHT).apply {
             order(ByteOrder.nativeOrder())
         }
-
         for (y in 0 until HEIGHT) {
             for (x in 0 until WIDTH) {
                 val pixel = scaled[x, y]
@@ -118,5 +118,24 @@ class TFLiteCaptchaRecognizer @Inject constructor(
         // 如果不是4位，按原始顺序返回
         AppLogger.w("解码的数组大小不是 ${NUM_OUTPUTS}, 按原始顺序返回")
         return arr.joinToString("")
+    }
+
+    private fun android.graphics.Bitmap.toAsciiArt(): String {
+        // 定义灰度到字符的映射，从最亮到最暗
+        val asciiChars = "@%#*+=-:. "
+        val sb = StringBuilder()
+        for (y in 0 until this.height) {
+            for (x in 0 until this.width) {
+                val pixel = this[x, y]
+                // 计算灰度值 (0-255)
+                val gray = (0.299 * Color.red(pixel) + 0.587 * Color.green(pixel) + 0.114 * Color.blue(pixel)).toInt()
+                // 根据灰度值选择一个字符
+                // 将 0-255 的范围映射到 asciiChars 的索引上
+                val index = (gray / 255.0 * (asciiChars.length - 1)).toInt()
+                sb.append(asciiChars[index])
+            }
+            sb.append("\n")
+        }
+        return sb.toString()
     }
 }

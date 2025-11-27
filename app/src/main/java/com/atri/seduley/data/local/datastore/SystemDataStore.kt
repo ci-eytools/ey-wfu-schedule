@@ -4,7 +4,6 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
-import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import com.atri.seduley.core.util.Const
 import com.atri.seduley.core.util.TimeUtil
@@ -23,21 +22,14 @@ class SystemDataStore @Inject constructor(
 ) {
 
     private object Keys {
-        val SEED_COLOR_KEY = intPreferencesKey("seed_color")
         val IS_NEED_NOTIFICATION = booleanPreferencesKey("is_need_notification")
         val IS_NEED_UPDATE_COURSE = booleanPreferencesKey("is_need_update_course")
         val LAST_UPDATED_COURSE_TIME = longPreferencesKey("last_updated_course_time")
     }
 
-    /** 保存主题颜色 */
-    suspend fun saveSeedColor(color: Int) {
-        dataStore.edit { it[Keys.SEED_COLOR_KEY] = color }
-    }
-
     /** 保存系统设置信息 */
     suspend fun saveSystemConfInfo(systemConfiguration: SystemConfEntity) {
         dataStore.edit { prefs ->
-            prefs[Keys.SEED_COLOR_KEY] = systemConfiguration.seedColor
             prefs[Keys.IS_NEED_NOTIFICATION] = systemConfiguration.isNeedNotification
             prefs[Keys.IS_NEED_UPDATE_COURSE] = systemConfiguration.isNeedUpdateCourse
             prefs[Keys.LAST_UPDATED_COURSE_TIME] = TimeUtil.localDateTimeToTimestamp(
@@ -47,10 +39,9 @@ class SystemDataStore @Inject constructor(
     }
 
     /** 获取系统设置信息 */
-    fun getSystemConfInfo(): Flow<SystemConfEntity> =
+    fun systemConfInfoFlow(): Flow<SystemConfEntity> =
         dataStore.data.map {
             SystemConfEntity(
-                seedColor = it[Keys.SEED_COLOR_KEY] ?: Const.DEFAULT_SEED_COLOR_INT,
                 isNeedNotification = it[Keys.IS_NEED_NOTIFICATION] ?: false,
                 isNeedUpdateCourse = it[Keys.IS_NEED_UPDATE_COURSE] ?: true,
                 lastUpdatedCourseDate = TimeUtil.fromTimestampToLocalDateTime(

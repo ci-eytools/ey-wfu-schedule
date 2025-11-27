@@ -7,9 +7,6 @@ import java.time.LocalDateTime
  */
 data class SystemConfEntity(
 
-    /** 应用主题颜色 */
-    val seedColor: Int,
-
     /** 是否需要每日课程提醒 */
     val isNeedNotification: Boolean,
 

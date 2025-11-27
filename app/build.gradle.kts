@@ -116,7 +116,6 @@ dependencies {
     implementation(libs.androidx.security.crypto)
     implementation(libs.androidx.palette)
     implementation(libs.material.kolor)
-    implementation(libs.androidx.core.splashscreen)
 
     // ============ UI Libraries ============
     implementation(libs.material)

@@ -17,13 +17,20 @@ import java.io.File
  * 开屏页
  */
 @Composable
-fun SplashBackground(modifier: Modifier = Modifier) {
+fun SplashBackground(
+    isDefaultSplash: Boolean,
+    modifier: Modifier = Modifier
+) {
+
     val context = LocalContext.current
     val activity = context as Activity
-    val splash = File(activity.cacheDir, Const.SPLASH_IMAGE_NAME)
 
     val painter = rememberAsyncImagePainter(
-        model = splash.takeIf { splash.exists() } ?: R.drawable.default_splash_background
+        model = if (isDefaultSplash) R.drawable.default_splash_background
+        else File(
+            activity.cacheDir,
+            Const.SPLASH_IMAGE_NAME
+        )
     )
     Box {
         Image(

@@ -1,7 +1,6 @@
 package com.atri.seduley
 
 import android.annotation.SuppressLint
-import android.app.ActivityOptions
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
@@ -22,11 +21,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import com.atri.seduley.data.local.sp.SystemProvider
 import com.atri.seduley.ui.screen.splash.SplashBackground
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.delay
+import javax.inject.Inject
 
+@AndroidEntryPoint
 @SuppressLint("CustomSplashScreen")
 class SplashActivity : ComponentActivity() {
+
+    @Inject
+    lateinit var systemProvider: SystemProvider
 
     @RequiresApi(Build.VERSION_CODES.S)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -34,53 +40,36 @@ class SplashActivity : ComponentActivity() {
 
         setContent {
 
-            var beforeAlpha by remember { mutableFloatStateOf(1f) }
+            var alpha by remember { mutableFloatStateOf(0f) }
 
-            var defaultAlpha by remember { mutableFloatStateOf(0f) }
-
-            val defaultAlphaAnim by animateFloatAsState(
-                targetValue = defaultAlpha,
-                label = "DefaultAlphaAnimation",
-                animationSpec = tween(durationMillis = 1000)
-            )
-
-            val beforeAlphaAnim by animateFloatAsState(
-                targetValue = beforeAlpha,
-                label = "BeforeAlphaAnimation",
-                animationSpec = tween(durationMillis = 500)
+            val alphaAnim by animateFloatAsState(
+                targetValue = alpha,
+                animationSpec = tween(durationMillis = 300), // 淡入 300ms
+                label = ""
             )
 
             Box(Modifier.fillMaxSize()) {
                 Image(
                     painter = painterResource(R.drawable.default_splash_before_background),
-                    contentDescription = "Before Splash",
+                    contentDescription = null,
                     modifier = Modifier
-                        .fillMaxSize()
-                        .alpha(beforeAlphaAnim),
+                        .fillMaxSize(),
                     contentScale = ContentScale.Crop
                 )
-
                 SplashBackground(
+                    isDefaultSplash = systemProvider.isDefaultSplash(),
                     modifier = Modifier
                         .fillMaxSize()
-                        .alpha(defaultAlphaAnim)
+                        .alpha(alphaAnim)
                 )
             }
 
             LaunchedEffect(Unit) {
-                defaultAlpha = 1f
-                delay(600)
-                beforeAlpha = 0f
-                delay(500)
+                alpha = 1f
+                delay(300)
 
-                // 启动 MainActivity
                 val intent = Intent(this@SplashActivity, MainActivity::class.java)
-                val options = ActivityOptions.makeCustomAnimation(
-                    this@SplashActivity,
-                    android.R.anim.fade_in,
-                    android.R.anim.fade_out
-                )
-                startActivity(intent, options.toBundle())
+                startActivity(intent)
                 finish()
             }
         }

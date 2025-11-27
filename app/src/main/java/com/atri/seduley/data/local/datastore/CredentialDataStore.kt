@@ -20,7 +20,7 @@ import javax.inject.Singleton
  * - 明文密码使用后立即清零
  */
 @Singleton
-class CredentialDatastore @Inject constructor(
+class CredentialDataStore @Inject constructor(
     private val dataStore: DataStore<Preferences>,
     private val cryptoManager: CryptoManager
 ) {

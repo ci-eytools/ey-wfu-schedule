@@ -2,7 +2,6 @@ package com.atri.seduley.data.repository
 
 import com.atri.seduley.core.util.AppLogger
 import com.atri.seduley.core.util.TimeUtil.toMonday
-import com.atri.seduley.core.util.TimeUtil.weekDate
 import com.atri.seduley.data.local.database.StudentDao
 import com.atri.seduley.data.local.database.entity.SemesterEntity
 import com.atri.seduley.data.remote.api.CourseApi
@@ -48,9 +47,9 @@ class CourseRepositoryImpl @Inject constructor(
         }
         AppLogger.d("学期信息: $semester")
         val startDate = semester.startDate
+        AppLogger.d("startDate: $startDate")
         // 每次循环按周自增
         for (i in 0..semester.totalWeeks - 1) {
-            AppLogger.d("正在拉取第 ${i + 1} 周")
             val date = startDate.plusWeeks(i.toLong())
             val html = courseApi.getCoursePageHTML(date.formatter())
             courses.addAll(parseCourseHtml(date, html))
@@ -123,7 +122,7 @@ class CourseRepositoryImpl @Inject constructor(
                     }
                 }
 
-                val date = monDate.weekDate(weekly, colIdx)
+                val date = monDate.plusDays((colIdx - 1).toLong())
 
                 courses.add(
                     Course(

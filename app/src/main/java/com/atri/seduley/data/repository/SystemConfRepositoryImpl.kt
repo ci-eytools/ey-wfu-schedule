@@ -1,6 +1,6 @@
 package com.atri.seduley.data.repository
 
-import com.atri.seduley.data.local.datastore.SystemDatastore
+import com.atri.seduley.data.local.datastore.SystemDataStore
 import com.atri.seduley.data.local.datastore.entity.SystemConfEntity
 import com.atri.seduley.domain.repository.SystemConfRepository
 import javax.inject.Inject
@@ -11,7 +11,7 @@ import javax.inject.Singleton
  */
 @Singleton
 class SystemConfRepositoryImpl @Inject constructor(
-    private val systemDatastore: SystemDatastore
+    private val systemDatastore: SystemDataStore
 ) : SystemConfRepository {
 
     /** 保存主题颜色 */

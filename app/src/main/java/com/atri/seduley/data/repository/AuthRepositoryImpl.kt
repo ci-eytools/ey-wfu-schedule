@@ -7,7 +7,7 @@ import com.atri.seduley.core.exception.NetworkException
 import com.atri.seduley.core.util.AppLogger
 import com.atri.seduley.data.local.database.StudentDao
 import com.atri.seduley.data.local.database.entity.StudentEntity
-import com.atri.seduley.data.local.datastore.CredentialDatastore
+import com.atri.seduley.data.local.datastore.CredentialDataStore
 import com.atri.seduley.data.local.datastore.entity.CredentialEntity
 import com.atri.seduley.data.remote.api.CaptchaApi
 import com.atri.seduley.data.remote.api.InitApi
@@ -27,7 +27,7 @@ class AuthRepositoryImpl @Inject constructor(
     private val captchaApi: CaptchaApi,
     private val captchaRecognizer: CaptchaRecognizer,
     private val studentDao: StudentDao,
-    private val credentialDatastore: CredentialDatastore
+    private val credentialDatastore: CredentialDataStore
 ) : AuthRepository {
 
     @Volatile

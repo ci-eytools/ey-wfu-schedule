@@ -18,7 +18,7 @@ import javax.inject.Singleton
  * 系统设置信息存储库实现
  */
 @Singleton
-class SystemDatastore @Inject constructor(
+class SystemDataStore @Inject constructor(
     private val dataStore: DataStore<Preferences>
 ) {
 

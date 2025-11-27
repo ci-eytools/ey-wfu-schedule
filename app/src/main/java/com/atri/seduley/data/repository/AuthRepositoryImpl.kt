@@ -9,6 +9,7 @@ import com.atri.seduley.data.local.database.StudentDao
 import com.atri.seduley.data.local.database.entity.StudentEntity
 import com.atri.seduley.data.local.datastore.CredentialDataStore
 import com.atri.seduley.data.local.datastore.entity.CredentialEntity
+import com.atri.seduley.data.local.sp.CurrStudentProvider
 import com.atri.seduley.data.remote.api.CaptchaApi
 import com.atri.seduley.data.remote.api.InitApi
 import com.atri.seduley.data.remote.api.LoginApi
@@ -27,7 +28,8 @@ class AuthRepositoryImpl @Inject constructor(
     private val captchaApi: CaptchaApi,
     private val captchaRecognizer: CaptchaRecognizer,
     private val studentDao: StudentDao,
-    private val credentialDatastore: CredentialDataStore
+    private val credentialDatastore: CredentialDataStore,
+    private val currStudentProvider: CurrStudentProvider
 ) : AuthRepository {
 
     @Volatile
@@ -36,7 +38,8 @@ class AuthRepositoryImpl @Inject constructor(
     /** 使用当前用户发起登录请求 */
     override suspend fun login() {
         if (isCurrIdLogin) return
-        credentialDatastore.login { studentId, password ->
+        val studentId = currStudentProvider.getCurrStudentId()
+        credentialDatastore.login(studentId) { studentId, password ->
             loginAs(studentId, password) {}
         }
     }
@@ -93,7 +96,7 @@ class AuthRepositoryImpl @Inject constructor(
                     AppLogger.d("第 $i 次登录成功!")
                     studentDao.insert(StudentEntity(studentId = studentId))
                     credentialDatastore.saveCredential(CredentialEntity(studentId, password))
-                    credentialDatastore.setCurrentStudent(studentId)
+                    currStudentProvider.saveCurrStudentId(studentId)
                     block()
                     return
                 }
@@ -114,9 +117,12 @@ class AuthRepositoryImpl @Inject constructor(
     }
 
     /** 获取当前登录用户 id */
-    override suspend fun getCurrentStudentId(): String? {
-        return credentialDatastore.getCurrentStudent()
+    override fun getCurrStudentId(): String? {
+        return currStudentProvider.getCurrStudentId()
     }
+
+    /** 订阅当前登录用户 id */
+    override fun currStudentIdFlow() = currStudentProvider.seedCurrStudentId
 
     /** 获取所有用户 id */
     override suspend fun getAllStudentId(): List<String> {
@@ -124,15 +130,15 @@ class AuthRepositoryImpl @Inject constructor(
     }
 
     /** 切换当前登录用户 */
-    override suspend fun setCurrentStudent(studentId: String) {
+    override fun saveCurrStudent(studentId: String) {
         isCurrIdLogin = false
-        credentialDatastore.setCurrentStudent(studentId)
+        currStudentProvider.saveCurrStudentId(studentId)
     }
 
 
     /** 登出/删除当前用户 */
     override suspend fun logout() {
-        val currStudentId = getCurrentStudentId().orEmpty()
+        val currStudentId = getCurrStudentId().orEmpty()
         if (currStudentId.isEmpty()) {
             throw CredentialException("请先登录")
         }
@@ -143,13 +149,16 @@ class AuthRepositoryImpl @Inject constructor(
     override suspend fun logoutAs(studentId: String) {
         isCurrIdLogin = false
         credentialDatastore.clear(studentId)
+        if (studentId == currStudentProvider.getCurrStudentId()) {
+            currStudentProvider.clear()
+        }
     }
 
     /** 登出/删除所有用户 */
     override suspend fun logoutAll() {
+        currStudentProvider.clear()
         credentialDatastore.clearAll()
     }
-
 
     /** 获取加密参数 */
     private fun getEncoded(account: String, password: String, sessResp: String): String {

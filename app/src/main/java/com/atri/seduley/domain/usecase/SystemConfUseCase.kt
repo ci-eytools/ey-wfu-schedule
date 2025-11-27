@@ -3,16 +3,18 @@ package com.atri.seduley.domain.usecase
 import android.content.Context
 import android.graphics.BitmapFactory
 import androidx.compose.ui.graphics.toArgb
-import com.atri.seduley.core.util.AppLogger
 import com.atri.seduley.core.util.Const
 import com.atri.seduley.domain.model.SystemConf
 import com.atri.seduley.domain.model.mapper.toDomain
 import com.atri.seduley.domain.model.mapper.toEntity
 import com.atri.seduley.domain.repository.SystemConfRepository
-import com.atri.seduley.domain.result.SystemConfResult
+import com.atri.seduley.domain.result.Result
+import com.atri.seduley.domain.result.toReturn
+import com.atri.seduley.domain.result.toReturnSync
 import com.atri.seduley.ui.theme.extractDominantColor
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -27,7 +29,7 @@ data class SystemConfUseCase @Inject constructor(
     /**
      * 根据 cover 文件更新主题种子颜色。如果 cover 文件为 不存在，则重置为默认主题色
      */
-    suspend fun updateSeedColorByCover(): SystemConfResult = toReturn {
+    suspend fun updateSeedColorByCover(): Result<Unit> = toReturn {
         val defColor = Const.DEFAULT_SEED_COLOR_INT
         val cover = File(context.cacheDir, Const.COVER_IMAGE_NAME)
         val newColorInt = cover.let {
@@ -47,29 +49,22 @@ data class SystemConfUseCase @Inject constructor(
         systemConfRepository.saveSeedColor(newColorInt)
     }
 
+    /** 获取主题颜色 */
+    fun getSeedColor(): Result<Int> = toReturnSync { systemConfRepository.getSeedColor() }
+
+    /** 订阅主题颜色 */
+    fun seedColorFlow(): Result<Flow<Int>> = toReturnSync { systemConfRepository.seedColorFlow() }
+
     /** 保存系统设置信息 */
-    suspend fun saveSystemConfInfo(systemConf: SystemConf) = toReturn {
+    suspend fun saveSystemConfInfo(systemConf: SystemConf): Result<Unit> = toReturn {
         systemConfRepository.saveSystemConfInfo(systemConf.toEntity())
     }
 
     /** 获取系统设置信息 */
-    fun getSystemConfInfo(): SystemConfResult = try {
-        SystemConfResult.Success(systemConfRepository.getSystemConfInfo().map { it.toDomain() })
-    } catch (_: Exception) {
-        SystemConfResult.UnknownError
+    fun getSystemConfInfo(): Result<Flow<SystemConf>> = toReturnSync {
+        systemConfRepository.systemConfInfoFlow().map { it.toDomain() }
     }
 
     /** 清除系统设置信息 */
-    suspend fun clear() = toReturn { systemConfRepository.clear() }
-
-    /** 快速处理异常 */
-    private suspend fun toReturn(block: suspend () -> Unit): SystemConfResult {
-        return try {
-            block()
-            SystemConfResult.Success()
-        } catch (e: Exception) {
-            AppLogger.e(e)
-            SystemConfResult.UnknownError
-        }
-    }
+    suspend fun clear(): Result<Unit> = toReturn { systemConfRepository.clear() }
 }

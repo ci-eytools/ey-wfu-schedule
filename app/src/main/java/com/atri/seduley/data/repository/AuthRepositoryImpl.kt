@@ -117,7 +117,7 @@ class AuthRepositoryImpl @Inject constructor(
     }
 
     /** 获取当前登录用户 id */
-    override fun getCurrStudentId(): String? {
+    override fun getCurrStudentId(): String {
         return currStudentProvider.getCurrStudentId()
     }
 
@@ -138,7 +138,7 @@ class AuthRepositoryImpl @Inject constructor(
 
     /** 登出/删除当前用户 */
     override suspend fun logout() {
-        val currStudentId = getCurrStudentId().orEmpty()
+        val currStudentId = getCurrStudentId()
         if (currStudentId.isEmpty()) {
             throw CredentialException("请先登录")
         }

@@ -17,20 +17,21 @@ import javax.inject.Singleton
 class CurrStudentProvider @Inject constructor(@ApplicationContext context: Context) {
 
     private val prefs: SharedPreferences =
-        context.getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
+        context.getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
 
     companion object {
         private const val KEY_CURRENT_STUDENT_ID = "current_student_id"
+        const val NULL_STATE = ""
     }
 
     private val _currStudentIdFlow = MutableStateFlow(getCurrStudentId())
 
     /** 对外暴露的当前用户流 */
-    val seedCurrStudentId: StateFlow<String?> = _currStudentIdFlow.asStateFlow()
+    val seedCurrStudentId: StateFlow<String> = _currStudentIdFlow.asStateFlow()
 
     /** 获取当前用户 */
-    fun getCurrStudentId(): String? {
-        return prefs.getString(KEY_CURRENT_STUDENT_ID, null)
+    fun getCurrStudentId(): String {
+        return prefs.getString(KEY_CURRENT_STUDENT_ID, NULL_STATE) ?: NULL_STATE
     }
 
     /** 保存当前用户 */
@@ -43,7 +44,7 @@ class CurrStudentProvider @Inject constructor(@ApplicationContext context: Conte
 
     /** 清除当前用户 */
     fun clear() {
-        _currStudentIdFlow.value = null
+        _currStudentIdFlow.value = NULL_STATE
         prefs.edit(commit = false) {
             remove(KEY_CURRENT_STUDENT_ID)
         }

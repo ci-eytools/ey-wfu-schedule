@@ -8,7 +8,6 @@ import com.atri.seduley.core.exception.BaseException
 import com.atri.seduley.core.exception.CredentialException
 import com.atri.seduley.data.local.datastore.entity.CredentialEntity
 import com.atri.seduley.data.local.datastore.security.CryptoManager
-import com.atri.seduley.data.local.sp.CurrStudentProvider
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject

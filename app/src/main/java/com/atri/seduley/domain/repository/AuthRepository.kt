@@ -17,7 +17,7 @@ interface AuthRepository {
     fun getCurrStudentId(): String?
 
     /** 订阅当前登录用户 id */
-    fun currStudentIdFlow(): Flow<String?>
+    fun currStudentIdFlow(): Flow<String>
 
     /** 获取所有用户 id */
     suspend fun getAllStudentId(): List<String>

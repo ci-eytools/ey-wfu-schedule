@@ -5,7 +5,6 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.atri.seduley.core.util.AppLogger
 import com.atri.seduley.core.util.Const
 import com.atri.seduley.domain.model.Credential
 import com.atri.seduley.domain.model.SystemConf
@@ -77,7 +76,8 @@ class SettingViewModel @Inject constructor(
 
                 is SystemConfResult.UnknownError -> emitErr()
             }
-
+        }
+        viewModelScope.launch {
             when (val info = authUseCase.getCurrentStudentId()) {
                 is AuthResult.Success -> {
                     info.value?.let { studentId.value = it.studentId } ?: emitErr()

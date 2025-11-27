@@ -15,6 +15,7 @@ import com.atri.seduley.ui.theme.extractDominantColor
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -49,11 +50,14 @@ data class SystemConfUseCase @Inject constructor(
         systemConfRepository.saveSeedColor(newColorInt)
     }
 
+    /** 保存是否使用默认封面封面 */
+    fun saveDefaultSplash(isDefault: Boolean) = toReturnSync { systemConfRepository.saveDefaultSplash(isDefault) }
+
     /** 获取主题颜色 */
     fun getSeedColor(): Result<Int> = toReturnSync { systemConfRepository.getSeedColor() }
 
     /** 订阅主题颜色 */
-    fun seedColorFlow(): Result<Flow<Int>> = toReturnSync { systemConfRepository.seedColorFlow() }
+    fun seedColorFlow(): Result<StateFlow<Int>> = toReturnSync { systemConfRepository.seedColorFlow() }
 
     /** 保存系统设置信息 */
     suspend fun saveSystemConfInfo(systemConf: SystemConf): Result<Unit> = toReturn {

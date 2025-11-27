@@ -2,7 +2,7 @@ package com.atri.seduley.data.repository
 
 import com.atri.seduley.data.local.datastore.SystemDataStore
 import com.atri.seduley.data.local.datastore.entity.SystemConfEntity
-import com.atri.seduley.data.local.sp.ThemeProvider
+import com.atri.seduley.data.local.sp.SystemProvider
 import com.atri.seduley.domain.repository.SystemConfRepository
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -13,17 +13,20 @@ import javax.inject.Singleton
 @Singleton
 class SystemConfRepositoryImpl @Inject constructor(
     private val systemDataStore: SystemDataStore,
-    private val themeProvider: ThemeProvider
+    private val systemProvider: SystemProvider
 ) : SystemConfRepository {
 
     /** 保存主题颜色 */
-    override suspend fun saveSeedColor(color: Int) = themeProvider.saveSeedColor(color)
+    override fun saveSeedColor(color: Int) = systemProvider.saveSeedColor(color)
+
+    /** 保存是否使用默认封面封面 */
+    override fun saveDefaultSplash(isDefault: Boolean) = systemProvider.saveDefaultSplash(isDefault)
 
     /** 获取主题颜色 */
-    override fun getSeedColor() = themeProvider.getSeedColor()
+    override fun getSeedColor() = systemProvider.getSeedColor()
 
     /** 订阅主题颜色 */
-    override fun seedColorFlow() = themeProvider.seedColorFlow
+    override fun seedColorFlow() = systemProvider.seedColorFlow
 
     /** 保存系统设置信息 */
     override suspend fun saveSystemConfInfo(systemConfiguration: SystemConfEntity) =

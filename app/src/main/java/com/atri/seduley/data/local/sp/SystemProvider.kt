@@ -15,13 +15,14 @@ import javax.inject.Singleton
  * 主题颜色存储库实现，基于 SharedPreferences
  */
 @Singleton
-class ThemeProvider @Inject constructor(@ApplicationContext context: Context) {
+class SystemProvider @Inject constructor(@ApplicationContext context: Context) {
 
     private val prefs: SharedPreferences =
-        context.getSharedPreferences("theme_prefs", Context.MODE_PRIVATE)
+        context.getSharedPreferences("system_prefs", Context.MODE_PRIVATE)
 
     companion object {
         private const val KEY_SEED_COLOR = "seed_color"
+        private const val KEY_DEFAULT_SPLASH = "is_default_splash"
     }
 
     private val _seedColorFlow = MutableStateFlow(
@@ -38,6 +39,16 @@ class ThemeProvider @Inject constructor(@ApplicationContext context: Context) {
         _seedColorFlow.value = color
         prefs.edit(commit = false) {
             putInt(KEY_SEED_COLOR, color)
+        }
+    }
+
+    fun isDefaultSplash(): Boolean {
+        return prefs.getBoolean(KEY_DEFAULT_SPLASH, true)
+    }
+
+    fun saveDefaultSplash(isDefault: Boolean) {
+        prefs.edit(commit = false) {
+            putBoolean(KEY_DEFAULT_SPLASH, isDefault)
         }
     }
 }

@@ -50,9 +50,6 @@ data class SystemConfUseCase @Inject constructor(
         systemConfRepository.saveSeedColor(newColorInt)
     }
 
-    /** 保存是否使用默认封面封面 */
-    fun saveDefaultSplash(isDefault: Boolean) = toReturnSync { systemConfRepository.saveDefaultSplash(isDefault) }
-
     /** 获取主题颜色 */
     fun getSeedColor(): Result<Int> = toReturnSync { systemConfRepository.getSeedColor() }
 

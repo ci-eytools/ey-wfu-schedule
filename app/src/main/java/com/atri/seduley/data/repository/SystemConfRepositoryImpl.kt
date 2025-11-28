@@ -19,9 +19,6 @@ class SystemConfRepositoryImpl @Inject constructor(
     /** 保存主题颜色 */
     override fun saveSeedColor(color: Int) = systemProvider.saveSeedColor(color)
 
-    /** 保存是否使用默认封面封面 */
-    override fun saveDefaultSplash(isDefault: Boolean) = systemProvider.saveDefaultSplash(isDefault)
-
     /** 获取主题颜色 */
     override fun getSeedColor() = systemProvider.getSeedColor()
 

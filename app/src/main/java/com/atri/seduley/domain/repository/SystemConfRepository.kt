@@ -12,9 +12,6 @@ interface SystemConfRepository {
     /** 保存主题颜色 */
     fun saveSeedColor(color: Int)
 
-    /** 保存是否使用默认封面封面 */
-    fun saveDefaultSplash(isDefault: Boolean)
-
     /** 获取主题颜色 */
     fun getSeedColor(): Int
 

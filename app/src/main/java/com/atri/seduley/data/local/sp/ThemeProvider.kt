@@ -15,10 +15,10 @@ import javax.inject.Singleton
  * 主题颜色存储库实现，基于 SharedPreferences
  */
 @Singleton
-class SystemProvider @Inject constructor(@ApplicationContext context: Context) {
+class ThemeProvider @Inject constructor(@ApplicationContext context: Context) {
 
     private val prefs: SharedPreferences =
-        context.getSharedPreferences("system_prefs", Context.MODE_PRIVATE)
+        context.getSharedPreferences("theme_prefs", Context.MODE_PRIVATE)
 
     companion object {
         private const val KEY_SEED_COLOR = "seed_color"

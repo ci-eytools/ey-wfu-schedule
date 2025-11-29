@@ -9,7 +9,7 @@ import androidx.annotation.RequiresApi
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.core.view.WindowCompat
-import com.atri.seduley.data.local.sp.SystemProvider
+import com.atri.seduley.data.local.sp.ThemeProvider
 import com.atri.seduley.ui.navigation.AppNav
 import com.atri.seduley.ui.theme.AppTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -19,7 +19,7 @@ import javax.inject.Inject
 class MainActivity : ComponentActivity() {
 
     @Inject
-    lateinit var systemProvider: SystemProvider
+    lateinit var systemProvider: ThemeProvider
 
     @RequiresApi(Build.VERSION_CODES.S)
     override fun onCreate(savedInstanceState: Bundle?) {

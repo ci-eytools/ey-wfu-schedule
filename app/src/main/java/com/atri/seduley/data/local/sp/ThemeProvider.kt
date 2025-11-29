@@ -30,10 +30,6 @@ class ThemeProvider @Inject constructor(@ApplicationContext context: Context) {
 
     val seedColorFlow: StateFlow<Int> = _seedColorFlow.asStateFlow()
 
-    fun getSeedColor(): Int {
-        return prefs.getInt(KEY_SEED_COLOR, Const.DEFAULT_SEED_COLOR_INT)
-    }
-
     fun saveSeedColor(color: Int) {
         _seedColorFlow.value = color
         prefs.edit(commit = false) {

@@ -5,7 +5,6 @@ import com.atri.seduley.domain.model.Credential
 import com.atri.seduley.domain.repository.AuthRepository
 import com.atri.seduley.domain.result.Result
 import com.atri.seduley.domain.result.toReturn
-import com.atri.seduley.domain.result.toReturnSync
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import javax.inject.Inject
@@ -59,6 +58,5 @@ data class AuthUseCase @Inject constructor(
     }
 
     /** 订阅当前用户 id */
-    fun observeCurrentStudentId(): Result<Flow<Long?>> =
-        toReturnSync { authRepository.observeCurrentStudentId() }
+    fun observeCurrentStudentId(): Flow<Long?> = authRepository.observeCurrentStudentId()
 }

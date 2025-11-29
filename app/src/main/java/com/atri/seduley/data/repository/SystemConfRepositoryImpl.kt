@@ -4,6 +4,7 @@ import com.atri.seduley.data.local.datastore.SystemDataStore
 import com.atri.seduley.data.local.datastore.entity.SystemConfEntity
 import com.atri.seduley.data.local.sp.ThemeProvider
 import com.atri.seduley.domain.repository.SystemConfRepository
+import kotlinx.coroutines.flow.StateFlow
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -19,17 +20,14 @@ class SystemConfRepositoryImpl @Inject constructor(
     /** 保存主题颜色 */
     override fun saveSeedColor(color: Int) = themeProvider.saveSeedColor(color)
 
-    /** 获取主题颜色 */
-    override fun getSeedColor() = themeProvider.getSeedColor()
-
-    /** 订阅主题颜色 */
-    override fun seedColorFlow() = themeProvider.seedColorFlow
+    /** 主题颜色流 */
+    override fun seedColorFlow(): StateFlow<Int> = themeProvider.seedColorFlow
 
     /** 保存系统设置信息 */
     override suspend fun saveSystemConfInfo(systemConfiguration: SystemConfEntity) =
         systemDataStore.saveSystemConfInfo(systemConfiguration)
 
-    /** 订阅系统设置信息 */
+    /** 观察系统设置信息 */
     override fun systemConfInfoFlow() = systemDataStore.systemConfInfoFlow()
 
     /** 清除系统设置信息 */

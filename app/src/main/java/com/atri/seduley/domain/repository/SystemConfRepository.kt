@@ -12,16 +12,13 @@ interface SystemConfRepository {
     /** 保存主题颜色 */
     fun saveSeedColor(color: Int)
 
-    /** 获取主题颜色 */
-    fun getSeedColor(): Int
-
-    /** 订阅主题颜色 */
+    /** 主题颜色流 */
     fun seedColorFlow(): StateFlow<Int>
 
     /** 保存系统设置信息 */
     suspend fun saveSystemConfInfo(systemConfiguration: SystemConfEntity)
 
-    /** 订阅系统设置信息 */
+    /** 观察系统设置信息 */
     fun systemConfInfoFlow(): Flow<SystemConfEntity>
 
     /** 清除系统设置信息 */

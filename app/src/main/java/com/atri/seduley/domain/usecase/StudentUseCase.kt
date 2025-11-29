@@ -1,10 +1,13 @@
 package com.atri.seduley.domain.usecase
 
 import com.atri.seduley.core.exception.CredentialException
-import com.atri.seduley.core.util.AppLogger
+import com.atri.seduley.domain.model.Semester
 import com.atri.seduley.domain.repository.AuthRepository
 import com.atri.seduley.domain.repository.StudentRepository
-import com.atri.seduley.domain.result.StudentResult
+import com.atri.seduley.domain.result.Result
+import com.atri.seduley.domain.result.toReturn
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 
 data class StudentUseCase @Inject constructor(
@@ -12,27 +15,20 @@ data class StudentUseCase @Inject constructor(
     private val authRepository: AuthRepository
 ) {
 
-    suspend fun getStudentInfo(
-        studentId: String? = null
-    ): StudentResult {
-        return try {
-            val currStudentId = parseStudentId(studentId)
-            val student = studentRepository.getStudentInfo(currStudentId)
-            StudentResult.Success(student)
-        } catch (e: CredentialException) {
-            return StudentResult.AuthError(e.message)
-        } catch (e: Exception) {
-            AppLogger.e(e)
-            return StudentResult.UnknownError
-        }
+    suspend fun observeSemester(studentId: String? = null): Flow<Semester?> =
+        studentRepository.observeSemester(resolveStudentId(studentId?.toLong()))
+
+    suspend fun clearStudent(studentId: String? = null): Result<Unit> = toReturn {
+        studentRepository.clearStudent(resolveStudentId(studentId?.toLong()))
     }
 
     /** 解析用户 id */
-    private suspend fun parseStudentId(studentId: String?): String {
-        val allIds = authRepository.getAllStudentId()
+    private suspend fun resolveStudentId(studentId: Long?): Long {
+        val allIds = authRepository.observeStudentIds().first()
+        val currentId = authRepository.observeCurrentStudentId().first()
         return when {
             studentId != null && allIds.contains(studentId) -> studentId
-            studentId == null && allIds.isNotEmpty() -> allIds.first()
+            studentId == null && currentId != null -> currentId
             else -> throw CredentialException("未登录或未找到用户")
         }
     }

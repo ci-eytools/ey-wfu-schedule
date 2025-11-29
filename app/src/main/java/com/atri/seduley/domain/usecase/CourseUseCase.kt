@@ -24,9 +24,9 @@ data class CourseUseCase @Inject constructor(
     suspend fun observeCourses(
         studentId: String? = null,
         date: LocalDate = LocalDate.now()
-    ): Result<Flow<List<Course?>>> = toReturn {
+    ): Flow<List<Course?>> {
         val currStudentId = resolveStudentId(studentId?.toLong())
-        courseRepository.observeCoursesByStudentIdAndDate(currStudentId, date)
+        return courseRepository.observeCoursesByStudentIdAndDate(currStudentId, date)
     }
 
     /** 更新课表 */
@@ -51,9 +51,10 @@ data class CourseUseCase @Inject constructor(
     /** 解析用户 id */
     private suspend fun resolveStudentId(studentId: Long?): Long {
         val allIds = authRepository.observeStudentIds().first()
+        val currentId = authRepository.observeCurrentStudentId().first()
         return when {
             studentId != null && allIds.contains(studentId) -> studentId
-            studentId == null && allIds.isNotEmpty() -> allIds.first()
+            studentId == null && currentId != null -> currentId
             else -> throw CredentialException("未登录或未找到用户")
         }
     }

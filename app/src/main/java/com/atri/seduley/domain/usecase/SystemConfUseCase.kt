@@ -50,11 +50,8 @@ data class SystemConfUseCase @Inject constructor(
         systemConfRepository.saveSeedColor(newColorInt)
     }
 
-    /** 获取主题颜色 */
-    fun getSeedColor(): Result<Int> = toReturnSync { systemConfRepository.getSeedColor() }
-
-    /** 订阅主题颜色 */
-    fun seedColorFlow(): Result<StateFlow<Int>> = toReturnSync { systemConfRepository.seedColorFlow() }
+    /** 主题颜色流 */
+    fun seedColorFlow(): StateFlow<Int> =  systemConfRepository.seedColorFlow()
 
     /** 保存系统设置信息 */
     suspend fun saveSystemConfInfo(systemConf: SystemConf): Result<Unit> = toReturn {

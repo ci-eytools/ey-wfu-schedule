@@ -21,7 +21,7 @@ interface StudentDao {
     @Query("SELECT * FROM students WHERE studentId = :studentId")
     fun observeStudentByStudentId(studentId: Long): Flow<StudentEntity?>
 
-    fun getSemesterByStudentId(studentId: Long): Flow<SemesterEntity?> {
+    fun observeSemesterByStudentId(studentId: Long): Flow<SemesterEntity?> {
         return observeStudentByStudentId(studentId).map { it?.semester }
     }
 
@@ -45,4 +45,7 @@ interface StudentDao {
 
     @Query("SELECT studentId FROM students")
     fun observeStudentIds(): Flow<List<Long>>
+
+    @Query("DELETE FROM students WHERE studentId = :studentId")
+    suspend fun clearStudent(studentId: Long)
 }

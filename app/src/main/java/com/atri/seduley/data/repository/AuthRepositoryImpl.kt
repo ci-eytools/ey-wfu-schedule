@@ -6,7 +6,6 @@ import com.atri.seduley.core.exception.LoginException
 import com.atri.seduley.core.exception.NetworkException
 import com.atri.seduley.core.util.AppLogger
 import com.atri.seduley.data.local.database.StudentDao
-import com.atri.seduley.data.local.database.entity.StudentEntity
 import com.atri.seduley.data.local.datastore.CredentialDataStore
 import com.atri.seduley.data.local.datastore.entity.CredentialEntity
 import com.atri.seduley.data.remote.api.CaptchaApi

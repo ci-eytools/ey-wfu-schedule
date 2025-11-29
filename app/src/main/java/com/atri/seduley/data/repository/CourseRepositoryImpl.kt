@@ -43,7 +43,7 @@ class CourseRepositoryImpl @Inject constructor(
     }
 
     /** 观察本地每日课表 */
-    override suspend fun observeCoursesByStudentIdAndDate(studentId: Long, date: LocalDate): Flow<List<Course?>> {
+    override suspend fun observeCoursesByStudentIdAndDate(studentId: Long, date: LocalDate): Flow<List<Course>> {
         return courseDao.observeCoursesByStudentIdAndDate(studentId, date).map { entities ->
             entities.map { it.toDomain() }
         }
@@ -52,7 +52,7 @@ class CourseRepositoryImpl @Inject constructor(
     /** 从远端获取本学期所有课表 */
     override suspend fun getAllCoursesFromRemote(studentId: Long): List<Course> {
         val courses = mutableListOf<Course>()
-        var semester = studentDao.getSemesterByStudentId(studentId).first()
+        var semester = studentDao.observeSemesterByStudentId(studentId).first()
         if (semester == null || semester.totalWeeks < 0) {
             val html = homeApi.getHome()
             semester = parseSemesterInfo(html)

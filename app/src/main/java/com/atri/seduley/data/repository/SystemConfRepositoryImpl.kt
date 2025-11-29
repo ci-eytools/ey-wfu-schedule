@@ -13,17 +13,17 @@ import javax.inject.Singleton
 @Singleton
 class SystemConfRepositoryImpl @Inject constructor(
     private val systemDataStore: SystemDataStore,
-    private val systemProvider: ThemeProvider
+    private val themeProvider: ThemeProvider
 ) : SystemConfRepository {
 
     /** 保存主题颜色 */
-    override fun saveSeedColor(color: Int) = systemProvider.saveSeedColor(color)
+    override fun saveSeedColor(color: Int) = themeProvider.saveSeedColor(color)
 
     /** 获取主题颜色 */
-    override fun getSeedColor() = systemProvider.getSeedColor()
+    override fun getSeedColor() = themeProvider.getSeedColor()
 
     /** 订阅主题颜色 */
-    override fun seedColorFlow() = systemProvider.seedColorFlow
+    override fun seedColorFlow() = themeProvider.seedColorFlow
 
     /** 保存系统设置信息 */
     override suspend fun saveSystemConfInfo(systemConfiguration: SystemConfEntity) =

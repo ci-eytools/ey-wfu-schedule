@@ -22,19 +22,19 @@ data class CourseUseCase @Inject constructor(
      * 向数据库请求
      */
     suspend fun observeCourses(
-        studentId: String? = null,
+        studentId: Long? = null,
         date: LocalDate = LocalDate.now()
     ): Flow<List<Course?>> {
-        val currStudentId = resolveStudentId(studentId?.toLong())
+        val currStudentId = resolveStudentId(studentId)
         return courseRepository.observeCoursesByStudentIdAndDate(currStudentId, date)
     }
 
     /** 更新课表 */
     suspend fun updateCourseFromRemote(
-        studentId: String? = null,
+        studentId: Long? = null,
         isNeedLogin: Boolean = true
     ): Result<Unit> = toReturn {
-        val currStudentId = resolveStudentId(studentId?.toLong())
+        val currStudentId = resolveStudentId(studentId)
         if (isNeedLogin) authRepository.loginAs(currStudentId)
         val courses = courseRepository.getAllCoursesFromRemote(currStudentId)
         courseRepository.insertCourses(currStudentId, courses)
@@ -42,9 +42,9 @@ data class CourseUseCase @Inject constructor(
 
     /** 清除课表 */
     suspend fun clearCourse(
-        studentId: String? = null
+        studentId: Long? = null
     ): Result<Unit> = toReturn {
-        val currStudentId = resolveStudentId(studentId?.toLong())
+        val currStudentId = resolveStudentId(studentId)
         courseRepository.clearCourses(currStudentId)
     }
 

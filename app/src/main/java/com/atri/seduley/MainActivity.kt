@@ -9,15 +9,10 @@ import androidx.annotation.RequiresApi
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.core.view.WindowCompat
-import com.atri.seduley.core.exception.BaseException
-import com.atri.seduley.core.util.Const
-import com.atri.seduley.data.local.sp.ThemeProvider
-import com.atri.seduley.domain.result.Result
 import com.atri.seduley.domain.usecase.SystemConfUseCase
 import com.atri.seduley.ui.navigation.AppNav
 import com.atri.seduley.ui.theme.AppTheme
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.flow.StateFlow
 import javax.inject.Inject
 
 @AndroidEntryPoint

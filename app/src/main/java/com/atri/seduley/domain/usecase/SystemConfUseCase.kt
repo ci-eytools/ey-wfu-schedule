@@ -10,7 +10,6 @@ import com.atri.seduley.domain.model.mapper.toEntity
 import com.atri.seduley.domain.repository.SystemConfRepository
 import com.atri.seduley.domain.result.Result
 import com.atri.seduley.domain.result.toReturn
-import com.atri.seduley.domain.result.toReturnSync
 import com.atri.seduley.ui.theme.extractDominantColor
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
@@ -51,7 +50,7 @@ data class SystemConfUseCase @Inject constructor(
     }
 
     /** 主题颜色流 */
-    fun seedColorFlow(): StateFlow<Int> =  systemConfRepository.seedColorFlow()
+    fun seedColorFlow(): StateFlow<Int> = systemConfRepository.seedColorFlow()
 
     /** 保存系统设置信息 */
     suspend fun saveSystemConfInfo(systemConf: SystemConf): Result<Unit> = toReturn {
@@ -59,8 +58,8 @@ data class SystemConfUseCase @Inject constructor(
     }
 
     /** 获取系统设置信息 */
-    fun getSystemConfInfo(): Result<Flow<SystemConf>> = toReturnSync {
-        systemConfRepository.systemConfInfoFlow().map { it.toDomain() }
+    fun getSystemConfInfo(): Flow<SystemConf> {
+        return systemConfRepository.systemConfInfoFlow().map { it.toDomain() }
     }
 
     /** 清除系统设置信息 */

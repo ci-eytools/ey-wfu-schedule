@@ -8,8 +8,7 @@ import java.time.LocalDate
 @Entity(
     tableName = "courses",
     indices = [
-        Index(value = ["studentId"]),
-        Index(value = ["date"]),
+        Index(value = ["studentId", "date"])
     ]
 )
 data class CourseEntity(

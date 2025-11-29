@@ -15,11 +15,11 @@ data class StudentUseCase @Inject constructor(
     private val authRepository: AuthRepository
 ) {
 
-    suspend fun observeSemester(studentId: String? = null): Flow<Semester?> =
-        studentRepository.observeSemester(resolveStudentId(studentId?.toLong()))
+    suspend fun observeSemester(studentId: Long? = null): Flow<Semester?> =
+        studentRepository.observeSemester(resolveStudentId(studentId))
 
-    suspend fun clearStudent(studentId: String? = null): Result<Unit> = toReturn {
-        studentRepository.clearStudent(resolveStudentId(studentId?.toLong()))
+    suspend fun clearStudent(studentId: Long? = null): Result<Unit> = toReturn {
+        studentRepository.clearStudent(resolveStudentId(studentId))
     }
 
     /** 解析用户 id */

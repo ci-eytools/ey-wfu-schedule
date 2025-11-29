@@ -29,7 +29,7 @@ data class AuthUseCase @Inject constructor(
             authRepository.login()
         } else {
             authRepository.loginAs(
-                studentId = credential.studentId.toLong(),
+                studentId = credential.studentId,
                 password = credential.password,
                 block
             )
@@ -48,13 +48,9 @@ data class AuthUseCase @Inject constructor(
 
     /** 登出 */
     suspend fun logout(
-        studentId: String? = null
+        studentId: Long? = null
     ): Result<Unit> = toReturn {
-        if (studentId.isNullOrEmpty()) {
-            authRepository.logout()
-        } else {
-            authRepository.logoutAs(studentId.toLong())
-        }
+        studentId?.let { authRepository.logoutAs(it) } ?: authRepository.logout()
     }
 
     /** 订阅当前用户 id */

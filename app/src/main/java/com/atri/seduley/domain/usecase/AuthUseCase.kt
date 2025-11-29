@@ -7,6 +7,7 @@ import com.atri.seduley.domain.result.Result
 import com.atri.seduley.domain.result.toReturn
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 /**
@@ -54,5 +55,6 @@ data class AuthUseCase @Inject constructor(
     }
 
     /** 订阅当前用户 id */
-    fun observeCurrentStudentId(): Flow<Long?> = authRepository.observeCurrentStudentId()
+    fun observeCurrentStudentId(): Flow<Long> =
+        authRepository.observeCurrentStudentId().map { it ?: -1L }
 }

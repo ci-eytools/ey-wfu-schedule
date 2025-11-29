@@ -5,6 +5,7 @@ import com.atri.seduley.core.exception.CredentialException
 import com.atri.seduley.core.exception.LoginException
 import com.atri.seduley.core.exception.NetworkException
 import com.atri.seduley.core.util.AppLogger
+import com.atri.seduley.core.util.Const
 import com.atri.seduley.data.local.database.StudentDao
 import com.atri.seduley.data.local.datastore.CredentialDataStore
 import com.atri.seduley.data.local.datastore.entity.CredentialEntity
@@ -38,7 +39,7 @@ class AuthRepositoryImpl @Inject constructor(
     override suspend fun login() {
         if (isCurrIdLogin) return
         val studentId = credentialDatastore.observeCurrentStudentId().first()
-        if (studentId == null) throw CredentialException("请先登录")
+        if (studentId == Const.LONG_SENTINEL_VALUE) throw CredentialException("请先登录")
         credentialDatastore.login(studentId) { studentId, password ->
             loginAs(studentId, password) {}
         }
@@ -133,7 +134,7 @@ class AuthRepositoryImpl @Inject constructor(
     /** 登出/删除当前用户 */
     override suspend fun logout() {
         val currentStudentId = credentialDatastore.observeCurrentStudentId().first()
-        if (currentStudentId == null) {
+        if (currentStudentId == Const.LONG_SENTINEL_VALUE) {
             throw CredentialException("请先登录")
         }
         logoutAs(currentStudentId)

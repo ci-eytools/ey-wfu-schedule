@@ -13,8 +13,8 @@ class StudentRepositoryImpl @Inject constructor(
 ) : StudentRepository {
 
     /** 观察学期信息 */
-    override fun observeSemester(studentId: Long): Flow<Semester?> {
-        return studentDao.observeSemesterByStudentId(studentId).map { it -> it?.toDomain() }
+    override fun observeSemester(studentId: Long): Flow<Semester> {
+        return studentDao.observeSemesterByStudentId(studentId).map { it?.toDomain() ?: Semester() }
     }
 
     /** 清除学生 */

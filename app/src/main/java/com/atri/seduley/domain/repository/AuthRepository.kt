@@ -8,28 +8,25 @@ interface AuthRepository {
     suspend fun login()
 
     /** 使用指定已存在用户发起登录请求 */
-    suspend fun loginAs(studentId: String)
+    suspend fun loginAs(studentId: Long)
 
     /** 使用指定新用户发起登录请求 */
-    suspend fun loginAs(studentId: String, password: String, block: suspend () -> Unit)
+    suspend fun loginAs(studentId: Long, password: String, block: suspend () -> Unit)
 
-    /** 获取当前登录用户 id */
-    fun getCurrStudentId(): String?
+    /** 观察当前登录用户 id */
+    fun observeCurrentStudentId(): Flow<Long?>
 
-    /** 订阅当前登录用户 id */
-    fun currStudentIdFlow(): Flow<String>
-
-    /** 获取所有用户 id */
-    suspend fun getAllStudentId(): List<String>
+    /** 观察所有用户 id */
+    fun observeStudentIds(): Flow<List<Long>>
 
     /** 切换当前登录用户 */
-    fun saveCurrStudent(studentId: String)
+    suspend fun saveCurrentStudent(studentId: Long)
 
     /** 登出/删除当前用户 */
     suspend fun logout()
 
     /** 登出/删除指定用户 */
-    suspend fun logoutAs(studentId: String)
+    suspend fun logoutAs(studentId: Long)
 
     /** 登出/删除所有用户 */
     suspend fun logoutAll()

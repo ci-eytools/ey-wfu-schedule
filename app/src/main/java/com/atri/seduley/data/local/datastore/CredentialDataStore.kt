@@ -3,8 +3,8 @@ package com.atri.seduley.data.local.datastore
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
-import com.atri.seduley.core.exception.BaseException
 import com.atri.seduley.core.exception.CredentialException
 import com.atri.seduley.data.local.datastore.entity.CredentialEntity
 import com.atri.seduley.data.local.datastore.security.CryptoManager
@@ -28,27 +28,26 @@ class CredentialDataStore @Inject constructor(
 ) {
 
     // 每个 studentId 对应的键
-    private fun studentIdKey(studentId: String) = stringPreferencesKey("student_id:$studentId")
-    private fun encryptPasswordKey(studentId: String) =
+    private fun studentIdKey(studentId: Long) = longPreferencesKey("student_id:$studentId")
+    private fun encryptPasswordKey(studentId: Long) =
         stringPreferencesKey("password_encrypted:$studentId")
 
     private object Key {
-        val CURRENT_STUDENT_ID = stringPreferencesKey("student_id")
+        val CURRENT_STUDENT_ID = longPreferencesKey("current_student_id")
     }
 
-    suspend fun saveCurrentStudentId(studentId: String) {
+    suspend fun saveCurrentStudentId(studentId: Long) {
         dataStore.edit { it[Key.CURRENT_STUDENT_ID] = studentId }
     }
 
     /** 观察当前登录 id */
-    fun observeCurrentStudentId(): Flow<String?> {
+    fun observeCurrentStudentId(): Flow<Long?> {
         return dataStore.data.map { it[Key.CURRENT_STUDENT_ID] }
     }
 
     /** 保存用户凭证 */
     suspend fun saveCredential(credentialEntity: CredentialEntity) {
         val studentId = credentialEntity.studentId
-        if (studentId.isEmpty()) return
 
         dataStore.edit { prefs ->
             prefs[studentIdKey(studentId)] = studentId
@@ -65,11 +64,7 @@ class CredentialDataStore @Inject constructor(
      * - 使用后 ByteArray 被清零
      * - 默认使用当前用户
      */
-    suspend fun <T> login(studentId: String?, block: suspend (String, String) -> T): T {
-        val id = studentId ?: throw BaseException()
-        if (id.isEmpty()) {
-            throw CredentialException("用户凭证为空")
-        }
+    suspend fun <T> login(studentId: Long, block: suspend (Long, String) -> T): T {
         val encrypted = getEncryptPassword(studentId)
         val plain = cryptoManager.decrypt(encrypted)
 
@@ -81,10 +76,13 @@ class CredentialDataStore @Inject constructor(
     }
 
     /** 清除指定用户的凭证 */
-    suspend fun clear(studentId: String) {
+    suspend fun clear(studentId: Long) {
         dataStore.edit {
             it.remove(studentIdKey(studentId))
             it.remove(encryptPasswordKey(studentId))
+            if (studentId == it[Key.CURRENT_STUDENT_ID]) {
+                it.remove(Key.CURRENT_STUDENT_ID)
+            }
         }
     }
 
@@ -94,7 +92,7 @@ class CredentialDataStore @Inject constructor(
     }
 
     /** 获取指定用户的加密密码 */
-    private suspend fun getEncryptPassword(studentId: String): String {
+    private suspend fun getEncryptPassword(studentId: Long): String {
         val encrypted = dataStore.data.first()[encryptPasswordKey(studentId)]
         return encrypted ?: throw CredentialException("未持有该用户的登录凭证: $studentId")
     }

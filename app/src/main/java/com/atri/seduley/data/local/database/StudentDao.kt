@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.map
 @Dao
 interface StudentDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertStudent(student: StudentEntity)
+    suspend fun insert(student: StudentEntity)
 
     @Query("SELECT * FROM students WHERE studentId = :studentId")
     suspend fun getStudentByStudentId(studentId: Long): StudentEntity?

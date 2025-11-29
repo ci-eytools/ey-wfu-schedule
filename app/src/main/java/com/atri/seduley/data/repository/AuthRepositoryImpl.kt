@@ -9,7 +9,6 @@ import com.atri.seduley.data.local.database.StudentDao
 import com.atri.seduley.data.local.database.entity.StudentEntity
 import com.atri.seduley.data.local.datastore.CredentialDataStore
 import com.atri.seduley.data.local.datastore.entity.CredentialEntity
-import com.atri.seduley.data.local.sp.CurrStudentProvider
 import com.atri.seduley.data.remote.api.CaptchaApi
 import com.atri.seduley.data.remote.api.InitApi
 import com.atri.seduley.data.remote.api.LoginApi
@@ -17,6 +16,8 @@ import com.atri.seduley.data.remote.api.SESSApi
 import com.atri.seduley.data.remote.model.LoginReq
 import com.atri.seduley.domain.ml.CaptchaRecognizer
 import com.atri.seduley.domain.repository.AuthRepository
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import org.jsoup.Jsoup
 import java.io.IOException
 import javax.inject.Inject
@@ -28,8 +29,7 @@ class AuthRepositoryImpl @Inject constructor(
     private val captchaApi: CaptchaApi,
     private val captchaRecognizer: CaptchaRecognizer,
     private val studentDao: StudentDao,
-    private val credentialDatastore: CredentialDataStore,
-    private val currStudentProvider: CurrStudentProvider
+    private val credentialDatastore: CredentialDataStore
 ) : AuthRepository {
 
     @Volatile
@@ -38,21 +38,22 @@ class AuthRepositoryImpl @Inject constructor(
     /** 使用当前用户发起登录请求 */
     override suspend fun login() {
         if (isCurrIdLogin) return
-        val studentId = currStudentProvider.getCurrStudentId()
+        val studentId = credentialDatastore.observeCurrentStudentId().first()
+        if (studentId == null) throw CredentialException("请先登录")
         credentialDatastore.login(studentId) { studentId, password ->
             loginAs(studentId, password) {}
         }
     }
 
     /** 使用指定已存在用户发起登录请求 */
-    override suspend fun loginAs(studentId: String) {
+    override suspend fun loginAs(studentId: Long) {
         credentialDatastore.login(studentId) { studentId, password ->
             loginAs(studentId, password) {}
         }
     }
 
     /** 使用指定用户发起登录，成功后自动保存 */
-    override suspend fun loginAs(studentId: String, password: String, block: suspend () -> Unit) {
+    override suspend fun loginAs(studentId: Long, password: String, block: suspend () -> Unit) {
         try {
             // --- 步骤 1: 初始化会话 ---
             // 访问登录页，目的是让 CookieJar 获取到初始的 JSESSIONID
@@ -75,12 +76,12 @@ class AuthRepositoryImpl @Inject constructor(
                 AppLogger.d("步骤3: 获取SESS加密参数完成")
 
                 // 构造 encoded
-                val encoded = getEncoded(studentId, password, sessResp)
+                val encoded = getEncoded(studentId.toString(), password, sessResp)
 
                 // --- 步骤 4: 提交最终登录表单 ---
                 val loginResultResp = loginApi.login(
                     LoginReq(
-                        studentId = studentId,
+                        studentId = studentId.toString(),
                         password = password,
                         captcha = captcha,
                         encoded = encoded
@@ -94,9 +95,8 @@ class AuthRepositoryImpl @Inject constructor(
                 }
                 if (isLoginSuccess(loginResultResp)) {
                     AppLogger.d("第 $i 次登录成功!")
-                    studentDao.insert(StudentEntity(studentId = studentId))
                     credentialDatastore.saveCredential(CredentialEntity(studentId, password))
-                    currStudentProvider.saveCurrStudentId(studentId)
+                    credentialDatastore.saveCurrentStudentId(studentId)
                     block()
                     return
                 }
@@ -116,47 +116,38 @@ class AuthRepositoryImpl @Inject constructor(
         }
     }
 
-    /** 获取当前登录用户 id */
-    override fun getCurrStudentId(): String {
-        return currStudentProvider.getCurrStudentId()
-    }
+    /** 观察当前登录用户 id */
+    override fun observeCurrentStudentId() = credentialDatastore.observeCurrentStudentId()
 
-    /** 订阅当前登录用户 id */
-    override fun currStudentIdFlow() = currStudentProvider.seedCurrStudentId
-
-    /** 获取所有用户 id */
-    override suspend fun getAllStudentId(): List<String> {
-        return credentialDatastore.getAllStudentId()
+    /** 观察所有用户 id */
+    override fun observeStudentIds(): Flow<List<Long>> {
+        return studentDao.observeStudentIds()
     }
 
     /** 切换当前登录用户 */
-    override fun saveCurrStudent(studentId: String) {
+    override suspend fun saveCurrentStudent(studentId: Long) {
         isCurrIdLogin = false
-        currStudentProvider.saveCurrStudentId(studentId)
+        credentialDatastore.saveCurrentStudentId(studentId)
     }
 
 
     /** 登出/删除当前用户 */
     override suspend fun logout() {
-        val currStudentId = getCurrStudentId()
-        if (currStudentId.isEmpty()) {
+        val currentStudentId = credentialDatastore.observeCurrentStudentId().first()
+        if (currentStudentId == null) {
             throw CredentialException("请先登录")
         }
-        logoutAs(currStudentId)
+        logoutAs(currentStudentId)
     }
 
     /** 登出/删除指定用户 */
-    override suspend fun logoutAs(studentId: String) {
+    override suspend fun logoutAs(studentId: Long) {
         isCurrIdLogin = false
         credentialDatastore.clear(studentId)
-        if (studentId == currStudentProvider.getCurrStudentId()) {
-            currStudentProvider.clear()
-        }
     }
 
     /** 登出/删除所有用户 */
     override suspend fun logoutAll() {
-        currStudentProvider.clear()
         credentialDatastore.clearAll()
     }
 

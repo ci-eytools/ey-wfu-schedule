@@ -1,10 +1,9 @@
 package com.atri.seduley.data.local.database.entity
 
+import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
-import com.atri.seduley.data.local.database.converter.LocalDateSerializer
-import kotlinx.serialization.Serializable
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -13,33 +12,14 @@ import java.time.LocalDateTime
     indices = [Index(value = ["studentId"], unique = true)]
 )
 data class StudentEntity(
-    @PrimaryKey(autoGenerate = true)
-    val id: Long = 0,
-    val studentId: String = "",  // 唯一索引
-    val courses: List<CourseEntity> = emptyList(),
-    val semester: SemesterEntity = SemesterEntity(),
-    val createdAt: LocalDateTime = LocalDateTime.now(),
-    val updatedAt: LocalDateTime = LocalDateTime.now()
+    @PrimaryKey val studentId: Long,
+    @Embedded val semester: SemesterEntity,
+    val createdAt: LocalDateTime,
+    val updatedAt: LocalDateTime
 )
 
-@Serializable
-data class CourseEntity(
-    val name: String = "",
-    val credit: Int = 0,        // * 100 存 int
-    val type: String = "",
-    val location: String = "",
-    @Serializable(with = LocalDateSerializer::class)
-    val date: LocalDate = LocalDate.now(),
-    val weekly: Int = 0,        // 周次
-    val dayOfWeek: Int = 0,
-    val section: Int = 0        // 第几大节
-)
-
-@Serializable
 data class SemesterEntity(
-    @Serializable(with = LocalDateSerializer::class)
-    val startDate: LocalDate = LocalDate.now(),
-    @Serializable(with = LocalDateSerializer::class)
-    val endDate: LocalDate = LocalDate.now(),
-    val totalWeeks: Int = -1
+    val startDate: LocalDate,
+    val endDate: LocalDate,
+    val totalWeeks: Int
 )

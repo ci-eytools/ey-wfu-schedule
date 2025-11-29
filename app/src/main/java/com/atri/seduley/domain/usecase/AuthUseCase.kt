@@ -7,6 +7,7 @@ import com.atri.seduley.domain.result.Result
 import com.atri.seduley.domain.result.toReturn
 import com.atri.seduley.domain.result.toReturnSync
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 
 /**
@@ -29,10 +30,20 @@ data class AuthUseCase @Inject constructor(
             authRepository.login()
         } else {
             authRepository.loginAs(
-                studentId = credential.studentId,
+                studentId = credential.studentId.toLong(),
                 password = credential.password,
                 block
             )
+        }
+    }
+
+    suspend fun switchStudent(
+        studentId: String
+    ): Result<Unit> = toReturn {
+        if (authRepository.observeStudentIds().first().contains(studentId.toLong())) {
+            authRepository.saveCurrentStudent(studentId.toLong())
+        } else {
+            throw CredentialException("账号不存在")
         }
     }
 
@@ -43,20 +54,11 @@ data class AuthUseCase @Inject constructor(
         if (studentId.isNullOrEmpty()) {
             authRepository.logout()
         } else {
-            authRepository.logoutAs(studentId)
+            authRepository.logoutAs(studentId.toLong())
         }
     }
 
     /** 订阅当前用户 id */
-    fun currStudentIdFlow(): Result<Flow<String>> =
-        toReturnSync { authRepository.currStudentIdFlow() }
-
-    /** 获取当前用户 */
-    fun getCurrentStudentId(): Result<String> = toReturnSync {
-        val studentId = authRepository.getCurrStudentId()
-        if (studentId.isNullOrEmpty()) {
-            throw CredentialException("当前未登录任何用户")
-        }
-        studentId
-    }
+    fun observeCurrentStudentId(): Result<Flow<Long?>> =
+        toReturnSync { authRepository.observeCurrentStudentId() }
 }

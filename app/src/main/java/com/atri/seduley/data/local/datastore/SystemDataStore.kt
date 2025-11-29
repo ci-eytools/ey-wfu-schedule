@@ -29,10 +29,10 @@ class SystemDataStore @Inject constructor(
 
     /** 保存系统设置信息 */
     suspend fun saveSystemConfInfo(systemConfiguration: SystemConfEntity) {
-        dataStore.edit { prefs ->
-            prefs[Keys.IS_NEED_NOTIFICATION] = systemConfiguration.isNeedNotification
-            prefs[Keys.IS_NEED_UPDATE_COURSE] = systemConfiguration.isNeedUpdateCourse
-            prefs[Keys.LAST_UPDATED_COURSE_TIME] = TimeUtil.localDateTimeToTimestamp(
+        dataStore.edit {
+            it[Keys.IS_NEED_NOTIFICATION] = systemConfiguration.isNeedNotification
+            it[Keys.IS_NEED_UPDATE_COURSE] = systemConfiguration.isNeedUpdateCourse
+            it[Keys.LAST_UPDATED_COURSE_TIME] = TimeUtil.localDateTimeToTimestamp(
                 systemConfiguration.lastUpdatedCourseDate
             )
         }
@@ -53,8 +53,6 @@ class SystemDataStore @Inject constructor(
 
     /** 清除系统设置信息 */
     suspend fun clear() {
-        dataStore.edit {
-            it.clear()
-        }
+        dataStore.edit { it.clear() }
     }
 }

@@ -12,12 +12,12 @@ interface CourseDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertCourses(courses: List<CourseEntity>)
 
-    @Query("SELECT * FROM course WHERE studentId = :studentId AND date = :date ORDER BY section ASC")
-    fun getCoursesByStudentIdAndDate(studentId: Long, date: LocalDate): Flow<List<CourseEntity>>
+    @Query("SELECT * FROM courses WHERE studentId = :studentId AND date = :date ORDER BY section ASC")
+    fun observeCoursesByStudentIdAndDate(studentId: Long, date: LocalDate): Flow<List<CourseEntity>>
 
-    @Query("DELETE FROM course WHERE studentId = :studentId")
+    @Query("DELETE FROM courses WHERE studentId = :studentId")
     suspend fun clearCoursesByStudentId(studentId: Long)
 
-    @Query("DELETE FROM course")
+    @Query("DELETE FROM courses")
     suspend fun clearAllCourses()
 }

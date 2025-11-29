@@ -2,6 +2,7 @@ package com.atri.seduley.data.repository
 
 import com.atri.seduley.core.util.AppLogger
 import com.atri.seduley.core.util.TimeUtil.toMonday
+import com.atri.seduley.data.local.database.CourseDao
 import com.atri.seduley.data.local.database.StudentDao
 import com.atri.seduley.data.local.database.entity.SemesterEntity
 import com.atri.seduley.data.remote.api.CourseApi
@@ -10,6 +11,9 @@ import com.atri.seduley.domain.model.Course
 import com.atri.seduley.domain.model.mapper.toDomain
 import com.atri.seduley.domain.model.mapper.toEntity
 import com.atri.seduley.domain.repository.CourseRepository
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import org.jsoup.Jsoup
 import java.time.DayOfWeek
 import java.time.LocalDate
@@ -21,29 +25,45 @@ import javax.inject.Inject
  */
 class CourseRepositoryImpl @Inject constructor(
     private val studentDao: StudentDao,
+    private val courseDao: CourseDao,
     private val courseApi: CourseApi,
     private val homeApi: HomeApi
 ) : CourseRepository {
 
-    /** 更新课表 */
-    override suspend fun updateCourse(studentId: String, courses: List<Course>) {
-        studentDao.updateCourses(studentId, courses.map { it.toEntity() })
+    /** 插入所有课表
+     *
+     * 此方法会先删除传入 studentId 的所有课表，再插入新的课表
+     */
+    override suspend fun insertCourses(
+        studentId: Long,
+        courses: List<Course>
+    ) {
+        courseDao.clearCoursesByStudentId(studentId)
+        courseDao.insertCourses(courses.map { it.toEntity(studentId) })
     }
 
-    /** 从本地获取课表 */
-    override suspend fun getCoursesFromDB(studentId: String): List<Course> {
-        return studentDao.getCoursesByStudentId(studentId).map { it -> it.toDomain() }
+    /** 观察本地每日课表 */
+    override suspend fun observeCoursesByStudentIdAndDate(studentId: Long, date: LocalDate): Flow<List<Course?>> {
+        return courseDao.observeCoursesByStudentIdAndDate(studentId, date).map { entities ->
+            entities.map { it.toDomain() }
+        }
     }
 
     /** 从远端获取本学期所有课表 */
-    override suspend fun getCoursesFromRemote(studentId: String): List<Course> {
+    override suspend fun getAllCoursesFromRemote(studentId: Long): List<Course> {
         val courses = mutableListOf<Course>()
-        var semester = studentDao.getSemesterByStudentId(studentId)
+        var semester = studentDao.getSemesterByStudentId(studentId).first()
         if (semester == null || semester.totalWeeks < 0) {
             val html = homeApi.getHome()
             semester = parseSemesterInfo(html)
             // 本地为空就更新一下数据
-            studentDao.updateSemester(studentId, semester)
+            val (start, end, total) = semester
+            studentDao.updateSemester(
+                studentId = studentId,
+                startDate = start,
+                endDate = end,
+                totalWeeks = total
+            )
         }
         AppLogger.d("学期信息: $semester")
         val startDate = semester.startDate
@@ -57,15 +77,14 @@ class CourseRepositoryImpl @Inject constructor(
         return courses
     }
 
-
     /** 清除课表 */
-    override suspend fun clearCourses(studentId: String) {
-        studentDao.clearCoursesByStudentId(studentId)
+    override suspend fun clearCourses(studentId: Long) {
+        courseDao.clearCoursesByStudentId(studentId)
     }
 
     /** 清除所有课表 */
     override suspend fun clearAllCourses() {
-        studentDao.clearAllCourses()
+        courseDao.clearAllCourses()
     }
 
     /**

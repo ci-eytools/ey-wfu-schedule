@@ -8,6 +8,7 @@ import com.atri.seduley.data.local.database.entity.SemesterEntity
 import com.atri.seduley.data.local.database.entity.StudentEntity
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import java.time.LocalDate
 
 @Dao
 interface StudentDao {
@@ -23,6 +24,21 @@ interface StudentDao {
     fun getSemesterByStudentId(studentId: Long): Flow<SemesterEntity?> {
         return observeStudentByStudentId(studentId).map { it?.semester }
     }
+
+    @Query("""
+        UPDATE students
+            SET startDate = :startDate,
+            endDate = :endDate,
+            totalWeeks = :totalWeeks
+        WHERE studentId = :studentId
+        """
+    )
+    suspend fun updateSemester(
+        studentId: Long,
+        startDate: LocalDate,
+        endDate: LocalDate,
+        totalWeeks: Int
+    )
 
     @Query("SELECT studentId FROM students")
     suspend fun getStudentIds(): List<Long>

@@ -17,8 +17,10 @@ fun CourseEntity.toDomain(): Course =
     )
 
 /** Course → CourseEntity */
-fun Course.toEntity(): CourseEntity =
+fun Course.toEntity(studentId: Long): CourseEntity =
     CourseEntity(
+        id = 0,
+        studentId = studentId,
         name = name,
         credit = credit,
         type = type,

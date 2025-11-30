@@ -5,6 +5,7 @@ import androidx.room.Room
 import com.atri.seduley.data.local.database.CourseDao
 import com.atri.seduley.data.local.database.SeduleyDatabase
 import com.atri.seduley.data.local.database.StudentDao
+import com.atri.seduley.data.local.database.TaskDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -33,4 +34,8 @@ class DatabaseModule {
     @Provides
     @Singleton
     fun provideCourseDao(db: SeduleyDatabase): CourseDao = db.courseDao
+
+    @Provides
+    @Singleton
+    fun provideTaskDao(db: SeduleyDatabase): TaskDao = db.taskDao
 }

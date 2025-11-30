@@ -15,7 +15,8 @@ data class TaskEntity(
     val triggerMode: TriggerMode,
     val callback: Callback,
     val state: TaskState,
-    val params: Map<String, String>
+    val params: Map<String, String>,
+    val updatedAt: LocalDateTime
 )
 
 /**
@@ -28,14 +29,15 @@ enum class Callback(val value: Int) {
 }
 
 enum class TriggerMode(val value: Int) {
-    AUTO(0),
-    INEXACT(1),
-    EXACT(2),
+    INEXACT_REPEAT(0),
+    EXACT(1),
 }
 
 enum class TaskState(val value: Int) {
     AWAIT(0),
     DONE(1),
-    TIME_OUT(3),
-    FAILED(4)
+    TIME_OUT(2),
+    FAILED(3)
 }
+
+fun TaskEntity.updatedTimestamp() = copy(updatedAt = LocalDateTime.now())

@@ -4,10 +4,12 @@ import com.atri.seduley.data.repository.AuthRepositoryImpl
 import com.atri.seduley.data.repository.CourseRepositoryImpl
 import com.atri.seduley.data.repository.StudentRepositoryImpl
 import com.atri.seduley.data.repository.SystemConfRepositoryImpl
+import com.atri.seduley.data.repository.TaskRepositoryImpl
 import com.atri.seduley.domain.repository.AuthRepository
 import com.atri.seduley.domain.repository.CourseRepository
 import com.atri.seduley.domain.repository.StudentRepository
 import com.atri.seduley.domain.repository.SystemConfRepository
+import com.atri.seduley.domain.repository.TaskRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -41,4 +43,10 @@ abstract class RepositoryModule {
     abstract fun bindStudentRepository(
         impl: StudentRepositoryImpl
     ): StudentRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindTaskRepository(
+        impl: TaskRepositoryImpl
+    ): TaskRepository
 }

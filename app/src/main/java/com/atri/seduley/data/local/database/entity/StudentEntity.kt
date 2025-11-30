@@ -14,8 +14,7 @@ import java.time.LocalDateTime
 data class StudentEntity(
     @PrimaryKey val studentId: Long,
     @Embedded val semester: SemesterEntity,
-    val createdAt: LocalDateTime,
-    val updatedAt: LocalDateTime
+    val courseUpdatedAt: LocalDateTime
 )
 
 data class SemesterEntity(

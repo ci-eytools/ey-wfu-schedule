@@ -1,13 +1,14 @@
 package com.atri.seduley.domain.usecase
 
-import com.atri.seduley.core.exception.CredentialException
 import com.atri.seduley.domain.model.Semester
+import com.atri.seduley.domain.model.Student
+import com.atri.seduley.domain.model.mapper.toEntity
 import com.atri.seduley.domain.repository.AuthRepository
 import com.atri.seduley.domain.repository.StudentRepository
 import com.atri.seduley.domain.result.Result
 import com.atri.seduley.domain.result.toReturn
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.first
+import java.time.LocalDateTime
 import javax.inject.Inject
 
 data class StudentUseCase @Inject constructor(
@@ -15,21 +16,18 @@ data class StudentUseCase @Inject constructor(
     private val authRepository: AuthRepository
 ) {
 
-    suspend fun observeSemester(studentId: Long? = null): Flow<Semester?> =
-        studentRepository.observeSemester(resolveStudentId(studentId))
-
-    suspend fun clearStudent(studentId: Long? = null): Result<Unit> = toReturn {
-        studentRepository.clearStudent(resolveStudentId(studentId))
+    /** 观察学期信息 */
+    fun observeSemester(studentId: Long): Flow<Semester?> {
+        return studentRepository.observeSemester(studentId)
     }
 
-    /** 解析用户 id */
-    private suspend fun resolveStudentId(studentId: Long?): Long {
-        val allIds = authRepository.observeStudentIds().first()
-        val currentId = authRepository.observeCurrentStudentId().first()
-        return when {
-            studentId != null && allIds.contains(studentId) -> studentId
-            studentId == null && currentId != null -> currentId
-            else -> throw CredentialException("未登录或未找到用户")
-        }
+    /** 清除学生 */
+    suspend fun clearStudent(studentId: Long): Result<Unit> = toReturn {
+        studentRepository.clearStudent(studentId)
+    }
+
+    /** 观察更新时间 */
+    fun observeUpdateTime(studentId: Long): Flow<LocalDateTime?> {
+        return studentRepository.observeUpdateTime(studentId)
     }
 }

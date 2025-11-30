@@ -3,6 +3,7 @@ package com.atri.seduley.data.remote.api
 import com.atri.seduley.core.network.RequestHelper
 import com.atri.seduley.core.network.url.ApiUrls
 import com.atri.seduley.data.remote.model.LoginReq
+import okhttp3.OkHttpClient
 import javax.inject.Inject
 
 /**
@@ -21,6 +22,19 @@ class LoginApi @Inject constructor(
                 "RANDOMCODE" to req.captcha,
                 "encoded" to req.encoded
             )
+        )
+    }
+
+    suspend fun login(req: LoginReq, client: OkHttpClient): String {
+        return requestHelper.post(
+            url = ApiUrls.LOGIN.toUrl(),
+            params = mapOf(
+                "userAccount" to req.studentId,
+                "userPassword" to req.password,
+                "RANDOMCODE" to req.captcha,
+                "encoded" to req.encoded
+            ),
+            client = client
         )
     }
 }

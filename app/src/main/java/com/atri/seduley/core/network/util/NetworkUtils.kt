@@ -1,4 +1,9 @@
-package com.atri.seduley.core.util
+package com.atri.seduley.core.network.util
+
+import okhttp3.JavaNetCookieJar
+import okhttp3.OkHttpClient
+import java.net.CookieManager
+import java.net.CookiePolicy
 
 /**
  * 网络请求工具类
@@ -26,5 +31,15 @@ object NetworkUtils {
             "Accept-Language" to "zh-CN,zh;q=0.9",
             "Connection" to "keep-alive"
         )
+    }
+
+    /** 创建独立的全新 OkHttpClient */
+    fun createIsolatedOkHttpClient(): OkHttpClient {
+        // CookieManager 将 Cookie 存储在内存中
+        val cookieManager = CookieManager()
+        cookieManager.setCookiePolicy(CookiePolicy.ACCEPT_ALL)
+        return OkHttpClient.Builder()
+            .cookieJar(JavaNetCookieJar(cookieManager))
+            .build()
     }
 }

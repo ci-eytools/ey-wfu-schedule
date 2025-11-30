@@ -55,6 +55,14 @@ class CourseRepositoryImpl @Inject constructor(
         }
     }
 
+    /** 获取本地每日课表 */
+    override suspend fun getCoursesByStudentIdAndDate(
+        studentId: Long,
+        date: LocalDate
+    ): List<Course> {
+        return courseDao.getCoursesByStudentIdAndDate(studentId, date).map { it.toDomain() }
+    }
+
     /**
      * 从远端获取本学期所有课表
      *

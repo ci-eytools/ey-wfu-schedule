@@ -9,6 +9,9 @@ interface StudentRepository {
     /** 观察学期信息 */
     fun observeSemester(studentId: Long): Flow<Semester?>
 
+    /** 获取所有 id */
+    suspend fun getAllStudentId(): List<Long>
+
     /** 清除学生 */
     suspend fun clearStudent(studentId: Long)
 

@@ -18,6 +18,11 @@ class StudentRepositoryImpl @Inject constructor(
         return studentDao.observeSemesterByStudentId(studentId).map { it?.toDomain() }
     }
 
+    /** 获取所有 id */
+    override suspend fun getAllStudentId(): List<Long> {
+        return studentDao.getStudentIds()
+    }
+
     /** 清除学生 */
     override suspend fun clearStudent(studentId: Long) {
         studentDao.clearStudent(studentId)

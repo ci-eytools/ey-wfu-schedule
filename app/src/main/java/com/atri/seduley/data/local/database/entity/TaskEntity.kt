@@ -25,11 +25,12 @@ data class TaskEntity(
  * 例如：UPDATE_COURSE(0)，表示当 callback == UPDATE_COURSE 时触发 updateCourse 方法
  */
 enum class Callback(val value: Int) {
-
+    NOTIFICATION_COURSE(0),
+    UPDATE_COURSE(1)
 }
 
 enum class TriggerMode(val value: Int) {
-    INEXACT_REPEAT(0),
+    INEXACT(0),
     EXACT(1),
 }
 
@@ -39,5 +40,3 @@ enum class TaskState(val value: Int) {
     TIME_OUT(2),
     FAILED(3)
 }
-
-fun TaskEntity.updatedTimestamp() = copy(updatedAt = LocalDateTime.now())

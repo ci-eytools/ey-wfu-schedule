@@ -14,3 +14,13 @@ data class Task(
     val params: Map<String, String>,
     val updatedAt: LocalDateTime
 )
+
+fun Task.done() = copy(state = TaskState.DONE, updatedAt = LocalDateTime.now())
+
+fun Task.nextDay() = copy(
+    triggerAt = triggerAt.plusDays(1),
+    state = TaskState.AWAIT,
+    updatedAt = LocalDateTime.now()
+)
+
+fun Task.updateTimestamp() = copy(updatedAt = LocalDateTime.now())

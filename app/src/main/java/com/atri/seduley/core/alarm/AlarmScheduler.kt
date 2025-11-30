@@ -1,6 +1,6 @@
 package com.atri.seduley.core.alarm
 
-interface AlarmService {
+interface AlarmScheduler {
 
     /** 创建定时闹钟 */
     fun schedule(config: AlarmConfig)

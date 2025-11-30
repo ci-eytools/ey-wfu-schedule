@@ -17,6 +17,7 @@ import com.atri.seduley.domain.ml.CaptchaRecognizer
 import com.atri.seduley.domain.repository.AuthRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
+import okhttp3.OkHttpClient
 import org.jsoup.Jsoup
 import java.io.IOException
 import javax.inject.Inject
@@ -115,8 +116,51 @@ class AuthRepositoryImpl @Inject constructor(
         }
     }
 
+    /** 使用指定已存在用户发起登录请求，使用传入的 OkHttpClient 实例 */
+    override suspend fun loginAs(
+        studentId: Long,
+        isolatedClient: OkHttpClient,
+        block: suspend () -> Unit
+    ) {
+        try {
+            credentialDatastore.login(studentId) { studentId, password ->
+                initApi.init(isolatedClient)
+                for (i in 1..5) {
+                    val bytes = captchaApi.getCaptcha(isolatedClient)
+                    val captcha = captchaRecognizer.recognize(bytes)
+                    val sessResp = sessApi.sess(isolatedClient)
+                    val encoded = getEncoded(studentId.toString(), password, sessResp)
+                    val loginResultResp = loginApi.login(
+                        LoginReq(
+                            studentId = studentId.toString(),
+                            password = password,
+                            captcha = captcha,
+                            encoded = encoded
+                        ),
+                        isolatedClient
+                    )
+                    if (isCaptchaError(loginResultResp)) {
+                        continue
+                    }
+                    if (isLoginSuccess(loginResultResp)) {
+                        block()
+                        break
+                    }
+                    if (isAccountOrPasswordError(loginResultResp)) {
+                        break
+                    }
+                }
+            }
+        } catch (_: Throwable) { /* 高并发环境且为后台运行不做任何处理 */}
+    }
+
     /** 观察当前登录用户 id */
     override fun observeCurrentStudentId() = credentialDatastore.observeCurrentStudentId()
+
+    /** 获取当前登录用户 id */
+    override suspend fun getCurrentStudentId(): Long? {
+        return credentialDatastore.getCurrentStudentId()
+    }
 
     /** 观察所有用户 id */
     override fun observeStudentIds(): Flow<List<Long>> {

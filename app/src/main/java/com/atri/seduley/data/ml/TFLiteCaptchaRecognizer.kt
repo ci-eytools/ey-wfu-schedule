@@ -9,6 +9,8 @@ import com.atri.seduley.core.exception.BaseException
 import com.atri.seduley.core.util.AppLogger
 import com.atri.seduley.domain.ml.CaptchaRecognizer
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import org.tensorflow.lite.Interpreter
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
@@ -18,6 +20,8 @@ import javax.inject.Inject
 class TFLiteCaptchaRecognizer @Inject constructor(
     @ApplicationContext private val context: Context
 ) : CaptchaRecognizer {
+
+    private val mutex = Mutex()
 
     private val interpreter: Interpreter by lazy {
         loadInterpreter()
@@ -57,8 +61,12 @@ class TFLiteCaptchaRecognizer @Inject constructor(
         val probabilityOutputs = Array(NUM_OUTPUTS) {
             FloatArray(NUM_CLASSES)
         }
-        runInference(inputBuffer, probabilityOutputs)
-        return decodeOutput(probabilityOutputs)
+
+        // 推理部分加锁
+        return mutex.withLock {
+            runInference(inputBuffer, probabilityOutputs)
+            decodeOutput(probabilityOutputs)
+        }
     }
 
     private fun runInference(input: ByteBuffer, outputsArray: Array<FloatArray>) {

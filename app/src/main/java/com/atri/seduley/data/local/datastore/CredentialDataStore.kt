@@ -45,6 +45,11 @@ class CredentialDataStore @Inject constructor(
         return dataStore.data.map { it[Key.CURRENT_STUDENT_ID] }
     }
 
+    /** 获取当前登录 id */
+    suspend fun getCurrentStudentId(): Long? {
+        return dataStore.data.map { it[Key.CURRENT_STUDENT_ID] }.first()
+    }
+
     /** 保存用户凭证 */
     suspend fun saveCredential(credentialEntity: CredentialEntity) {
         val studentId = credentialEntity.studentId

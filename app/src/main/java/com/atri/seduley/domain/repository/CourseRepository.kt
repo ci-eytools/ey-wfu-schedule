@@ -18,6 +18,9 @@ interface CourseRepository {
     /** 观察本地每日课表 */
     fun observeCoursesByStudentIdAndDate(studentId: Long, date: LocalDate): Flow<List<Course>>
 
+    /** 获取本地每日课表 */
+    suspend fun getCoursesByStudentIdAndDate(studentId: Long, date: LocalDate): List<Course>
+
     /**
      * 从远端获取本学期所有课表
      *

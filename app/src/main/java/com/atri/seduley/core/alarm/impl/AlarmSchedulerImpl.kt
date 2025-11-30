@@ -5,25 +5,19 @@ import android.app.AlarmManager
 import android.content.Context
 import com.atri.seduley.core.alarm.AlarmBackend
 import com.atri.seduley.core.alarm.AlarmConfig
-import com.atri.seduley.core.alarm.AlarmService
+import com.atri.seduley.core.alarm.AlarmScheduler
 import com.atri.seduley.core.alarm.util.ACTION
 import com.atri.seduley.core.alarm.util.PendingIntentFactory
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.time.ZoneId
 import javax.inject.Inject
 
-class AlarmServiceImpl @Inject constructor(
+class AlarmSchedulerImpl @Inject constructor(
+    private val alarmManager: AlarmManager,
     @ApplicationContext private val context: Context
-) : AlarmService {
+) : AlarmScheduler {
 
-    private val alarmManager = context.getSystemService(AlarmManager::class.java)
-
-    /**
-     * 设置定时闹钟
-     *
-     * INEXACT_ALARM 模式交由系统自动重复
-     * EXACT_ALARM 模式需手动重设
-     */
+    /** 设置定时闹钟 */
     @SuppressLint("ScheduleExactAlarm")
     override fun schedule(config: AlarmConfig) {
         val triggerMillis = config.triggerAt
@@ -38,13 +32,12 @@ class AlarmServiceImpl @Inject constructor(
         )
 
         when (config.backend) {
-
             AlarmBackend.INEXACT_ALARM -> {
-                // 非精确闹钟，每日重复
-                alarmManager.setInexactRepeating(
+                // 非精确闹钟
+                alarmManager.setWindow(
                     AlarmManager.RTC_WAKEUP,
                     triggerMillis,
-                    AlarmManager.INTERVAL_DAY,
+                    config.windowMillis ?: (10 * 60 * 1000L),   // 默认 10min 窗口
                     pendingIntent
                 )
             }

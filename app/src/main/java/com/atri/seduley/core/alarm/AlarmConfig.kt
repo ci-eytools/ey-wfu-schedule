@@ -5,5 +5,6 @@ import java.time.LocalDateTime
 data class AlarmConfig(
     val requestCode: Int,
     val triggerAt: LocalDateTime,
+    val windowMillis: Long? = null,
     val backend: AlarmBackend
 )

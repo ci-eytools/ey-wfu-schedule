@@ -13,11 +13,12 @@ import javax.inject.Singleton
  */
 @Singleton
 class RequestHelper @Inject constructor(
-    private val client: OkHttpClient
+    private val defaultClient: OkHttpClient
 ) {
 
     suspend fun get(
-        url: String
+        url: String,
+        client: OkHttpClient = defaultClient
     ): String = withContext(Dispatchers.IO) {
         val request = Request.Builder()
             .url(url)
@@ -27,7 +28,8 @@ class RequestHelper @Inject constructor(
 
     suspend fun postBytes(
         url: String,
-        params: Map<String, String>
+        params: Map<String, String>,
+        client: OkHttpClient = defaultClient
     ): ByteArray = withContext(Dispatchers.IO) {
         val formBody = FormBody.Builder().apply {
             params.forEach { (k, v) -> add(k, v) }
@@ -41,7 +43,8 @@ class RequestHelper @Inject constructor(
 
     suspend fun post(
         url: String,
-        params: Map<String, String>
+        params: Map<String, String>,
+        client: OkHttpClient = defaultClient
     ): String = withContext(Dispatchers.IO) {
         val formBody = FormBody.Builder().apply {
             params.forEach { (k, v) -> add(k, v) }

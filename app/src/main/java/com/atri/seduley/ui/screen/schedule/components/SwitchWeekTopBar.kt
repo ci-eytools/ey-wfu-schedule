@@ -89,8 +89,8 @@ fun ToTodayButton(
     }
 }
 
-enum class SwitchWeekWay(val offset: Long) {
-    PREVIOUS(-7),
-    NOW(0),
-    NEXT(7)
+enum class SwitchWeekWay() {
+    PREVIOUS,
+    NOW,
+    NEXT
 }

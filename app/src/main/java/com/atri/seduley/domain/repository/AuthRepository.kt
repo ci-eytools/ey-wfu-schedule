@@ -5,10 +5,10 @@ import kotlinx.coroutines.flow.Flow
 interface AuthRepository {
 
     /** 使用当前用户发起登录请求 */
-    suspend fun login()
+    suspend fun login(block: suspend () -> Unit)
 
     /** 使用指定已存在用户发起登录请求 */
-    suspend fun loginAs(studentId: Long)
+    suspend fun loginAs(studentId: Long, block: suspend () -> Unit)
 
     /** 使用指定新用户发起登录请求 */
     suspend fun loginAs(studentId: Long, password: String, block: suspend () -> Unit)

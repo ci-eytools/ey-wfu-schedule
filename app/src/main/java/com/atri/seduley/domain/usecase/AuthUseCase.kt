@@ -7,7 +7,6 @@ import com.atri.seduley.domain.result.Result
 import com.atri.seduley.domain.result.toReturn
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 /**
@@ -27,7 +26,7 @@ data class AuthUseCase @Inject constructor(
         block: suspend () -> Unit
     ): Result<Unit> = toReturn {
         if (credential == null) {
-            authRepository.login()
+            authRepository.login(block)
         } else {
             authRepository.loginAs(
                 studentId = credential.studentId,
@@ -55,6 +54,5 @@ data class AuthUseCase @Inject constructor(
     }
 
     /** 订阅当前用户 id */
-    fun observeCurrentStudentId(): Flow<Long> =
-        authRepository.observeCurrentStudentId().map { it ?: -1L }
+    fun observeCurrentStudentId(): Flow<Long?> = authRepository.observeCurrentStudentId()
 }

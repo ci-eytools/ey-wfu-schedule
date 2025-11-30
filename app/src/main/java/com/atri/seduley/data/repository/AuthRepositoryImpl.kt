@@ -5,7 +5,6 @@ import com.atri.seduley.core.exception.CredentialException
 import com.atri.seduley.core.exception.LoginException
 import com.atri.seduley.core.exception.NetworkException
 import com.atri.seduley.core.util.AppLogger
-import com.atri.seduley.core.util.Const
 import com.atri.seduley.data.local.database.StudentDao
 import com.atri.seduley.data.local.datastore.CredentialDataStore
 import com.atri.seduley.data.local.datastore.entity.CredentialEntity
@@ -36,19 +35,19 @@ class AuthRepositoryImpl @Inject constructor(
     private var isCurrIdLogin: Boolean = false
 
     /** 使用当前用户发起登录请求 */
-    override suspend fun login() {
+    override suspend fun login(block: suspend () -> Unit) {
         if (isCurrIdLogin) return
         val studentId = credentialDatastore.observeCurrentStudentId().first()
-        if (studentId == Const.LONG_SENTINEL_VALUE) throw CredentialException("请先登录")
+        if (studentId == null) throw CredentialException("请先登录")
         credentialDatastore.login(studentId) { studentId, password ->
-            loginAs(studentId, password) {}
+            loginAs(studentId, password, block)
         }
     }
 
     /** 使用指定已存在用户发起登录请求 */
-    override suspend fun loginAs(studentId: Long) {
+    override suspend fun loginAs(studentId: Long, block: suspend () -> Unit) {
         credentialDatastore.login(studentId) { studentId, password ->
-            loginAs(studentId, password) {}
+            loginAs(studentId, password, block)
         }
     }
 
@@ -134,7 +133,7 @@ class AuthRepositoryImpl @Inject constructor(
     /** 登出/删除当前用户 */
     override suspend fun logout() {
         val currentStudentId = credentialDatastore.observeCurrentStudentId().first()
-        if (currentStudentId == Const.LONG_SENTINEL_VALUE) {
+        if (currentStudentId == null) {
             throw CredentialException("请先登录")
         }
         logoutAs(currentStudentId)

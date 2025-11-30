@@ -57,8 +57,8 @@ data class SystemConfUseCase @Inject constructor(
         systemConfRepository.saveSystemConfInfo(systemConf.toEntity())
     }
 
-    /** 获取系统设置信息 */
-    fun getSystemConfInfo(): Flow<SystemConf> {
+    /** 观察系统设置信息 */
+    fun observeSystemConfInfo(): Flow<SystemConf> {
         return systemConfRepository.systemConfInfoFlow().map { it.toDomain() }
     }
 

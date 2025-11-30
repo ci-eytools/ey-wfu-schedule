@@ -24,7 +24,6 @@ class SystemDataStore @Inject constructor(
     private object Keys {
         val IS_NEED_NOTIFICATION = booleanPreferencesKey("is_need_notification")
         val IS_NEED_UPDATE_COURSE = booleanPreferencesKey("is_need_update_course")
-        val LAST_UPDATED_COURSE_TIME = longPreferencesKey("last_updated_course_time")
     }
 
     /** 保存系统设置信息 */
@@ -32,9 +31,6 @@ class SystemDataStore @Inject constructor(
         dataStore.edit {
             it[Keys.IS_NEED_NOTIFICATION] = systemConfiguration.isNeedNotification
             it[Keys.IS_NEED_UPDATE_COURSE] = systemConfiguration.isNeedUpdateCourse
-            it[Keys.LAST_UPDATED_COURSE_TIME] = TimeUtil.localDateTimeToTimestamp(
-                systemConfiguration.lastUpdatedCourseDate
-            )
         }
     }
 
@@ -43,11 +39,7 @@ class SystemDataStore @Inject constructor(
         dataStore.data.map {
             SystemConfEntity(
                 isNeedNotification = it[Keys.IS_NEED_NOTIFICATION] ?: false,
-                isNeedUpdateCourse = it[Keys.IS_NEED_UPDATE_COURSE] ?: true,
-                lastUpdatedCourseDate = TimeUtil.fromTimestampToLocalDateTime(
-                    it[Keys.LAST_UPDATED_COURSE_TIME]
-                )
-                    ?: Const.NO_LAST_UPDATE_SELECTED_DATE
+                isNeedUpdateCourse = it[Keys.IS_NEED_UPDATE_COURSE] ?: true
             )
         }
 

@@ -29,70 +29,62 @@ fun DailyScheduleScreen(
     navController: NavController,
     viewModel: ScheduleViewModel = hiltViewModel()
 ) {
+
     val uiState by viewModel.uiState.collectAsState()
-
-    val success = uiState as? ScheduleUiState.Success
-
-    val selectedDate = success?.selectedDate ?: viewModel.dateCache.selectedDate
-    val startDate = viewModel.dateCache.startDate
-    val endDate = viewModel.dateCache.endDate
 
     Scaffold(
         topBar = {
             DailyScheduleTopBar(
-                selectedDate = selectedDate,
-                startDate = startDate,
-                endDate = endDate,
+                selectedDate = (uiState as? ScheduleUiState.Success)?.selectedDate ?: LocalDate.now(),
+                startDate = (uiState as? ScheduleUiState.Success)?.semester?.startDate ?: LocalDate.now(),
+                endDate = (uiState as? ScheduleUiState.Success)?.semester?.endDate ?: LocalDate.now(),
                 onDayOfWeekSelect = { viewModel.onEvent(ScheduleEvent.SwitchDate(it)) },
                 onSwitchWeek = { viewModel.onEvent(ScheduleEvent.SwitchWeek(it)) }
             )
         },
-
         floatingActionButton = {
             if (navController.currentDestination?.route == Screen.DailySchedule.route) {
                 ToTodayButton(
-                    selectedDate = selectedDate,
+                    selectedDate = (uiState as? ScheduleUiState.Success)?.selectedDate ?: LocalDate.now(),
                     onClick = { viewModel.onEvent(ScheduleEvent.SwitchDate(LocalDate.now())) }
                 )
             }
         }
     ) { innerPadding ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+        ) {
+            when (val currentState = uiState) {
 
-        when (uiState) {
-
-            is ScheduleUiState.Loading -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(innerPadding),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator()
+                is ScheduleUiState.Loading -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
+                    }
                 }
-            }
 
-            is ScheduleUiState.Success -> {
-                DailyScheduleContent(
-                    selectedDate = success!!.selectedDate,
-                    courses = success.courses,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(innerPadding)
-                )
-            }
-
-            is ScheduleUiState.Error -> {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(innerPadding),
-                    contentAlignment = Alignment.Center
-                ) {
-                    InfoText(
-                        selectedDate = selectedDate,
-                        text = (uiState as ScheduleUiState.Error).message,
-                        color = MaterialTheme.colorScheme.error
+                is ScheduleUiState.Success -> {
+                    DailyScheduleContent(
+                        selectedDate = currentState.selectedDate,
+                        courses = currentState.courses
                     )
+                }
+
+                is ScheduleUiState.Error -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        InfoText(
+                            selectedDate = LocalDate.now(),
+                            text = currentState.message,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
                 }
             }
         }

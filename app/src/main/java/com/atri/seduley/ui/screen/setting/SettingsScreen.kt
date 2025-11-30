@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.atri.seduley.core.util.Const
 import com.atri.seduley.ui.screen.setting.components.NestScroll
 import com.atri.seduley.ui.viewmodel.SettingViewModel
 import kotlinx.coroutines.flow.collectLatest
@@ -44,8 +45,10 @@ fun SettingsScreen(
     // 从 ViewModel 中收集响应式状态
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
-    val studentId by viewModel.studentId.collectAsState()
+    val studentId by viewModel.currentStudentId.collectAsState()
     val systemConf by viewModel.systemConf.collectAsState()
+    val updateTime by viewModel.updateTime.collectAsState()
+    val coverVersion by viewModel.coverVersion.collectAsState()
 
     LaunchedEffect(viewModel) {
         viewModel.event.collectLatest { event ->
@@ -68,8 +71,10 @@ fun SettingsScreen(
     ) { _ ->
         Box {
             NestScroll(
-                studentId = studentId,
+                studentId = if (studentId != -1L) studentId.toString() else "未登录",
+                updateTime = updateTime ?: Const.NO_LAST_UPDATE_SELECTED_DATE,
                 systemConf = systemConf,
+                coverVersion = coverVersion,
                 onEvent = viewModel::onEvent
             )
 

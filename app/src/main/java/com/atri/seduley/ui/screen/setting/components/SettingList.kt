@@ -65,6 +65,7 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun SettingList(
     studentId: String?,
+    updateTime: LocalDateTime,
     systemConf: SystemConf,
     onEvent: (SettingEvent) -> Unit,
     modifier: Modifier = Modifier
@@ -98,9 +99,9 @@ fun SettingList(
         )
         Spacer(modifier = Modifier.height(15.dp))
         CourseInfo(
-            lastUpdatedCourseDate = systemConf.lastUpdatedCourseDate,
-            clearSchedules = { onEvent(SettingEvent.ClearSchedules) },
-            enterSchedules = { onEvent(SettingEvent.EnterSchedules) }
+            lastUpdatedCourseDate = updateTime,
+            clearSchedules = { onEvent(SettingEvent.ClearCourses) },
+            enterSchedules = { onEvent(SettingEvent.UpdateCourses) }
         )
         Spacer(modifier = Modifier.height(15.dp))
         BackgroundTaskOptions(
@@ -167,22 +168,22 @@ fun CourseInfo(
         modifier = modifier.fillMaxWidth()
     ) {
         ListItem(
-            settingItem = "清空课程",
+            settingItem = "清空课表",
             onClick = { showClearAllCourseDialog = true },
         )
         ConfirmDialog(
-            text = "是否清空课程",
+            text = "是否清空课表",
             showDialog = showClearAllCourseDialog,
             onDismiss = { showClearAllCourseDialog = false },
             onConfirm = { clearSchedules() }
         )
         ListItem(
-            settingItem = "拉取所有课程",
+            settingItem = "更新课表",
             detail = formatTime,
             onClick = { showEnterAllCourseDialog = true }
         )
         ConfirmDialog(
-            text = "是否拉取所有课程",
+            text = "是否更新课程",
             showDialog = showEnterAllCourseDialog,
             onDismiss = { showEnterAllCourseDialog = false },
             onConfirm = { enterSchedules() }

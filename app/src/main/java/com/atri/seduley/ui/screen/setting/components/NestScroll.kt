@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import com.atri.seduley.domain.model.SystemConf
 import com.atri.seduley.ui.screen.setting.SettingEvent
+import java.time.LocalDateTime
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
@@ -43,7 +44,9 @@ import kotlin.math.roundToInt
 @Composable
 fun NestScroll(
     studentId: String,
+    updateTime: LocalDateTime,
     systemConf: SystemConf,
+    coverVersion: Int,
     onEvent: (SettingEvent) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -110,6 +113,7 @@ fun NestScroll(
                 .aspectRatio(currentAspectRatio) // 动态宽高比
         ) {
             FlowBackground(
+                coverVersion = coverVersion,
                 onEvent = { onEvent(it) },
                 modifier = Modifier.matchParentSize()
             )
@@ -139,6 +143,7 @@ fun NestScroll(
                 }
                 .clip(RoundedCornerShape(topStart = 15.dp, topEnd = 15.dp)),
             studentId = studentId,
+            updateTime = updateTime,
             systemConf = systemConf,
             onEvent = { onEvent(it) },
         )

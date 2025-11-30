@@ -18,19 +18,14 @@ import java.io.File
  */
 @Composable
 fun SplashBackground(
-    isDefaultSplash: Boolean,
     modifier: Modifier = Modifier
 ) {
 
     val context = LocalContext.current
     val activity = context as Activity
-
+    val file = File(activity.cacheDir, Const.SPLASH_IMAGE_NAME)
     val painter = rememberAsyncImagePainter(
-        model = if (isDefaultSplash) R.drawable.default_splash_background
-        else File(
-            activity.cacheDir,
-            Const.SPLASH_IMAGE_NAME
-        )
+        model = if (file.exists()) file else R.drawable.default_splash_background
     )
     Box {
         Image(

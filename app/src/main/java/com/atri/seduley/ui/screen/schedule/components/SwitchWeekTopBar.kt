@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.atri.seduley.core.util.AppLogger
 import java.time.LocalDate
 
 @Composable
@@ -56,7 +57,7 @@ fun SwitchWeekTopBar(
                 containerColor = Color.Transparent,
                 contentColor = MaterialTheme.colorScheme.secondary
             ),
-            enabled = selectedDate.isBefore(endDate.plusWeeks(-1))
+            enabled = selectedDate.isBefore(endDate)
         ) {
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowForward,

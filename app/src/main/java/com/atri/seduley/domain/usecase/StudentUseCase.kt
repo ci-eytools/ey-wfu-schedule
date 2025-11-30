@@ -1,8 +1,6 @@
 package com.atri.seduley.domain.usecase
 
 import com.atri.seduley.domain.model.Semester
-import com.atri.seduley.domain.model.Student
-import com.atri.seduley.domain.model.mapper.toEntity
 import com.atri.seduley.domain.repository.AuthRepository
 import com.atri.seduley.domain.repository.StudentRepository
 import com.atri.seduley.domain.result.Result

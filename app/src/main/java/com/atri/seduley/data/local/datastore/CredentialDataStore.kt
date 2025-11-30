@@ -42,8 +42,8 @@ class CredentialDataStore @Inject constructor(
     }
 
     /** 观察当前登录 id */
-    fun observeCurrentStudentId(): Flow<Long> {
-        return dataStore.data.map { it[Key.CURRENT_STUDENT_ID] ?: Const.LONG_SENTINEL_VALUE }
+    fun observeCurrentStudentId(): Flow<Long?> {
+        return dataStore.data.map { it[Key.CURRENT_STUDENT_ID] }
     }
 
     /** 保存用户凭证 */

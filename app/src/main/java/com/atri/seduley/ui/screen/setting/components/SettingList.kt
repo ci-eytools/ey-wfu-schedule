@@ -240,7 +240,7 @@ fun BackgroundTaskOptions(
         ListItem(
             settingItem = "每日课程提醒",
             detail = if (!hasNotificationPermission) "权限不足, 无法启用"
-            else if (isNeedNotification) "启用 (需确认拥有自启动与后台高耗电权限)" else "禁用",
+            else if (isNeedNotification) "启用 (请确认自启动与后台高耗电权限)" else "禁用",
             onClick = {
                 // 只有在有权限时才显示对话框
                 if (hasNotificationPermission) {
@@ -265,7 +265,7 @@ fun BackgroundTaskOptions(
         settingItem = "每日更新课表",
 
         detail = if (!hasBackgroundTaskPermission) "权限不足, 无法启用"
-        else if (isNeedUpdateCourse) "启用 (需确认拥有自启动与后台高耗电权限)" else "禁用",
+        else if (isNeedUpdateCourse) "启用 (请确认自启动与后台高耗电权限)" else "禁用",
         onClick = {
             if (hasBackgroundTaskPermission) {
                 showSwitchUpdateCourseDialog = true

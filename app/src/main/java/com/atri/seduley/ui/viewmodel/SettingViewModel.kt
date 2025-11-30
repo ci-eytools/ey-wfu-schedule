@@ -5,14 +5,14 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.atri.seduley.core.exception.BaseException
 import com.atri.seduley.core.util.Const
 import com.atri.seduley.domain.model.Credential
 import com.atri.seduley.domain.model.SystemConf
-import com.atri.seduley.domain.result.AuthResult
-import com.atri.seduley.domain.result.CourseResult
-import com.atri.seduley.domain.result.SystemConfResult
+import com.atri.seduley.domain.result.Result
 import com.atri.seduley.domain.usecase.AuthUseCase
 import com.atri.seduley.domain.usecase.CourseUseCase
+import com.atri.seduley.domain.usecase.StudentUseCase
 import com.atri.seduley.domain.usecase.SystemConfUseCase
 import com.atri.seduley.ui.screen.setting.SettingEvent
 import com.atri.seduley.ui.screen.setting.SettingUiEvent
@@ -22,6 +22,7 @@ import com.atri.seduley.ui.screen.setting.SettingUiState.Idle
 import com.atri.seduley.ui.screen.setting.SettingUiState.Loading
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -29,7 +30,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -43,6 +45,7 @@ class SettingViewModel @Inject constructor(
     private val authUseCase: AuthUseCase,
     private val systemConfUseCase: SystemConfUseCase,
     private val courseUseCase: CourseUseCase,
+    private val studentUseCase: StudentUseCase,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
@@ -52,159 +55,220 @@ class SettingViewModel @Inject constructor(
     private val _event = MutableSharedFlow<SettingUiEvent>()
     val event: SharedFlow<SettingUiEvent> = _event
 
-    val studentId = MutableStateFlow("未登录")
-    private val _systemConf = MutableStateFlow(
-        SystemConf(
-            seedColor = Const.DEFAULT_SEED_COLOR_INT,
+    val systemConf: StateFlow<SystemConf> = systemConfUseCase.observeSystemConfInfo().stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = SystemConf(
             isNeedNotification = false,
-            isNeedUpdateCourse = true,
-            lastUpdatedCourseDate = LocalDateTime.now()
+            isNeedUpdateCourse = true
         )
     )
-    val systemConf: StateFlow<SystemConf> = _systemConf
-    val seedColor: StateFlow<Int> = _systemConf.map { it.seedColor }
-        .stateIn(viewModelScope, SharingStarted.Lazily, Const.DEFAULT_SEED_COLOR_INT)
 
-    init {
-        viewModelScope.launch {
-            when (val info = systemConfUseCase.getSystemConfInfo()) {
-                is SystemConfResult.Success -> {
-                    info.value?.collect { conf ->
-                        _systemConf.value = conf
-                    } ?: emitErr()
-                }
+    val currentStudentId = authUseCase.observeCurrentStudentId()
+        .map { it ?: -1L }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = -1L
+        )
 
-                is SystemConfResult.UnknownError -> emitErr()
-            }
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val updateTime = currentStudentId
+        .filterNotNull()
+        .flatMapLatest {
+            studentUseCase.observeUpdateTime(it)
         }
-        viewModelScope.launch {
-            when (val info = authUseCase.getCurrentStudentId()) {
-                is AuthResult.Success -> {
-                    info.value?.let { studentId.value = it.studentId } ?: emitErr()
-                }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = LocalDateTime.now()
+        )
 
-                is AuthResult.UnknownError -> emitErr(info.msg)
-                else -> emitErr()
+    // 封面版本号
+    private val _coverVersion = MutableStateFlow(0)
+    val coverVersion: StateFlow<Int> = _coverVersion
+
+    fun onEvent(event: SettingEvent) {
+        try {
+            when (event) {
+                is SettingEvent.SaveCredential -> saveCredential(event)
+                is SettingEvent.ClearCourses -> clearCourses()
+                is SettingEvent.UpdateCourses -> updateCourses()
+                is SettingEvent.UpdateCover -> updateCover()
+                is SettingEvent.ResetCover -> resetCover()
+                is SettingEvent.UpdateSplash -> updateSplash()
+                is SettingEvent.ResetSplash -> resetSplash()
+                is SettingEvent.SwitchNotificationDemand -> switchNotificationDemand(event.isNeedNotification)
+                is SettingEvent.SwitchUpdateCourseDemand -> switchUpdateCourseDemand(event.isNeedUpdateCourse)
+            }
+        } catch (e: BaseException) {
+            viewModelScope.launch {
+                emitMsg(e.message)
             }
         }
     }
 
-    fun onEvent(event: SettingEvent) {
-        when (event) {
+    /** 保存用户凭证（需预登录，保证账号密码准确且自动拉取对应课表） */
+    private fun saveCredential(event: SettingEvent.SaveCredential) {
+        viewModelScope.launch {
+            if (event.studentId.isEmpty() || event.password.isEmpty()) {
+                emitErr("请输入学号或密码")
+                return@launch
+            }
 
-            // 保存用户凭证（需预登录，保证账号密码准确且自动拉取对应课表）
-            is SettingEvent.SaveCredential -> {
-                viewModelScope.launch {
-                    if (event.studentId.isEmpty() || event.password.isEmpty()) {
-                        emitErr("请输入学号或密码")
-                        return@launch
+            // 1.开始登录，立即显示加载框
+            _uiState.value = Loading("正在验证 ${event.studentId} 的凭证...")
+
+            val studentLong = try {
+                event.studentId.toLong()
+            } catch (_: NumberFormatException) {
+                emitErr("学号格式错误")
+                return@launch
+            }
+            // 2.调用登录
+            authUseCase.login(
+                Credential(
+                    studentLong,
+                    event.password
+                )
+            ) {
+                // 3.登录成功，更新加载框文本，准备拉取课表
+                emitMsg("登录凭证有效，准备拉取课表...")
+                _uiState.value =
+                    Loading(message = "正在拉取 $studentLong 的课表信息，请稍后...")
+
+                // 4.开始拉取课表
+                when (val courseInfo =
+                    courseUseCase.updateCourseFromRemote(
+                        studentLong
+                    )) {
+                    is Result.Success -> emitMsg("拉取 $studentLong 的课表信息成功")
+                    is Result.Error -> emitErr(courseInfo.msg)
+                }
+            }.let { loginResult ->
+                when (loginResult) {
+                    is Result.Success -> _uiState.value = Idle
+                    is Result.Error -> emitErr(loginResult.msg)
+                }
+            }
+        }
+    }
+
+    /** 清除当前用户的课表信息 */
+    private fun clearCourses() {
+        launchWithDelayedLoading("正在清除 ${currentStudentId.value} 的课表信息") {
+            if (currentStudentId.value == -1L) {
+                emitErr("当前无任何登录凭证")
+                return@launchWithDelayedLoading
+            }
+            when (val info = courseUseCase.clearCourse(currentStudentId.value)) {
+                is Result.Success -> {
+                    emitMsg("删除 ${currentStudentId.value} 的课表信息成功")
+                }
+
+                is Result.Error -> emitErr(info.msg)
+            }
+        }
+    }
+
+    /** 向服务器拉取当前用户的课表 */
+    private fun updateCourses() {
+        viewModelScope.launch {
+            if (currentStudentId.value == -1L) {
+                emitErr("未登录")
+                return@launch
+            }
+            _uiState.value = Loading("正在拉取 ${currentStudentId.value} 的课表信息...")
+            authUseCase.login {
+                when (val info =
+                    courseUseCase.updateCourseFromRemote(currentStudentId.value)) {
+                    is Result.Success -> {
+                        _uiState.value = Idle
+                        emitMsg("拉取 ${currentStudentId.value} 的课表信息成功")
                     }
 
-                    // 1.开始登录，立即显示加载框
-                    _uiState.value = Loading("正在验证 ${event.studentId} 的凭证...")
-
-                    // 2.调用登录
-                    authUseCase.login(Credential(event.studentId, event.password)) {
-                        // 3.登录成功，更新加载框文本，准备拉取课表
-                        emitMsg("登录凭证有效，准备拉取课表...")
-                        _uiState.value =
-                            Loading(message = "正在拉取 ${event.studentId} 的课表信息，请稍后...")
-
-                        // 4.开始拉取课表
-                        when (val courseInfo =
-                            courseUseCase.updateCourseFromRemote(event.studentId, false)) {
-                            is CourseResult.Success -> emitMsg("拉取 ${event.studentId} 的课表信息成功")
-                            is CourseResult.AuthError -> emitErr(courseInfo.msg)
-                            is CourseResult.UnknownError -> emitErr()
-                        }
-                    }.let { loginResult ->
-                        when (loginResult) {
-                            is AuthResult.Success -> _uiState.value = Idle
-                            is AuthResult.InvalidCredential -> emitMsg(loginResult.msg)
-                            is AuthResult.NetworkError -> emitErr("请检查您的网络连接")
-                            is AuthResult.UnknownError -> emitErr(loginResult.msg)
-                        }
-                    }
+                    is Result.Error -> emitErr(info.msg)
+                }
+            }.let { loginResult ->
+                when (loginResult) {
+                    is Result.Success -> _uiState.value = Idle
+                    is Result.Error -> emitErr(loginResult.msg)
                 }
             }
+        }
+    }
 
-            // 清除当前用户的课表信息
-            is SettingEvent.ClearSchedules -> {
-                launchWithDelayedLoading("正在清除 ${studentId.value} 的课表信息") {
-                    when (val info = courseUseCase.clearCourse(studentId.value)) {
-                        is CourseResult.Success -> emitMsg("删除 ${studentId.value} 的课表信息成功")
-                        is CourseResult.AuthError -> emitErr(info.msg)
-                        CourseResult.UnknownError -> emitErr()
-                    }
-                }
+    /** 更新封面 */
+    private fun updateCover() {
+        launchWithDelayedLoading {
+            _coverVersion.value++
+            systemConfUseCase.updateSeedColorByCover()
+        }
+    }
+
+    /** 重置封面 */
+    private fun resetCover() {
+        launchWithDelayedLoading {
+            _coverVersion.value++
+            val coverFile = File(context.cacheDir, Const.COVER_IMAGE_NAME)
+            if (!coverFile.exists()) emitErr("当前已为默认封面")
+            coverFile.delete()
+            systemConfUseCase.updateSeedColorByCover()  // 更新 datastore
+        }
+    }
+
+    /** 更新开屏页 */
+    private fun updateSplash() {
+        viewModelScope.launch {
+            emitMsg("更新开屏页成功")
+        }
+    }
+
+    /** 重置开屏页 */
+    private fun resetSplash() {
+        launchWithDelayedLoading {
+            val splashFile = File(context.cacheDir, Const.SPLASH_IMAGE_NAME)
+            if (!splashFile.exists()) emitErr("当前已为默认开屏页")
+            splashFile.delete()
+            emitMsg("重置开屏页成功")
+        }
+    }
+
+    /** 切换是否每日提醒 */
+    private fun switchNotificationDemand(isNeedNotification: Boolean) {
+        launchWithDelayedLoading {
+            val systemConf = systemConf.value
+            if (systemConf.isNeedNotification == isNeedNotification) {
+                emitMsg("每日提醒已为${if (isNeedNotification) "开启" else "关闭"}状态")
+                return@launchWithDelayedLoading
+            }
+            when (systemConfUseCase.saveSystemConfInfo(
+                systemConf.copy(
+                    isNeedNotification = isNeedNotification
+                )
+            )) {
+                is Result.Success -> emitMsg("已${if (isNeedNotification) "开启" else "关闭"}每日提醒")
+                is Result.Error -> emitErr("未知错误")
             }
 
-            // 向服务器拉取当前用户的课表
-            is SettingEvent.EnterSchedules -> {
-                launchWithDelayedLoading("正在拉取 ${studentId.value} 的课表信息") {
-                    when (val info = courseUseCase.updateCourseFromRemote(studentId.value)) {
-                        is CourseResult.Success -> emitMsg("拉取 ${studentId.value} 的课表信息成功")
-                        is CourseResult.AuthError -> emitErr(info.msg)
-                        CourseResult.UnknownError -> emitErr()
-                    }
-                }
-            }
+        }
+    }
 
-            // 更新封面
-            SettingEvent.UpdateCover -> {
-                launchWithDelayedLoading {
-                    systemConfUseCase.updateSeedColorByCover()
-                }
+    /** 切换是否每日更新课表 */
+    private fun switchUpdateCourseDemand(isNeedUpdateCourse: Boolean) {
+        launchWithDelayedLoading {
+            val systemConf = systemConf.value
+            if (systemConf.isNeedUpdateCourse == isNeedUpdateCourse) {
+                emitMsg("每日更新课表已为${if (isNeedUpdateCourse) "开启" else "关闭"}状态")
+                return@launchWithDelayedLoading
             }
-
-            // 重置封面
-            is SettingEvent.ResetCover -> {
-                launchWithDelayedLoading {
-                    val coverFile = File(context.cacheDir, Const.COVER_IMAGE_NAME)
-                    if (!coverFile.exists()) emitErr("当前已为默认封面")
-                    coverFile.delete()
-                    systemConfUseCase.updateSeedColorByCover()  // 更新 datastore
-                }
-            }
-
-            is SettingEvent.UpdateSplash -> {
-                viewModelScope.launch {
-                    emitMsg("更新封面成功")
-                }
-            }
-
-            // 重置开屏页
-            is SettingEvent.ResetSplash -> {
-                launchWithDelayedLoading {
-                    val splashFile = File(context.cacheDir, Const.COVER_IMAGE_NAME)
-                    if (!splashFile.exists()) emitErr("当前已为默认开屏页")
-                    splashFile.delete()
-                    emitMsg("重置开屏页成功")
-                }
-            }
-
-            // 切换是否每日提醒
-            is SettingEvent.SwitchNotificationDemand -> {
-                launchWithDelayedLoading {
-                    val systemConf = systemConf.first()
-                    systemConfUseCase.saveSystemConfInfo(
-                        systemConf.copy(
-                            isNeedUpdateCourse = !systemConf.isNeedNotification
-                        )
-                    )
-                }
-            }
-
-            // 切换是否每日更新课表
-            is SettingEvent.SwitchUpdateCourseDemand -> {
-                launchWithDelayedLoading {
-                    val systemConf = systemConf.first()
-                    systemConfUseCase.saveSystemConfInfo(
-                        systemConf.copy(
-                            isNeedUpdateCourse = !systemConf.isNeedNotification
-                        )
-                    )
-                }
+            when (systemConfUseCase.saveSystemConfInfo(
+                systemConf.copy(
+                    isNeedUpdateCourse = isNeedUpdateCourse
+                )
+            )) {
+                is Result.Success -> emitMsg("已${if (isNeedUpdateCourse) "开启" else "关闭"}每日更新课表")
+                is Result.Error -> emitErr("未知错误")
             }
         }
     }

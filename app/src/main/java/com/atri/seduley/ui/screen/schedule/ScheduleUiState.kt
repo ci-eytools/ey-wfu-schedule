@@ -1,6 +1,7 @@
 package com.atri.seduley.ui.screen.schedule
 
 import com.atri.seduley.domain.model.Course
+import com.atri.seduley.domain.model.Semester
 import java.time.LocalDate
 
 /**
@@ -12,27 +13,13 @@ sealed class ScheduleUiState {
     object Loading : ScheduleUiState()
 
     /** 成功状态 */
-    class Success(
-        val selectedDate: LocalDate,        // 当前选择日期
-        val courses: List<Course>,          // 课程信息（周）
-        val isOrderSectionVisible: Boolean = false  // 是否选中课程（留有状态，暂时无效）
+    data class Success(
+        val semester: Semester,
+        val selectedDate: LocalDate,
+        val courses: List<Course>,
+        val isOrderSectionVisible: Boolean = false
     ) : ScheduleUiState()
 
     /** 错误状态 */
     class Error(val message: String) : ScheduleUiState()
 }
-
-/**
- * 缓存日期信息
- */
-data class DateCache(
-
-    /** 当前选择日期 */
-    var selectedDate: LocalDate,
-
-    /** 学期开始日期 */
-    var startDate: LocalDate,
-
-    /** 学期结束日期 */
-    var endDate: LocalDate
-)

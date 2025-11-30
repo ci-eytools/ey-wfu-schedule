@@ -12,10 +12,10 @@ sealed class SettingEvent {
     ) : SettingEvent()
 
     /** 清除所有课表 */
-    data object ClearSchedules : SettingEvent()
+    data object ClearCourses : SettingEvent()
 
     /** 拉取所有课表 */
-    data object EnterSchedules : SettingEvent()
+    data object UpdateCourses : SettingEvent()
 
     /** 更新封面 */
     data object UpdateCover : SettingEvent()

@@ -1,5 +1,6 @@
 package com.atri.seduley.data.local.database
 
+import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
@@ -7,6 +8,7 @@ import com.atri.seduley.data.local.database.entity.CourseEntity
 import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
 
+@Dao
 interface CourseDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)

@@ -1,13 +1,11 @@
 package com.atri.seduley.domain.usecase
 
-import com.atri.seduley.core.exception.CredentialException
 import com.atri.seduley.domain.model.Course
 import com.atri.seduley.domain.repository.AuthRepository
 import com.atri.seduley.domain.repository.CourseRepository
 import com.atri.seduley.domain.result.Result
 import com.atri.seduley.domain.result.toReturn
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.first
 import java.time.LocalDate
 import javax.inject.Inject
 
@@ -21,41 +19,27 @@ data class CourseUseCase @Inject constructor(
      *
      * 向数据库请求
      */
-    suspend fun observeCourses(
-        studentId: Long? = null,
-        date: LocalDate = LocalDate.now()
-    ): Flow<List<Course?>> {
-        val currStudentId = resolveStudentId(studentId)
-        return courseRepository.observeCoursesByStudentIdAndDate(currStudentId, date)
+    fun observeCourses(
+        studentId: Long,
+        date: LocalDate
+    ): Flow<List<Course>> {
+        return courseRepository.observeCoursesByStudentIdAndDate(studentId, date)
     }
 
     /** 更新课表 */
     suspend fun updateCourseFromRemote(
-        studentId: Long? = null,
-        isNeedLogin: Boolean = true
+        studentId: Long
     ): Result<Unit> = toReturn {
-        val currStudentId = resolveStudentId(studentId)
-        if (isNeedLogin) authRepository.loginAs(currStudentId)
+        val currStudentId = studentId
         val courses = courseRepository.getAllCoursesFromRemote(currStudentId)
         courseRepository.insertCourses(currStudentId, courses)
     }
 
     /** 清除课表 */
     suspend fun clearCourse(
-        studentId: Long? = null
+        studentId: Long
     ): Result<Unit> = toReturn {
-        val currStudentId = resolveStudentId(studentId)
+        val currStudentId = studentId
         courseRepository.clearCourses(currStudentId)
-    }
-
-    /** 解析用户 id */
-    private suspend fun resolveStudentId(studentId: Long?): Long {
-        val allIds = authRepository.observeStudentIds().first()
-        val currentId = authRepository.observeCurrentStudentId().first()
-        return when {
-            studentId != null && allIds.contains(studentId) -> studentId
-            studentId == null && currentId != null -> currentId
-            else -> throw CredentialException("未登录或未找到用户")
-        }
     }
 }

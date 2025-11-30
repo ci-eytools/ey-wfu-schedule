@@ -16,9 +16,13 @@ interface CourseRepository {
     suspend fun insertCourses(studentId: Long, courses: List<Course>)
 
     /** 观察本地每日课表 */
-    suspend fun observeCoursesByStudentIdAndDate(studentId: Long, date: LocalDate): Flow<List<Course?>>
+    fun observeCoursesByStudentIdAndDate(studentId: Long, date: LocalDate): Flow<List<Course>>
 
-    /** 从远端获取本学期所有课表 */
+    /**
+     * 从远端获取本学期所有课表
+     *
+     * 若不存在当前学生信息，则创建
+     */
     suspend fun getAllCoursesFromRemote(studentId: Long): List<Course>
 
     /** 清除课表 */

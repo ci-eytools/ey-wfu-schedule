@@ -33,6 +33,4 @@ object Const {
 
     val NO_LAST_UPDATE_SELECTED_DATE: LocalDateTime =
         LocalDateTime.of(2020, 8, 31, 0, 0)
-
-    const val LONG_SENTINEL_VALUE: Long = -1L
 }

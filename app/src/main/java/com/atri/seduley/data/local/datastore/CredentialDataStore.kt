@@ -6,7 +6,6 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.atri.seduley.core.exception.CredentialException
-import com.atri.seduley.core.util.Const
 import com.atri.seduley.data.local.datastore.entity.CredentialEntity
 import com.atri.seduley.data.local.datastore.security.CryptoManager
 import kotlinx.coroutines.flow.Flow

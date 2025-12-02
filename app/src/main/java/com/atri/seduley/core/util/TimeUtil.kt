@@ -15,6 +15,18 @@ object TimeUtil {
 
     private val zoneId: ZoneId = ZoneId.systemDefault()
 
+    /** 将 LocalDateTime 归一化到指定位，从小到大，不包括传入位 */
+    fun naturalization(dateTime: LocalDateTime, timeUnit: TimeUnit): LocalDateTime {
+        return when (timeUnit) {
+            TimeUnit.DAYS -> dateTime.withHour(0).withMinute(0).withSecond(0).withNano(0)
+            TimeUnit.HOURS -> dateTime.withMinute(0).withSecond(0).withNano(0)
+            TimeUnit.MINUTES -> dateTime.withSecond(0).withNano(0)
+            TimeUnit.SECONDS -> dateTime.withNano(0)
+            TimeUnit.MILLISECONDS -> dateTime // LocalDateTime 精度到纳秒，无毫秒单位，直接返回
+            else -> dateTime
+        }
+    }
+
     /** 归一化到当前周周一日期 */
     fun LocalDate.toMonday(): LocalDate =
         this.with(DayOfWeek.MONDAY)

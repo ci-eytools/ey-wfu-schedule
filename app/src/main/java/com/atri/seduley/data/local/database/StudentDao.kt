@@ -61,4 +61,11 @@ interface StudentDao {
 
     @Query("SELECT courseUpdatedAt FROM students WHERE studentId = :studentId")
     fun observeUpdateTime(studentId: Long): Flow<LocalDateTime?>
+
+    @Query("SELECT * FROM students")
+    fun observeStudents(): Flow<List<StudentEntity>>
+
+    @Query("UPDATE students SET nickname = :nickname WHERE studentId = :studentId")
+    suspend fun updateNickname(studentId: Long, nickname: String)
+
 }

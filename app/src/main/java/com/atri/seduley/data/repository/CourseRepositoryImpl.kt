@@ -41,6 +41,7 @@ class CourseRepositoryImpl @Inject constructor(
         studentId: Long,
         courses: List<Course>
     ) {
+        if (courses.isEmpty()) return   // 为空取消插入
         courseDao.clearCoursesByStudentId(studentId)
         courseDao.insertCourses(courses.map { it.toEntity(studentId) })
     }

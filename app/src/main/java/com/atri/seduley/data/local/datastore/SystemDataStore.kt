@@ -2,9 +2,10 @@ package com.atri.seduley.data.local.datastore
 
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.intPreferencesKey
 import com.atri.seduley.data.local.datastore.entity.SystemConfEntity
+import com.atri.seduley.data.local.datastore.entity.TaskWay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
@@ -19,15 +20,15 @@ class SystemDataStore @Inject constructor(
 ) {
 
     private object Keys {
-        val IS_NEED_NOTIFICATION = booleanPreferencesKey("is_need_notification")
-        val IS_NEED_UPDATE_COURSE = booleanPreferencesKey("is_need_update_course")
+        val NOTIFICATION_WAY = intPreferencesKey("notification_way")
+        val UPDATE_COURSE_WAY = intPreferencesKey("update_course_way")
     }
 
     /** 保存系统设置信息 */
     suspend fun saveSystemConfInfo(systemConfiguration: SystemConfEntity) {
         dataStore.edit {
-            it[Keys.IS_NEED_NOTIFICATION] = systemConfiguration.isNeedNotification
-            it[Keys.IS_NEED_UPDATE_COURSE] = systemConfiguration.isNeedUpdateCourse
+            it[Keys.NOTIFICATION_WAY] = systemConfiguration.notificationWay.value
+            it[Keys.UPDATE_COURSE_WAY] = systemConfiguration.updateCourseWay.value
         }
     }
 
@@ -35,8 +36,8 @@ class SystemDataStore @Inject constructor(
     fun systemConfInfoFlow(): Flow<SystemConfEntity> =
         dataStore.data.map {
             SystemConfEntity(
-                isNeedNotification = it[Keys.IS_NEED_NOTIFICATION] ?: false,
-                isNeedUpdateCourse = it[Keys.IS_NEED_UPDATE_COURSE] ?: true
+                notificationWay = TaskWay.fromValue(it[Keys.NOTIFICATION_WAY] ?: 0),
+                updateCourseWay = TaskWay.fromValue(it[Keys.UPDATE_COURSE_WAY] ?: 0)
             )
         }
 

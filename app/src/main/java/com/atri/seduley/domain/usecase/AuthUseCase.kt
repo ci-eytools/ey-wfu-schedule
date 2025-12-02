@@ -48,9 +48,9 @@ data class AuthUseCase @Inject constructor(
 
     /** 登出 */
     suspend fun logout(
-        studentId: Long? = null
+        studentId: Long
     ): Result<Unit> = toReturn {
-        studentId?.let { authRepository.logoutAs(it) } ?: authRepository.logout()
+        authRepository.logoutAs(studentId)
     }
 
     /** 订阅当前用户 id */

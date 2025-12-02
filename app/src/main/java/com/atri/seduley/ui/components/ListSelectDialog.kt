@@ -49,7 +49,7 @@ fun ListDialog(
                 modifier = modifier
                     .fillMaxWidth()
                     .background(
-                        color = MaterialTheme.colorScheme.background,
+                        color = MaterialTheme.colorScheme.surfaceVariant,
                         shape = RoundedCornerShape(12.dp)
                     )
                     .padding(16.dp)

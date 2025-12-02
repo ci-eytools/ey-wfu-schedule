@@ -5,17 +5,29 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.os.Build
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
@@ -23,9 +35,13 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -35,6 +51,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -46,6 +64,8 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -53,11 +73,15 @@ import com.atri.seduley.R
 import com.atri.seduley.core.util.Const
 import com.atri.seduley.core.util.PermissionUtil
 import com.atri.seduley.core.util.PermissionUtil.hasPermission
+import com.atri.seduley.data.local.datastore.entity.TaskWay
+import com.atri.seduley.data.local.datastore.entity.getMsg
 import com.atri.seduley.domain.model.SystemConf
-import com.atri.seduley.ui.screen.setting.SettingEvent
 import com.atri.seduley.ui.components.ConfirmDialog
 import com.atri.seduley.ui.components.ListDialog
 import com.atri.seduley.ui.components.SingleChoiceDialog
+import com.atri.seduley.ui.model.StudentInfo
+import com.atri.seduley.ui.model.StudentUpdate
+import com.atri.seduley.ui.screen.setting.SettingEvent
 import com.atri.seduley.ui.screen.setting.util.rememberImageCropper
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -65,6 +89,7 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun SettingList(
     studentId: String?,
+    studentInfos: List<StudentInfo>,
     updateTime: LocalDateTime,
     systemConf: SystemConf,
     onEvent: (SettingEvent) -> Unit,
@@ -88,14 +113,18 @@ fun SettingList(
         )
         IdentityInfo(
             studentId = studentId,
-            updateCredential = { studentId, password ->
+            studentInfos = studentInfos,
+            saveCredential = { studentId, password ->
                 onEvent(
                     SettingEvent.SaveCredential(
                         studentId,
                         password
                     )
                 )
-            }
+            },
+            switchCurrentId = { onEvent(SettingEvent.SwitchCredential(it)) },
+            updateCredential = { onEvent(SettingEvent.UpdateCredential(it)) },
+            clearCredential = { onEvent(SettingEvent.ClearCredential(it)) }
         )
         Spacer(modifier = Modifier.height(15.dp))
         CourseInfo(
@@ -107,8 +136,8 @@ fun SettingList(
         BackgroundTaskOptions(
             switchNotificationDemand = { onEvent(SettingEvent.SwitchNotificationDemand(it)) },
             switchUpdateCourseDemand = { onEvent(SettingEvent.SwitchUpdateCourseDemand(it)) },
-            isNeedNotification = systemConf.isNeedNotification,
-            isNeedUpdateCourse = systemConf.isNeedUpdateCourse
+            notificationWay = systemConf.notificationWay,
+            updateCourseWay = systemConf.updateCourseWay
         )
         Spacer(modifier = Modifier.height(15.dp))
         PermissionOptions()
@@ -124,26 +153,35 @@ fun SettingList(
 @Composable
 fun IdentityInfo(
     studentId: String? = null,
-    updateCredential: (String, String) -> Unit,
+    studentInfos: List<StudentInfo>,
+    switchCurrentId: (String) -> Unit,
+    clearCredential: (String) -> Unit,
+    updateCredential: (StudentUpdate) -> Unit,
+    saveCredential: (String, String) -> Unit,
     @SuppressLint("ModifierParameter") modifier: Modifier = Modifier
 ) {
     var isShowCredentialInputDialog by remember { mutableStateOf(false) }
     Column(
         modifier = modifier.fillMaxWidth()
     ) {
+        val nickName = studentInfos.firstOrNull { it.studentId == studentId }?.nickName
         ListItem(
-            settingItem = "修改账户信息",
-            detail = studentId.takeIf { !it.isNullOrEmpty() } ?: "未设置",
+            settingItem = "账户信息",
+            detail = nickName ?: studentId.takeIf { !it.isNullOrEmpty() } ?: "未登录",
             onClick = { isShowCredentialInputDialog = true }
         )
     }
-    CredentialInputDialog(
-        currentStudentId = studentId,
+    ManagerCredential(
+        studentInfos = studentInfos,
         showDialog = isShowCredentialInputDialog,
         onDismiss = {
             isShowCredentialInputDialog = false
         },
-        onConfirm = { studentId, password -> updateCredential(studentId, password) }
+        currentStudentId = studentId,
+        switchCurrentId = switchCurrentId,
+        clearCredential = { clearCredential(it) },
+        updateCredential = { updateCredential(it) },
+        onConfirm = { studentId, password -> saveCredential(studentId, password) }
     )
 }
 
@@ -193,10 +231,10 @@ fun CourseInfo(
 
 @Composable
 fun BackgroundTaskOptions(
-    switchNotificationDemand: (Boolean) -> Unit,
-    switchUpdateCourseDemand: (Boolean) -> Unit,
-    isNeedNotification: Boolean,
-    isNeedUpdateCourse: Boolean,
+    switchNotificationDemand: (TaskWay) -> Unit,
+    switchUpdateCourseDemand: (TaskWay) -> Unit,
+    notificationWay: TaskWay,
+    updateCourseWay: TaskWay,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -239,8 +277,7 @@ fun BackgroundTaskOptions(
     ) {
         ListItem(
             settingItem = "每日课程提醒",
-            detail = if (!hasNotificationPermission) "权限不足, 无法启用"
-            else if (isNeedNotification) "启用 (请确认自启动与后台高耗电权限)" else "禁用",
+            detail = if (!hasNotificationPermission) "权限不足, 无法启用" else notificationWay.getMsg(),
             onClick = {
                 // 只有在有权限时才显示对话框
                 if (hasNotificationPermission) {
@@ -252,20 +289,16 @@ fun BackgroundTaskOptions(
     SingleChoiceDialog(
         title = "每日课程提醒",
         text = "若启用需在权限列表将所有权限打开方可正常提醒",
-        options = listOf("启用", "禁用"),
-        selectedIndex = if (isNeedNotification) 0 else 1,
+        options = listOf("禁用", "自动选择", "不精确", "精确（会增加耗电）"),
+        selectedIndex = notificationWay.value,
         showDialog = showSwitchNotificationDemandDialog,
         onDismiss = { showSwitchNotificationDemandDialog = false },
-        onConfirm = {
-            switchNotificationDemand(it == 0)
-        }
+        onConfirm = { switchNotificationDemand(TaskWay.fromValue(it)) }
     )
-
     ListItem(
         settingItem = "每日更新课表",
 
-        detail = if (!hasBackgroundTaskPermission) "权限不足, 无法启用"
-        else if (isNeedUpdateCourse) "启用 (请确认自启动与后台高耗电权限)" else "禁用",
+        detail = if (!hasBackgroundTaskPermission) "权限不足, 无法启用" else updateCourseWay.getMsg(),
         onClick = {
             if (hasBackgroundTaskPermission) {
                 showSwitchUpdateCourseDialog = true
@@ -275,13 +308,11 @@ fun BackgroundTaskOptions(
     SingleChoiceDialog(
         title = "每日更新课表",
         text = "需打开权限列表除通知外的所有权限",
-        options = listOf("启用", "禁用"),
-        selectedIndex = if (isNeedUpdateCourse) 0 else 1,
+        options = listOf("禁用", "自动选择", "不精确", "精确（会增加后台耗电）"),
+        selectedIndex = updateCourseWay.value,
         showDialog = showSwitchUpdateCourseDialog,
         onDismiss = { showSwitchUpdateCourseDialog = false },
-        onConfirm = {
-            switchUpdateCourseDemand(it == 0)
-        }
+        onConfirm = { switchUpdateCourseDemand(TaskWay.fromValue(it)) }
     )
 }
 
@@ -360,7 +391,7 @@ fun PermissionOptions(modifier: Modifier = Modifier) {
                     handlePermissionClick {
                         PermissionUtil.openExactAlarmSettings(context)
                     }
-                },
+                }
             )
             ListItem(
                 settingItem = "忽略电池优化",
@@ -467,7 +498,6 @@ fun ListItem(
         modifier = modifier
             .clickable { onClick() }
             .fillMaxWidth()
-            .background(color = MaterialTheme.colorScheme.background)
             .padding(top = 8.dp)
     ) {
         Row(
@@ -511,38 +541,335 @@ fun ListItem(
 }
 
 @Composable
-fun CredentialInputDialog(
+fun ManagerCredential(
+    studentInfos: List<StudentInfo>,
     currentStudentId: String?,
+    switchCurrentId: (String) -> Unit,
+    clearCredential: (String) -> Unit,
+    updateCredential: (StudentUpdate) -> Unit,
     showDialog: Boolean,
     onDismiss: () -> Unit,
     onConfirm: (String, String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    if (showDialog) {
+    if (!showDialog) return
+    var isUserListExpanded by remember { mutableStateOf(false) }
+    var isInputSectionVisible by remember { mutableStateOf(false) }
 
-        var studentId by remember { mutableStateOf("") }
+    var studentId by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var nickname by remember { mutableStateOf("") }
+    var isShowPassword by remember { mutableStateOf(false) }
+
+
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Surface(
+            shape = RoundedCornerShape(16.dp),
+            color = MaterialTheme.colorScheme.surfaceVariant,
+            modifier = modifier.fillMaxWidth(0.9f)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            ) {
+                // 标题
+                Text(
+                    text = "账户管理",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(bottom = 18.dp)
+                )
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(8.dp))
+                        .border(
+                            0.5.dp,
+                            MaterialTheme.colorScheme.primary,
+                            RoundedCornerShape(8.dp)
+                        )
+                        .background(color = MaterialTheme.colorScheme.inversePrimary.copy(0.1f))
+                        .animateContentSize()
+                ) {
+                    val currentUser =
+                        studentInfos.firstOrNull { it.studentId == currentStudentId }
+                    val otherStudents =
+                        studentInfos.filter { it.studentId != currentStudentId }
+
+                    Box(modifier = Modifier.clickable {
+                        isUserListExpanded = !isUserListExpanded
+                    }) {
+                        CredentialItem(
+                            studentId = currentUser?.studentId ?: "",
+                            nickName = currentUser?.nickName ?: "",
+                            clearCredential = { /* 当前登录用户不可删除 */ },
+                            updateCredential = { updateCredential(it) },
+                            isExpanded = isUserListExpanded,
+                            modifier = Modifier.padding(end = 3.dp)
+                        )
+                    }
+
+                    if (isUserListExpanded && otherStudents.isNotEmpty()) {
+                        HorizontalDivider(
+                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
+                            thickness = 1.dp,
+                            modifier = Modifier.padding(horizontal = 8.dp)
+                        )
+
+                        LazyColumn(
+                            modifier = Modifier
+                                .heightIn(max = 160.dp)
+                        ) {
+                            items(otherStudents) { studentInfo ->
+                                CredentialItem(
+                                    studentId = studentInfo.studentId,
+                                    nickName = studentInfo.nickName,
+                                    isExpanded = null,
+                                    clearCredential = { clearCredential(it) },
+                                    updateCredential = { updateCredential(it) },
+                                    modifier = Modifier.clickable { switchCurrentId(studentInfo.studentId) }
+                                )
+                                HorizontalDivider(
+                                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
+                                    thickness = 0.5.dp,
+                                    modifier = Modifier.padding(horizontal = 8.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                AnimatedVisibility(visible = isInputSectionVisible) {
+                    Column {
+                        OutlinedTextField(
+                            value = studentId,
+                            onValueChange = { studentId = it },
+                            label = { Text(text = "请输入学号") },
+                            placeholder = { Text(text = "添加凭证") },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        OutlinedTextField(
+                            value = password,
+                            onValueChange = { password = it },
+                            label = { Text(text = "请输入密码") },
+                            singleLine = true,
+                            visualTransformation = if (isShowPassword) VisualTransformation.None
+                            else PasswordVisualTransformation(),
+                            trailingIcon = {
+                                IconButton(onClick = { isShowPassword = !isShowPassword }) {
+                                    Icon(
+                                        painter = painterResource(
+                                            id = if (isShowPassword) R.drawable.ic_eye
+                                            else R.drawable.ic_eye_off
+                                        ),
+                                        contentDescription = if (isShowPassword) "Show password"
+                                        else "Hide passwords",
+                                    )
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            OutlinedTextField(
+                                value = nickname,
+                                onValueChange = { nickname = it },
+                                label = { Text(text = "请输入昵称（可选）") },
+                                singleLine = true,
+                                modifier = Modifier.weight(0.6f)
+                            )
+                            Spacer(modifier = Modifier.weight(0.1f))
+                            Button(
+                                onClick = {
+                                    onConfirm(studentId, password)
+                                    isInputSectionVisible = false
+                                    studentId = ""
+                                    password = ""
+                                    nickname = ""
+                                },
+                                shape = RoundedCornerShape(6.dp),
+                                contentPadding = PaddingValues(horizontal = 3.dp),
+                                modifier = Modifier
+                                    .weight(0.3f)
+                            ) {
+                                Text("确认添加")
+                            }
+                        }
+                    }
+
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    OutlinedButton(
+                        onClick = { isInputSectionVisible = !isInputSectionVisible },
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text(if (isInputSectionVisible) "取消添加" else "添加凭证")
+                    }
+                    Spacer(modifier = Modifier.weight(1f))
+                    TextButton(onClick = onDismiss) {
+                        Text("关闭")
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun CredentialItem(
+    studentId: String,
+    nickName: String,
+    updateCredential: (StudentUpdate) -> Unit,
+    clearCredential: (String) -> Unit,
+    isExpanded: Boolean? = null,
+    @SuppressLint("ModifierParameter") modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.End
+    ) {
+        val isNickNull = nickName.isEmpty()
+        var isShowDeleteCredentialDialog by remember { mutableStateOf(false) }
+        var isShowUpdateCredentialDialog by remember { mutableStateOf(false) }
+
+        val rotation by animateFloatAsState(
+            targetValue = if (isExpanded == true) -180f else 0f,
+            animationSpec = tween(durationMillis = 300),
+            label = "rotationAnimation"
+        )
+        Column(
+            modifier = Modifier
+                .padding(start = 8.dp, top = 6.dp, bottom = 6.dp)
+                .heightIn(min = 40.dp),
+            verticalArrangement = Arrangement.Center
+        ) {
+            if (!isNickNull) {
+                Text(
+                    text = nickName,
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+            Text(
+                text = if (!studentId.isEmpty()) studentId else "未登录",
+                style = if (!isNickNull) MaterialTheme.typography.bodySmall else MaterialTheme.typography.bodyLarge,
+                fontWeight = if (!isNickNull) FontWeight.Thin else FontWeight.Bold
+            )
+        }
+
+        Spacer(modifier = Modifier.weight(1f))
+
+        IconButton(
+            onClick = { isShowUpdateCredentialDialog = true }
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.ic_edit),
+                tint = MaterialTheme.colorScheme.primary,
+                contentDescription = "UpdateCredential",
+                modifier = Modifier
+                    .padding(8.dp)
+                    .size(24.dp)
+            )
+        }
+
+
+        if (isExpanded != null) {
+            Icon(
+                painter = painterResource(R.drawable.ic_triangle_arrow),
+                tint = MaterialTheme.colorScheme.primary,
+                contentDescription = if (isExpanded) "Expanded" else "Collapsed",
+                modifier = Modifier
+                    .padding(8.dp)
+                    .size(28.dp)
+                    .rotate(rotation)
+            )
+        } else {
+            IconButton(
+                onClick = { isShowDeleteCredentialDialog = true }
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_delete),
+                    tint = MaterialTheme.colorScheme.primary,
+                    contentDescription = "DeleteCredential",
+                    modifier = Modifier
+                        .padding(8.dp)
+                        .size(24.dp)
+                )
+            }
+        }
+
+        ConfirmDialog(
+            text = "是否删除凭证：\n$studentId",
+            showDialog = isShowDeleteCredentialDialog,
+            onDismiss = { isShowDeleteCredentialDialog = false },
+            onConfirm = { clearCredential(studentId) }
+        )
+
+        CredentialUpdateInputDialog(
+            studentId = studentId,
+            oldNickname = nickName,
+            showDialog = isShowUpdateCredentialDialog,
+            onDismiss = { isShowUpdateCredentialDialog = false },
+            onConfirm = { updateCredential(it) }
+        )
+    }
+}
+
+@Composable
+fun CredentialUpdateInputDialog(
+    studentId: String,
+    showDialog: Boolean,
+    oldNickname: String,
+    onDismiss: () -> Unit,
+    onConfirm: (StudentUpdate) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    if (showDialog) {
         var password by remember { mutableStateOf("") }
+        var nickname by remember { mutableStateOf(oldNickname) }
         var isShowPassword by remember { mutableStateOf(false) }
 
         AlertDialog(
             modifier = modifier,
             onDismissRequest = { onDismiss() },
-            title = { Text("登录凭证") },
+            title = { Text("更新凭证") },
             text = {
                 Column {
                     OutlinedTextField(
                         value = studentId,
-                        onValueChange = { studentId = it },
-                        label = { Text(text = "请输入学号") },
+                        onValueChange = { /* 更改凭证时禁止更改 id */ },
+                        label = { Text(text = "学号不可更改") },
                         placeholder = {
-                            Text(text = currentStudentId ?: "未设置")
+                            Text(text = studentId)
                         },
-                        singleLine = true
+                        singleLine = true,
+                        enabled = false,     // 更改凭证时禁止更改 id
+                        modifier = Modifier.fillMaxWidth()
                     )
                     OutlinedTextField(
                         value = password,
                         onValueChange = { password = it },
-                        label = { Text(text = "请输入密码") },
+                        label = { Text(text = "新密码（留空不更改）") },
                         singleLine = true,
                         visualTransformation = if (isShowPassword) VisualTransformation.None
                         else PasswordVisualTransformation(),
@@ -552,25 +879,41 @@ fun CredentialInputDialog(
                                     id = if (isShowPassword) R.drawable.ic_eye
                                     else R.drawable.ic_eye_off
                                 ),
-                                contentDescription = if (isShowPassword) "隐藏密码" else "显示密码",
+                                contentDescription = if (isShowPassword) "Show password"
+                                else "Hide passwords",
                                 tint = Color.Gray,
                                 modifier = Modifier
-                                    .size(24.dp)
                                     .clickable(
                                         interactionSource = remember { MutableInteractionSource() },
                                         indication = null
                                     ) { isShowPassword = !isShowPassword }
                             )
-                        }
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = nickname,
+                        onValueChange = { newText ->
+                            if (newText.length <= 16) {
+                                nickname = newText
+                            }
+                        },
+                        label = { Text(text = "昵称（留空清除，最多16字符）") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
                     )
                 }
             },
             confirmButton = {
                 Button(onClick = {
-                    onConfirm(studentId, password)
+                    if (oldNickname == nickname) {
+                        onConfirm(StudentUpdate(studentId, password))
+                    } else {
+                        onConfirm(StudentUpdate(studentId, password, nickname))
+                    }
                     onDismiss()
                 }) {
-                    Text("确认")
+                    Text("更新")
                 }
             },
             dismissButton = {

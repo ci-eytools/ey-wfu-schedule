@@ -6,7 +6,6 @@ import android.content.Context
 import com.atri.seduley.core.alarm.AlarmBackend
 import com.atri.seduley.core.alarm.AlarmConfig
 import com.atri.seduley.core.alarm.AlarmScheduler
-import com.atri.seduley.core.alarm.util.ACTION
 import com.atri.seduley.core.alarm.util.PendingIntentFactory
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.time.ZoneId
@@ -27,8 +26,7 @@ class AlarmSchedulerImpl @Inject constructor(
 
         val pendingIntent = PendingIntentFactory.createBroadcast(
             context = context,
-            requestCode = config.requestCode,
-            action = ACTION
+            requestCode = config.requestCode
         )
 
         when (config.backend) {
@@ -37,16 +35,31 @@ class AlarmSchedulerImpl @Inject constructor(
                 alarmManager.setWindow(
                     AlarmManager.RTC_WAKEUP,
                     triggerMillis,
-                    config.windowMillis ?: (10 * 60 * 1000L),   // 默认 10min 窗口
+                    config.windowMillis ?: (15 * 60 * 1000L),   // 默认 15min 窗口
                     pendingIntent
                 )
             }
 
-            AlarmBackend.EXACT_ALARM -> {
-                // 精确闹钟
-                alarmManager.setExactAndAllowWhileIdle(
+            /*AlarmBackend.INEXACT_REPEAT -> {
+                alarmManager.setInexactRepeating(
                     AlarmManager.RTC_WAKEUP,
                     triggerMillis,
+                    AlarmManager.INTERVAL_DAY,
+                    pendingIntent
+                )
+            }*/
+
+            AlarmBackend.EXACT_ALARM -> {
+                // 精确闹钟
+                /*alarmManager.setExactAndAllowWhileIdle(
+                    AlarmManager.RTC_WAKEUP,
+                    triggerMillis,
+                    pendingIntent
+                )*/
+                alarmManager.setInexactRepeating(
+                    AlarmManager.RTC_WAKEUP,
+                    triggerMillis,
+                    AlarmManager.INTERVAL_DAY,
                     pendingIntent
                 )
             }
@@ -57,8 +70,7 @@ class AlarmSchedulerImpl @Inject constructor(
     override fun cancel(requestCode: Int) {
         val pi = PendingIntentFactory.createBroadcast(
             context = context,
-            requestCode = requestCode,
-            action = ACTION
+            requestCode = requestCode
         )
 
         alarmManager.cancel(pi)

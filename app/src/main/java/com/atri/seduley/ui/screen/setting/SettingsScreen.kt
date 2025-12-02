@@ -49,6 +49,7 @@ fun SettingsScreen(
     val systemConf by viewModel.systemConf.collectAsState()
     val updateTime by viewModel.updateTime.collectAsState()
     val coverVersion by viewModel.coverVersion.collectAsState()
+    val studentInfos by viewModel.studentInfos.collectAsState()
 
     LaunchedEffect(viewModel) {
         viewModel.event.collectLatest { event ->
@@ -74,6 +75,7 @@ fun SettingsScreen(
                 studentId = if (studentId != -1L) studentId.toString() else "未登录",
                 updateTime = updateTime ?: Const.NO_LAST_UPDATE_SELECTED_DATE,
                 systemConf = systemConf,
+                studentInfos = studentInfos,
                 coverVersion = coverVersion,
                 onEvent = viewModel::onEvent
             )

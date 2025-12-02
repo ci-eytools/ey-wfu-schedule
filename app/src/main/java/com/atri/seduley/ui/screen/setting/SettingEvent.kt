@@ -1,5 +1,8 @@
 package com.atri.seduley.ui.screen.setting
 
+import com.atri.seduley.data.local.datastore.entity.TaskWay
+import com.atri.seduley.ui.model.StudentUpdate
+
 /**
  * 设置页事件
  */
@@ -10,6 +13,15 @@ sealed class SettingEvent {
         val studentId: String,
         val password: String
     ) : SettingEvent()
+
+    /** 切换当前登录凭证 */
+    data class SwitchCredential(val studentId: String) : SettingEvent()
+
+    /** 删除指定凭证 */
+    data class ClearCredential(val studentId: String) : SettingEvent()
+
+    /** 更新凭证 */
+    data class UpdateCredential(val studentUpdate: StudentUpdate) : SettingEvent()
 
     /** 清除所有课表 */
     data object ClearCourses : SettingEvent()
@@ -29,9 +41,9 @@ sealed class SettingEvent {
     /** 重置开屏页 */
     data object ResetSplash : SettingEvent()
 
-    /** 是否需要每日提醒 */
-    data class SwitchNotificationDemand(val isNeedNotification: Boolean) : SettingEvent()
+    /** 切换每日通知需求 */
+    data class SwitchNotificationDemand(val taskWay: TaskWay) : SettingEvent()
 
-    /** 是否需要每日更新课表 */
-    data class SwitchUpdateCourseDemand(val isNeedUpdateCourse: Boolean) : SettingEvent()
+    /** 切换每日更新课表需求 */
+    data class SwitchUpdateCourseDemand(val taskWay: TaskWay) : SettingEvent()
 }

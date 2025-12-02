@@ -42,6 +42,9 @@ fun ConfirmDialog(
         BasicAlertDialog(
             onDismissRequest = { onDismiss() },
             properties = DialogProperties(), content = {
+
+                Spacer(modifier = Modifier.height(16.dp))
+
                 Column(
                     modifier = modifier
                         .fillMaxWidth()

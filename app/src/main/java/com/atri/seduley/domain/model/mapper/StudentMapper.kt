@@ -8,17 +8,21 @@ import com.atri.seduley.domain.model.Student
 /** StudentEntity -> Student */
 fun StudentEntity.toDomain() =
     Student(
-        studentId = 0,
+        studentId = studentId,
         semester = semester.toDomain(),
-        updatedAt = courseUpdatedAt
+        nickName = nickName ?: "",
+        courseUpdatedAt = courseUpdatedAt,
+        params = params ?: emptyMap()
     )
 
 /** Student -> StudentEntity */
 fun Student.toEntity() =
     StudentEntity(
-        studentId = 0,
+        studentId = studentId,
         semester = semester.toEntity(),
-        courseUpdatedAt = updatedAt
+        nickName = nickName,
+        courseUpdatedAt = courseUpdatedAt,
+        params = params
     )
 
 /** SemesterEntity -> Semester */

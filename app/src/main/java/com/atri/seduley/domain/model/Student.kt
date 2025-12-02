@@ -6,7 +6,9 @@ import java.time.LocalDateTime
 data class Student(
     val studentId: Long,
     val semester: Semester,
-    val updatedAt: LocalDateTime
+    val nickName: String,
+    val courseUpdatedAt: LocalDateTime,
+    val params: Map<String, String>
 )
 
 data class Semester(

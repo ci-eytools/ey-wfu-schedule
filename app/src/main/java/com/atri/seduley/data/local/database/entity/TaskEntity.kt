@@ -11,12 +11,13 @@ import java.time.LocalDateTime
 )
 data class TaskEntity(
     @PrimaryKey val requestCode: Int,
-    val triggerAt: LocalDateTime,
+    val triggerAt: LocalDateTime,               // 目标触发时间
+    val actualTriggerAt: LocalDateTime? = null, // 实际触发时间
     val triggerMode: TriggerMode,
     val callback: Callback,
     val state: TaskState,
     val params: Map<String, String>,
-    val updatedAt: LocalDateTime
+    val createdAt: LocalDateTime
 )
 
 /**
@@ -38,5 +39,6 @@ enum class TaskState(val value: Int) {
     AWAIT(0),
     DONE(1),
     TIME_OUT(2),
-    FAILED(3)
+    FAILED(3),
+    CLEAR(4)
 }

@@ -4,7 +4,6 @@ import android.app.AlarmManager
 import android.content.Context
 import com.atri.seduley.core.alarm.AlarmScheduler
 import com.atri.seduley.core.alarm.impl.AlarmSchedulerImpl
-import dagger.Binds
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -14,7 +13,7 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-abstract class AlarmModule {
+object AlarmModule {
 
     @Provides
     @Singleton
@@ -22,9 +21,12 @@ abstract class AlarmModule {
         return context.getSystemService(AlarmManager::class.java)
     }
 
-    @Binds
+    @Provides
     @Singleton
-    abstract fun bindAlarmService(
-        impl: AlarmSchedulerImpl
-    ): AlarmScheduler
+    fun provideAlarmScheduler(
+        alarmManager: AlarmManager,
+        @ApplicationContext context: Context
+    ): AlarmScheduler {
+        return AlarmSchedulerImpl(alarmManager, context)
+    }
 }

@@ -18,19 +18,20 @@ object Const {
     const val DEFAULT_SEED_COLOR_INT = 0xFF6200EE.toInt()
 
     /** 每日课程提醒触发时间 */
-    val DAILY_CLAZZ_NOTIFICATION_TIME: LocalTime = LocalTime.of(22, 0)
+    // TODO 测试
+    val DAILY_COURSE_NOTIFICATION_TIME: LocalTime = LocalTime.of(13, 0)
 
-    /**
-     * 每日课程自动更新时间
-     */
-    val DAILY_UPDATE_COURSE_TIME: LocalTime = LocalTime.of(22, 0)
+    /** 每日课程自动更新时间 */
+    // TODO 测试
+    val DAILY_UPDATE_COURSE_TIME: LocalTime = LocalTime.of(14, 0)
 
     /** 删除大于此数量的闹钟 */
     const val DELECT_ALARM_NUM: Int = 1000
 
     /** 当今日无课时切换到明日课表的时间 */
-    val SWITCH_SELECTED_DATE_TOMORROW: LocalTime = LocalTime.of(18, 0)
+    val SWITCH_SELECTED_DATE_TOMORROW: LocalTime = LocalTime.of(15, 0)
 
+    /** 无最后更新选定日期 */
     val NO_LAST_UPDATE_SELECTED_DATE: LocalDateTime =
         LocalDateTime.of(2020, 8, 31, 0, 0)
 }

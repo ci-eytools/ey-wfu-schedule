@@ -14,7 +14,9 @@ import java.time.LocalDateTime
 data class StudentEntity(
     @PrimaryKey val studentId: Long,
     @Embedded val semester: SemesterEntity,
-    val courseUpdatedAt: LocalDateTime
+    val nickName: String? = null,
+    val courseUpdatedAt: LocalDateTime,
+    val params: Map<String, String>? = null
 )
 
 data class SemesterEntity(

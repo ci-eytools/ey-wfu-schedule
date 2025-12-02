@@ -44,6 +44,21 @@
                 android:name="com.yalantis.ucrop.UCropActivity"
                 android:theme="@style/Theme.SeduleyApp"
                 android:exported="false" />
+
+        <!-- Alarm -->
+        <receiver
+                android:name=".domain.alarm.AlarmReceiver"
+                android:enabled="true"
+                android:exported="false">
+        </receiver>
+        <receiver
+                android:name=".domain.alarm.BootCompletedReceiver"
+                android:enabled="true"
+                android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>

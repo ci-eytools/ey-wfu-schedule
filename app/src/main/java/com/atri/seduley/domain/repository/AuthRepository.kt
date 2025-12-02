@@ -29,6 +29,7 @@ interface AuthRepository {
     /** 切换当前登录用户 */
     suspend fun saveCurrentStudent(studentId: Long)
 
+
     /** 登出/删除当前用户 */
     suspend fun logout()
 

@@ -22,7 +22,7 @@ class AlarmDispatcher @Inject constructor(
 ) {
     @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
     fun dailyCourseNotification() {
-        systemCoroutineScope.scope.launch  {
+        systemCoroutineScope.scope.launch {
             val now = LocalDate.now()
             val studentId = authRepository.getCurrentStudentId()
             if (studentId == null) {
@@ -31,23 +31,53 @@ class AlarmDispatcher @Inject constructor(
             val courses = courseRepository.getCoursesByStudentIdAndDate(
                 studentId, now.plusDays(1)
             )
-            val section = courses.minByOrNull { course -> course.section }?.section
-            val msg = when (section) {
-                1, 2 -> {
-                    val time = sectionToTime(section).start
+
+            if (courses.isEmpty()) {
+                val tomorrow = LocalDate.now().plusDays(1)
+                val isWeekendTomorrow = tomorrow.dayOfWeek.value >= 6
+                if (!isWeekendTomorrow) {
+                    systemBarNotification.show("明日课程提醒", "明日无课，可以睡个好觉啦！")
+                }
+                return@launch
+            }
+
+
+            val earliestSection = courses.minByOrNull { it.section }?.section
+            val dayOfWeek = courses.first().dayOfWeek
+
+            // 辅助变量：是否周五/周六
+            val isWeekend = dayOfWeek == 5 || dayOfWeek == 6
+
+            // 根据最早节次生成消息
+            val msg = when (earliestSection) {
+                null -> {
+                    "明日无课, 记得取消闹钟哦 "
+                }
+
+                // 1、2节 —— 早课
+                in 1..2 -> {
+                    val time = sectionToTime(earliestSection).start
                     "明日 $time 有课, 早点休息吧 (不要忘记设闹钟哦) "
                 }
 
-                3, 4, 5 -> {
-                    " 明日上午无课 "
+                // 3、4、5节 —— 中午前是否有课
+                in 3..5 -> {
+                    if (isWeekend) {
+                        val time = sectionToTime(earliestSection).start
+                        "明日 $time 有课, 不要忘记了哦 "
+                    } else {
+                        "明日上午无课 "
+                    }
                 }
 
                 else -> {
-                    "明日无课, 记得取消闹钟哦"
+                    "明日无课, 记得取消闹钟哦 "
                 }
             }
-            val dayOfWeek = courses[0].dayOfWeek
-            if (dayOfWeek < 5 || dayOfWeek == 7) {
+
+            // 周五/周六的特殊推送逻辑
+            val shouldNotify = !isWeekend || msg.contains("设闹钟")
+            if (shouldNotify) {
                 systemBarNotification.show("明日课程提醒", msg)
             }
         }
@@ -56,10 +86,11 @@ class AlarmDispatcher @Inject constructor(
     fun updateCourses() {
         systemCoroutineScope.scope.launch {
             studentRepository.getAllStudentId().forEach {
-                courseRepository.clearCourses(it)
                 authRepository.loginAs(it, NetworkUtils.createIsolatedOkHttpClient()) {
-                    courseRepository.insertCourses(it,
-                        courseRepository.getAllCoursesFromRemote(it))
+                    courseRepository.insertCourses(
+                        it,
+                        courseRepository.getAllCoursesFromRemote(it)
+                    )
                 }
             }
         }

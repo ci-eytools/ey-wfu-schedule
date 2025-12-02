@@ -14,13 +14,12 @@ import javax.inject.Inject
  * 职责是: 触发一个UseCase来重新调度所有必要的闹钟.
  */
 @AndroidEntryPoint
-class BootCompletedReceiver @Inject constructor(
-    private val taskUseCase: TaskUseCase
-) : BroadcastReceiver() {
+class BootCompletedReceiver: BroadcastReceiver() {
 
-    // 注入全局协程作用域，用于安全地执行后台任务
     @Inject
     lateinit var systemScope: SystemCoroutineScope
+    @Inject
+    lateinit var taskUseCase: TaskUseCase
 
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action != Intent.ACTION_BOOT_COMPLETED) {

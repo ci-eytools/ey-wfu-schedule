@@ -7,13 +7,14 @@ import android.content.Intent
 import androidx.annotation.RequiresPermission
 import com.atri.seduley.core.alarm.util.ACTION
 import com.atri.seduley.core.util.AppLogger
+import com.atri.seduley.core.util.SystemCoroutineScope
 import com.atri.seduley.data.local.database.entity.Callback
+import com.atri.seduley.data.local.database.entity.TaskState
 import com.atri.seduley.domain.model.Task
+import com.atri.seduley.domain.model.copyWithNewParams
 import com.atri.seduley.domain.model.nextDay
 import com.atri.seduley.domain.repository.TaskRepository
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -21,15 +22,18 @@ import javax.inject.Inject
  * 接收 AlarmManager 触发事件
  */
 @AndroidEntryPoint
-class AlarmReceiver @Inject constructor(
-    private val alarmDispatcher: AlarmDispatcher,
-    private val taskRepository: TaskRepository
-) : BroadcastReceiver() {
+class AlarmReceiver : BroadcastReceiver() {
 
-    private val scope = CoroutineScope(Dispatchers.IO)
+    @Inject
+    lateinit var alarmDispatcher: AlarmDispatcher
+    @Inject
+    lateinit var taskRepository: TaskRepository
+    @Inject
+    lateinit var systemCoroutineScope: SystemCoroutineScope
 
     @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
     override fun onReceive(context: Context, intent: Intent) {
+        AppLogger.i("AlarmReceiver onReceive")
         if (intent.action != ACTION) {
             AppLogger.w("Unknown action: ${intent.action}")
             return
@@ -43,19 +47,37 @@ class AlarmReceiver @Inject constructor(
 
         AppLogger.i("Alarm triggered: requestCode=$requestCode")
 
+        val pendingResult = goAsync()
         // 1. 从数据库读取对应任务
-        scope.launch {
-            val task = taskRepository.getTask(requestCode)
-            if (task == null) {
-                AppLogger.w("Task not found for requestCode=$requestCode")
-                return@launch
+        systemCoroutineScope.scope.launch {
+            var task: Task? = null
+            try {
+                task = taskRepository.getTask(requestCode)
+                if (task == null) {
+                    AppLogger.w("Task not found for requestCode=$requestCode, aborting.")
+                    return@launch
+                }
+
+                // 2. 分发对应回调
+                val newTask = dispatchCallback(task)
+
+                // 3. 更新任务
+//                taskRepository.updateTask(newTask)
+            } catch (e: Exception) {
+                val eStr = e.toString()
+                if (task != null) {
+                    taskRepository.updateTask(
+                        task.copyWithNewParams(
+                            state = TaskState.FAILED,
+                            newParams = mapOf("error" to eStr)
+                        )
+                    )
+                }
+                AppLogger.w(eStr)
+            } finally {
+                AppLogger.i("Finishing pendingResult for requestCode=$requestCode.")
+                pendingResult.finish()
             }
-
-            // 2. 分发对应回调
-            val newTask = dispatchCallback(task)
-
-            // 3. 更新任务
-            taskRepository.updateTask(newTask)
         }
     }
 

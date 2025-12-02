@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import com.atri.seduley.domain.model.SystemConf
+import com.atri.seduley.ui.model.StudentInfo
 import com.atri.seduley.ui.screen.setting.SettingEvent
 import java.time.LocalDateTime
 import kotlin.math.max
@@ -45,6 +46,7 @@ import kotlin.math.roundToInt
 fun NestScroll(
     studentId: String,
     updateTime: LocalDateTime,
+    studentInfos: List<StudentInfo>,
     systemConf: SystemConf,
     coverVersion: Int,
     onEvent: (SettingEvent) -> Unit,
@@ -143,6 +145,7 @@ fun NestScroll(
                 }
                 .clip(RoundedCornerShape(topStart = 15.dp, topEnd = 15.dp)),
             studentId = studentId,
+            studentInfos = studentInfos,
             updateTime = updateTime,
             systemConf = systemConf,
             onEvent = { onEvent(it) },

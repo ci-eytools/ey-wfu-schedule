@@ -15,6 +15,7 @@ import com.atri.seduley.data.remote.api.SESSApi
 import com.atri.seduley.data.remote.model.LoginReq
 import com.atri.seduley.domain.ml.CaptchaRecognizer
 import com.atri.seduley.domain.repository.AuthRepository
+import com.atri.seduley.domain.repository.CourseRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import okhttp3.OkHttpClient
@@ -29,6 +30,7 @@ class AuthRepositoryImpl @Inject constructor(
     private val captchaApi: CaptchaApi,
     private val captchaRecognizer: CaptchaRecognizer,
     private val studentDao: StudentDao,
+    private val courseRepository: CourseRepository,
     private val credentialDatastore: CredentialDataStore
 ) : AuthRepository {
 
@@ -110,6 +112,8 @@ class AuthRepositoryImpl @Inject constructor(
 
         } catch (_: IOException) {
             throw NetworkException()
+        } catch (e: CredentialException) {
+            throw CredentialException(e.message)
         } catch (e: Exception) {
             AppLogger.e(e)
             throw BaseException(e = e)
@@ -151,7 +155,8 @@ class AuthRepositoryImpl @Inject constructor(
                     }
                 }
             }
-        } catch (_: Throwable) { /* 高并发环境且为后台运行不做任何处理 */}
+        } catch (_: Throwable) { /* 高并发环境且为后台运行不做任何处理 */
+        }
     }
 
     /** 观察当前登录用户 id */
@@ -173,7 +178,6 @@ class AuthRepositoryImpl @Inject constructor(
         credentialDatastore.saveCurrentStudentId(studentId)
     }
 
-
     /** 登出/删除当前用户 */
     override suspend fun logout() {
         val currentStudentId = credentialDatastore.observeCurrentStudentId().first()
@@ -187,6 +191,8 @@ class AuthRepositoryImpl @Inject constructor(
     override suspend fun logoutAs(studentId: Long) {
         isCurrIdLogin = false
         credentialDatastore.clear(studentId)
+        studentDao.clearStudent(studentId)
+        courseRepository.clearCourses(studentId)
     }
 
     /** 登出/删除所有用户 */

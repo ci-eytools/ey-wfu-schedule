@@ -2,6 +2,7 @@ package com.atri.seduley.ui.screen.schedule.components
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -14,11 +15,17 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.atri.seduley.R
 import java.time.LocalDate
+import java.time.temporal.ChronoUnit
 
 @Composable
 fun SwitchWeekTopBar(
@@ -28,40 +35,54 @@ fun SwitchWeekTopBar(
     onClick: (SwitchWeekWay) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Row(
-        modifier = modifier
-            .scale(0.8f),
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
+    Column(
+        horizontalAlignment = Alignment.End
     ) {
-        OutlinedButton(
-            onClick = { onClick(SwitchWeekWay.PREVIOUS) },
-            shape = RoundedCornerShape(30),
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.secondary),
-            colors = ButtonDefaults.outlinedButtonColors(
-                containerColor = Color.Transparent,
-                contentColor = MaterialTheme.colorScheme.secondary
-            ),
-            enabled = selectedDate.isAfter(startDate)
-        ) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = "Previous"
-            )
+        val weekly = when {
+            startDate != endDate -> "第 ${ChronoUnit.WEEKS.between(startDate, selectedDate) + 1} 周"
+            else -> ""
         }
-        OutlinedButton(
-            onClick = { onClick(SwitchWeekWay.NEXT) },
-            shape = RoundedCornerShape(30),
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.secondary),
-            colors = ButtonDefaults.outlinedButtonColors(
-                containerColor = Color.Transparent,
-                contentColor = MaterialTheme.colorScheme.secondary
-            ),
-            enabled = selectedDate.isBefore(endDate)
+        Text(
+            text = weekly,
+            color = Color.Gray,
+            fontWeight = FontWeight.Light,
+            fontFamily = FontFamily(Font(R.font.sanji_suxian_sc)),
+            modifier = Modifier.padding(end = 18.dp)
+        )
+        Row(
+            modifier = Modifier.scale(0.8f),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                contentDescription = "Next"
-            )
+            OutlinedButton(
+                onClick = { onClick(SwitchWeekWay.PREVIOUS) },
+                shape = RoundedCornerShape(30),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.secondary),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    containerColor = Color.Transparent,
+                    contentColor = MaterialTheme.colorScheme.secondary
+                ),
+                enabled = selectedDate.isAfter(startDate)
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Previous"
+                )
+            }
+            OutlinedButton(
+                onClick = { onClick(SwitchWeekWay.NEXT) },
+                shape = RoundedCornerShape(30),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.secondary),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    containerColor = Color.Transparent,
+                    contentColor = MaterialTheme.colorScheme.secondary
+                ),
+                enabled = selectedDate.isBefore(endDate)
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                    contentDescription = "Next"
+                )
+            }
         }
     }
 }

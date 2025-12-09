@@ -1,6 +1,8 @@
 package com.atri.seduley.ui.screen.setting.components
 
 import android.annotation.SuppressLint
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.MutatePriority
@@ -41,11 +43,13 @@ import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
 
+@RequiresApi(Build.VERSION_CODES.R)
 @SuppressLint("ConfigurationScreenWidthHeight")
 @Composable
 fun NestScroll(
     studentId: String,
     updateTime: LocalDateTime,
+    duration: Int,
     studentInfos: List<StudentInfo>,
     systemConf: SystemConf,
     coverVersion: Int,
@@ -144,6 +148,7 @@ fun NestScroll(
                     )
                 }
                 .clip(RoundedCornerShape(topStart = 15.dp, topEnd = 15.dp)),
+            duration = duration,
             studentId = studentId,
             studentInfos = studentInfos,
             updateTime = updateTime,

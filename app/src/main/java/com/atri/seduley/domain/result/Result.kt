@@ -26,3 +26,19 @@ suspend inline fun <T> toReturn(
     }
 }
 
+inline fun <T> toReturnSync(
+    block: () -> T
+): Result<T> {
+    return try {
+        Result.Success(block())
+    } catch (e: CredentialException) {
+        Result.Error(e.message)
+    } catch (e: NetworkException) {
+        Result.Error("请检查网络连接")
+    } catch (e: Exception) {
+        AppLogger.e(e)
+        Result.Error()
+    }
+}
+
+

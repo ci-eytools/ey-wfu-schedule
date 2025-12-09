@@ -72,6 +72,7 @@ fun SingleChoiceDialog(
                     Text(
                         text = title,
                         textAlign = TextAlign.Center,
+                        fontWeight = FontWeight.Bold,
                         modifier = Modifier.fillMaxWidth(),
                         style = MaterialTheme.typography.titleLarge
                     )
@@ -117,14 +118,18 @@ fun SingleChoiceDialog(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.Center
                     ) {
-                        Button(onClick = {
-                            onConfirm(currentSelection)
-                            onDismiss()
-                        }) {
+                        Button(
+                            shape = RoundedCornerShape(8.dp),
+                            onClick = {
+                                onConfirm(currentSelection)
+                                onDismiss()
+                            }) {
                             Text("确认")
                         }
                         Spacer(modifier = Modifier.width(16.dp))
-                        Button(onClick = { onDismiss() }) {
+                        Button(
+                            shape = RoundedCornerShape(8.dp),
+                            onClick = { onDismiss() }) {
                             Text("取消")
                         }
                     }

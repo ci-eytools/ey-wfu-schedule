@@ -29,7 +29,7 @@ class TaskRepositoryImpl @Inject constructor(
 
     /** 更新任务 */
     override suspend fun updateTask(task: Task) {
-        taskDao.update(task.toEntity())
+        taskDao.insert(task.toEntity())
     }
 
     /** 清除任务 */

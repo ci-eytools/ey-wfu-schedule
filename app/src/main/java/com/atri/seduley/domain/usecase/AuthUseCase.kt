@@ -55,4 +55,7 @@ data class AuthUseCase @Inject constructor(
 
     /** 订阅当前用户 id */
     fun observeCurrentStudentId(): Flow<Long?> = authRepository.observeCurrentStudentId()
+
+    /** 获取当前用户 id */
+    suspend fun getCurrentStudentId(): Long? = authRepository.getCurrentStudentId()
 }

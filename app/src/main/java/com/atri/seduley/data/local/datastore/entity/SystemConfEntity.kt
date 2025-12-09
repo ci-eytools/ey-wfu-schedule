@@ -14,9 +14,8 @@ data class SystemConfEntity(
 
 enum class TaskWay(val value: Int) {
     STOP(0),
-    AUTO(1),
-    INEXACT_ALARM(2),
-    EXACT_ALARM(3);
+    INEXACT_ALARM(1),
+    EXACT_ALARM(2);
 
     companion object {
         fun fromValue(value: Int): TaskWay =
@@ -27,7 +26,6 @@ enum class TaskWay(val value: Int) {
 fun TaskWay.getMsg() =
     when (this) {
         TaskWay.STOP -> "禁用"
-        TaskWay.AUTO -> "自动选择"
         TaskWay.INEXACT_ALARM -> "不精确"
         TaskWay.EXACT_ALARM -> "精确"
     }

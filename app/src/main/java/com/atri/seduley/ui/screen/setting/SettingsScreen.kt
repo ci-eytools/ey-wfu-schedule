@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -50,6 +51,7 @@ fun SettingsScreen(
     val updateTime by viewModel.updateTime.collectAsState()
     val coverVersion by viewModel.coverVersion.collectAsState()
     val studentInfos by viewModel.studentInfos.collectAsState()
+    val duration by viewModel.duration.collectAsState()
 
     LaunchedEffect(viewModel) {
         viewModel.event.collectLatest { event ->
@@ -74,6 +76,7 @@ fun SettingsScreen(
             NestScroll(
                 studentId = if (studentId != -1L) studentId.toString() else "未登录",
                 updateTime = updateTime ?: Const.NO_LAST_UPDATE_SELECTED_DATE,
+                duration = duration,
                 systemConf = systemConf,
                 studentInfos = studentInfos,
                 coverVersion = coverVersion,
@@ -94,12 +97,12 @@ fun LoadingDialog(
     Dialog(onDismissRequest = { /* 禁止关闭 */ }) {
         Box(
             modifier = Modifier
-                .size(180.dp)
+                .size(200.dp)
                 .background(
-                    color = Color.White,
+                    color = MaterialTheme.colorScheme.secondaryContainer,
                     shape = RoundedCornerShape(16.dp)
                 )
-                .padding(24.dp),
+                .padding(12.dp),
             contentAlignment = Alignment.Center
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -107,7 +110,8 @@ fun LoadingDialog(
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
                     text = text,
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer
                 )
             }
         }

@@ -25,6 +25,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -42,9 +43,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -54,11 +57,14 @@ import com.atri.seduley.domain.model.Course
 import com.atri.seduley.ui.util.sectionToTimeStr
 import com.atri.seduley.ui.util.timeToSection
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.LocalTime
 
 @Composable
 fun DateDisplay(
+    nextSection: Int,
+    selectedDate: LocalDate,
     section: Int,
     modifier: Modifier = Modifier
 ) {
@@ -69,20 +75,49 @@ fun DateDisplay(
         verticalArrangement = Arrangement.Top
     ) {
         val (startTimeStr, endTimeStr) = sectionToTimeStr(section)
-        Text(
-            text = startTimeStr,
-            modifier = Modifier,
-            style = MaterialTheme.typography.bodyLarge,
-            fontWeight = FontWeight.Bold
-        )
+        val targetAlpha = remember { Animatable(0f) }
+
+        // 时间信息的淡入动画
+        LaunchedEffect(selectedDate) {
+            targetAlpha.snapTo(0f)
+            targetAlpha.animateTo(
+                targetValue = 1f,
+                animationSpec = tween(1000)
+            )
+        }
+
+        Column(
+            modifier = Modifier.alpha(targetAlpha.value),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Top
+        ) {
+            Text(
+                text = startTimeStr,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(
+                text = endTimeStr,
+                color = Color.Gray,
+                style = MaterialTheme.typography.bodySmall,
+                fontWeight = FontWeight.Light
+            )
+        }
         Spacer(modifier = Modifier.height(2.dp))
-        Text(
-            text = endTimeStr,
-            modifier = Modifier,
-            color = Color.Gray,
-            style = MaterialTheme.typography.bodySmall,
-            fontWeight = FontWeight.Light
-        )
+
+        if (selectedDate == LocalDate.now() && section == nextSection) {
+            AnimatedCharactersText(
+                text = "NEXT",
+                key = selectedDate,
+                style = TextStyle(
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = FontFamily(Font(R.font.playfairdisplay_variablefont_wght)),
+                    color = MaterialTheme.colorScheme.primary
+                )
+            )
+        }
     }
 }
 
@@ -257,9 +292,10 @@ fun DetailCard(
                     modifier = Modifier
                         .padding(16.dp),
                     style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Bold,
-                    fontFamily = FontFamily(Font(R.font.simyou)),
-                    fontSize = 18.sp
+                    maxLines = 5,
+                    overflow = TextOverflow.Ellipsis,
+                    fontFamily = FontFamily(Font(R.font.sanji_suxian_sc)),
+                    fontSize = 21.sp
                 )
                 Text(
                     text = course.location,
@@ -267,8 +303,25 @@ fun DetailCard(
                         .padding(16.dp),
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp
+                    fontFamily = FontFamily(Font(R.font.sanji_suxian_sc)),
+                    fontSize = 21.sp
                 )
+                Spacer(modifier = Modifier.weight(1f))
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(21.dp)
+                        .padding(horizontal = 8.dp),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    repeat(course.section) {
+                        VerticalDivider(
+                            color = MaterialTheme.colorScheme.onPrimary,
+                            thickness = 1.dp,
+                            modifier = Modifier.padding(start = 5.dp)
+                        )
+                    }
+                }
             }
         }
     }
@@ -284,17 +337,8 @@ fun DailyScheduleItem(
         modifier = modifier
             .fillMaxWidth(),
     ) {
-        // 3.逐渐浮现时间信息 0 -> 1000
-        val targetAlpha = remember { Animatable(0f) }
-        LaunchedEffect(selectedDate) {
-            targetAlpha.snapTo(0f)
-            targetAlpha.animateTo(
-                targetValue = 1f,
-                animationSpec = tween(1000)
-            )
-        }
 
-        // 动随时间态更新当前小节
+        // 动态随时间态更新当前小节
         var nowSection by remember { mutableIntStateOf(timeToSection(LocalTime.now()) ?: -1) }
 
         LaunchedEffect(Unit) {
@@ -305,10 +349,10 @@ fun DailyScheduleItem(
         }
 
         DateDisplay(
+            nextSection = nowSection + 1,
+            selectedDate = selectedDate,
             section = course.section,
-            modifier = Modifier
-                .weight(1f)
-                .alpha(targetAlpha.value)
+            modifier = Modifier.weight(1f)
         )
         TimeLine(
             selectedDate = selectedDate,
@@ -400,8 +444,50 @@ fun InfoText(
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
             color = color,
-            fontFamily = FontFamily(Font(R.font.simyou))
+            fontFamily = FontFamily(Font(R.font.sanji_suxian_sc))
         )
+    }
+}
+
+@Composable
+private fun AnimatedCharactersText(
+    text: String,
+    modifier: Modifier = Modifier,
+    key: Any? = text,
+    staggerDelay: Long = 80L,
+    style: TextStyle = MaterialTheme.typography.bodyLarge
+) {
+    val animatedValues = remember(text) {
+        List(text.length) {
+            Animatable(0f) to Animatable(20f)
+        }
+    }
+
+    LaunchedEffect(key) {
+        animatedValues.forEach { (alpha, offsetY) ->
+            alpha.snapTo(0f)
+            offsetY.snapTo(20f)
+        }
+        animatedValues.forEachIndexed { index, (alpha, offsetY) ->
+            launch {
+                delay(index * staggerDelay)
+                launch { alpha.animateTo(1f, tween(durationMillis = 300)) }
+                launch { offsetY.animateTo(0f, tween(durationMillis = 300, easing = FastOutSlowInEasing)) }
+            }
+        }
+    }
+
+    Row(modifier = modifier) {
+        animatedValues.forEachIndexed { index, (alpha, offsetY) ->
+            Text(
+                text = text[index].toString(),
+                style = style, // 应用传入的完整样式
+                modifier = Modifier.graphicsLayer {
+                    this.alpha = alpha.value
+                    this.translationY = offsetY.value
+                }
+            )
+        }
     }
 }
 

@@ -11,19 +11,23 @@ object Const {
     /** 封面图片名 */
     const val COVER_IMAGE_NAME = "cover.jpg"
 
+    // gif 封面图
+    const val GIF_COVER_IMAGE_NAME = "cover.gif"
+
     /** 开屏页图片名 */
     const val SPLASH_IMAGE_NAME = "splash.jpg"
 
+    /** 开屏页默认持续时间 */
+    const val DEFAULT_SPLASH_DURATION = 300
+
     /** 默认主题颜色 */
-    const val DEFAULT_SEED_COLOR_INT = 0xFF6200EE.toInt()
+    const val DEFAULT_SEED_COLOR_INT = 0xFF415F91.toInt()
 
     /** 每日课程提醒触发时间 */
-    // TODO 测试
-    val DAILY_COURSE_NOTIFICATION_TIME: LocalTime = LocalTime.of(13, 0)
+    val DAILY_COURSE_NOTIFICATION_TIME: LocalTime = LocalTime.of(23, 20)
 
     /** 每日课程自动更新时间 */
-    // TODO 测试
-    val DAILY_UPDATE_COURSE_TIME: LocalTime = LocalTime.of(14, 0)
+    val DAILY_UPDATE_COURSE_TIME: LocalTime = LocalTime.of(19, 0)
 
     /** 删除大于此数量的闹钟 */
     const val DELECT_ALARM_NUM: Int = 1000

@@ -3,14 +3,17 @@ package com.atri.seduley.domain.usecase
 import com.atri.seduley.domain.model.Course
 import com.atri.seduley.domain.repository.AuthRepository
 import com.atri.seduley.domain.repository.CourseRepository
+import com.atri.seduley.domain.repository.StudentRepository
 import com.atri.seduley.domain.result.Result
 import com.atri.seduley.domain.result.toReturn
 import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
+import java.time.LocalDateTime
 import javax.inject.Inject
 
 data class CourseUseCase @Inject constructor(
     private val courseRepository: CourseRepository,
+    private val studentRepository: StudentRepository,
     private val authRepository: AuthRepository
 ) {
 
@@ -32,6 +35,7 @@ data class CourseUseCase @Inject constructor(
     ): Result<Unit> = toReturn {
         val currStudentId = studentId
         val courses = courseRepository.getAllCoursesFromRemote(currStudentId)
+        studentRepository.updateCourseUpdateAt(currStudentId, LocalDateTime.now())
         courseRepository.insertCourses(currStudentId, courses)
     }
 

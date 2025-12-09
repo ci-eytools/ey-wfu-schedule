@@ -4,13 +4,17 @@ import android.Manifest
 import androidx.annotation.RequiresPermission
 import com.atri.seduley.core.network.util.NetworkUtils
 import com.atri.seduley.core.notification.notifier.SystemBarNotification
+import com.atri.seduley.core.util.AppLogger
 import com.atri.seduley.core.util.SystemCoroutineScope
 import com.atri.seduley.domain.repository.AuthRepository
 import com.atri.seduley.domain.repository.CourseRepository
 import com.atri.seduley.domain.repository.StudentRepository
 import com.atri.seduley.ui.util.sectionToTime
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
 import java.time.LocalDate
+import java.time.LocalDateTime
 import javax.inject.Inject
 
 class AlarmDispatcher @Inject constructor(
@@ -83,16 +87,26 @@ class AlarmDispatcher @Inject constructor(
         }
     }
 
+    @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
     fun updateCourses() {
         systemCoroutineScope.scope.launch {
-            studentRepository.getAllStudentId().forEach {
-                authRepository.loginAs(it, NetworkUtils.createIsolatedOkHttpClient()) {
-                    courseRepository.insertCourses(
-                        it,
-                        courseRepository.getAllCoursesFromRemote(it)
-                    )
+            val ids = studentRepository.getAllStudentId()
+
+            // 并行处理
+            val jobs = ids.map { id ->
+                async  {
+                    authRepository.loginAs(id, NetworkUtils.createIsolatedOkHttpClient()) {
+                        val courses = courseRepository.getAllCoursesFromRemote(id)
+                        courseRepository.insertCourses(id, courses)
+                        // 更新课表更新时间
+                        studentRepository.updateCourseUpdateAt(id, LocalDateTime.now())
+                    }
+                    systemBarNotification.show("测试", "正在拉取 $id 的课表")
                 }
             }
+
+            jobs.awaitAll()
+            AppLogger.i("课表异步拉取完成")
         }
     }
 }

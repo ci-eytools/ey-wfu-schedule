@@ -5,10 +5,14 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.os.Build
+import android.view.WindowManager
+import androidx.annotation.RequiresApi
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -19,32 +23,40 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -53,6 +65,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -85,11 +99,14 @@ import com.atri.seduley.ui.screen.setting.SettingEvent
 import com.atri.seduley.ui.screen.setting.util.rememberImageCropper
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import kotlin.math.roundToInt
 
+@RequiresApi(Build.VERSION_CODES.R)
 @Composable
 fun SettingList(
     studentId: String?,
     studentInfos: List<StudentInfo>,
+    duration: Int,
     updateTime: LocalDateTime,
     systemConf: SystemConf,
     onEvent: (SettingEvent) -> Unit,
@@ -114,11 +131,12 @@ fun SettingList(
         IdentityInfo(
             studentId = studentId,
             studentInfos = studentInfos,
-            saveCredential = { studentId, password ->
+            saveCredential = { studentId, password, nickname ->
                 onEvent(
                     SettingEvent.SaveCredential(
                         studentId,
-                        password
+                        password,
+                        nickname
                     )
                 )
             },
@@ -143,8 +161,9 @@ fun SettingList(
         PermissionOptions()
         Spacer(modifier = Modifier.height(15.dp))
         CommonOptions(
+            duration = duration,
             resetCover = { onEvent(SettingEvent.ResetCover) },
-            updateSplash = { onEvent(SettingEvent.UpdateSplash) },
+            updateSplash = { onEvent(SettingEvent.UpdateSplash(it)) },
             resetSplash = { onEvent(SettingEvent.ResetSplash) }
         )
     }
@@ -157,14 +176,15 @@ fun IdentityInfo(
     switchCurrentId: (String) -> Unit,
     clearCredential: (String) -> Unit,
     updateCredential: (StudentUpdate) -> Unit,
-    saveCredential: (String, String) -> Unit,
+    saveCredential: (String, String, String) -> Unit,
     @SuppressLint("ModifierParameter") modifier: Modifier = Modifier
 ) {
     var isShowCredentialInputDialog by remember { mutableStateOf(false) }
     Column(
         modifier = modifier.fillMaxWidth()
     ) {
-        val nickName = studentInfos.firstOrNull { it.studentId == studentId }?.nickName
+        val nickName =
+            studentInfos.firstOrNull { it.studentId == studentId && it.nickName.isNotEmpty() }?.nickName
         ListItem(
             settingItem = "账户信息",
             detail = nickName ?: studentId.takeIf { !it.isNullOrEmpty() } ?: "未登录",
@@ -181,7 +201,13 @@ fun IdentityInfo(
         switchCurrentId = switchCurrentId,
         clearCredential = { clearCredential(it) },
         updateCredential = { updateCredential(it) },
-        onConfirm = { studentId, password -> saveCredential(studentId, password) }
+        onConfirm = { studentId, password, nickname ->
+            saveCredential(
+                studentId,
+                password,
+                nickname
+            )
+        }
     )
 }
 
@@ -221,7 +247,7 @@ fun CourseInfo(
             onClick = { showEnterAllCourseDialog = true }
         )
         ConfirmDialog(
-            text = "是否更新课程",
+            text = "是否更新课表",
             showDialog = showEnterAllCourseDialog,
             onDismiss = { showEnterAllCourseDialog = false },
             onConfirm = { enterSchedules() }
@@ -288,8 +314,8 @@ fun BackgroundTaskOptions(
     }
     SingleChoiceDialog(
         title = "每日课程提醒",
-        text = "若启用需在权限列表将所有权限打开方可正常提醒",
-        options = listOf("禁用", "自动选择", "不精确", "精确（会增加耗电）"),
+        text = "需拥有权限列表所有权限\n每日 23:20 左右提醒",
+        options = listOf("禁用", "不精确（推荐）", "精确"),
         selectedIndex = notificationWay.value,
         showDialog = showSwitchNotificationDemandDialog,
         onDismiss = { showSwitchNotificationDemandDialog = false },
@@ -307,8 +333,8 @@ fun BackgroundTaskOptions(
     )
     SingleChoiceDialog(
         title = "每日更新课表",
-        text = "需打开权限列表除通知外的所有权限",
-        options = listOf("禁用", "自动选择", "不精确", "精确（会增加后台耗电）"),
+        text = "需拥有权限列表除通知外的权限\n每日 19:00 左右更新",
+        options = listOf("禁用", "不精确（推荐）", "精确"),
         selectedIndex = updateCourseWay.value,
         showDialog = showSwitchUpdateCourseDialog,
         onDismiss = { showSwitchUpdateCourseDialog = false },
@@ -425,10 +451,12 @@ fun PermissionOptions(modifier: Modifier = Modifier) {
 }
 
 
+@RequiresApi(Build.VERSION_CODES.R)
 @Composable
 fun CommonOptions(
+    duration: Int,
     resetCover: () -> Unit,
-    updateSplash: () -> Unit,
+    updateSplash: (Int?) -> Unit,
     resetSplash: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -439,15 +467,22 @@ fun CommonOptions(
     Column(
         modifier = modifier
     ) {
-        val activity = (LocalContext.current) as Activity
+        val context = LocalContext.current
+        val activity = context as Activity
+        // 获取屏幕实际宽高
+        val windowMetrics = context.getSystemService(WindowManager::class.java).currentWindowMetrics
+        val bounds = windowMetrics.bounds
+        val aspectX = bounds.width().toFloat()
+        val aspectY = bounds.height().toFloat()
+
         val startSplashCrop = rememberImageCropper(
             activity = activity,
-            imageName = Const.SPLASH_IMAGE_NAME,
-            aspectRatioX = 9f,
-            aspectRatioY = 16f,
-            onSuccess = { updateSplash() },
+            aspectRatioX = aspectX,
+            aspectRatioY = aspectY,
+            onSuccess = { updateSplash(null) },
             onCancel = { }
         )
+
         ListItem(
             settingItem = "重置封面",
             onClick = { showResetCoverDialog = true }
@@ -462,22 +497,219 @@ fun CommonOptions(
             settingItem = "更新开屏页",
             onClick = { showUpdateSplashDialog = true }
         )
-        ConfirmDialog(
-            text = "是否读取相册更新开屏页",
-            showDialog = showUpdateSplashDialog,
-            onDismiss = { showUpdateSplashDialog = false },
-            onConfirm = { startSplashCrop() }
+        UpdateSplash(
+            initialDuration = duration,
+            isShowDialog = showUpdateSplashDialog,
+            onConfirmDuration = { updateSplash(it) },
+            onSelectImage = { startSplashCrop() },
+            onDismiss = { showUpdateSplashDialog = false }
         )
         ListItem(
-            settingItem = "重置开屏页",
+            settingItem = "删除开屏页",
             onClick = { showResetSplashDialog = true }
         )
         ConfirmDialog(
-            text = "是否重置封面",
+            text = "是否删除封面",
+            describe = "默认封面无法删除",
             showDialog = showResetSplashDialog,
             onDismiss = { showResetSplashDialog = false },
             onConfirm = { resetSplash() }
         )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun UpdateSplash(
+    initialDuration: Int,
+    isShowDialog: Boolean,
+    onDismiss: () -> Unit,
+    onConfirmDuration: (Int) -> Unit,
+    onSelectImage: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    if (!isShowDialog) return
+
+    var sliderPosition by remember(initialDuration) { mutableFloatStateOf(initialDuration.toFloat()) }
+
+
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Surface(
+            shape = RoundedCornerShape(16.dp),
+            color = MaterialTheme.colorScheme.surfaceVariant,
+            modifier = modifier.fillMaxWidth(0.9f)
+        ) {
+            Column(
+                modifier = Modifier.padding(vertical = 24.dp)
+            ) {
+                Text(
+                    text = "开屏页设置",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(horizontal = 24.dp)
+                )
+                Spacer(modifier = Modifier.height(6.dp))
+                Text(
+                    text = "无法更改默认开屏页",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Light,
+                    modifier = Modifier.padding(horizontal = 24.dp)
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                ListItem(
+                    settingItem = "更新开屏图片",
+                    detail = "从相册选择",
+                    isShowDivider = true,
+                    onClick = { onSelectImage() },
+                    modifier = Modifier.padding(horizontal = 8.dp)
+                )
+
+                Column(
+                    modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = "调整显示时长",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onBackground,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(top = 24.dp)
+                    )
+
+                    Text(
+                        text = "当前: ${sliderPosition.toInt()} 毫秒",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+
+                    Slider(
+                        value = sliderPosition,
+                        onValueChange = { newValue ->
+                            sliderPosition = newValue
+                        },
+                        onValueChangeFinished = {
+                            // 将滑块对齐到最近的刻度点
+                            sliderPosition = ((sliderPosition / 100f).roundToInt() * 100).toFloat()
+                        },
+                        valueRange = 0f..1000f,
+                        steps = 9,  // 10个点，9个间隔
+                        colors = SliderDefaults.colors(
+                            activeTrackColor = Color.Transparent,
+                            inactiveTrackColor = Color.Transparent,
+                            activeTickColor = Color.Transparent,
+                            inactiveTickColor = Color.Transparent
+                        ),
+                        thumb = {
+                            Box(
+                                modifier = Modifier
+                                    .shadow(elevation = 4.dp, shape = CircleShape)
+                                    .border(
+                                        width = 3.dp,
+                                        color = MaterialTheme.colorScheme.primary,
+                                        shape = CircleShape
+                                    )
+                                    .background(MaterialTheme.colorScheme.surface, CircleShape)
+                                    .size(22.dp)
+                            )
+                        },
+                        track = { sliderState ->
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(8.dp)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .clip(CircleShape)
+                                        .background(
+                                            MaterialTheme.colorScheme.surfaceVariant.copy(
+                                                alpha = 0.5f
+                                            )
+                                        )
+                                )
+
+                                // 计算当前滑块在哪个刻度上
+                                val currentStep = (sliderState.value / 100f).roundToInt()
+                                val activeTrackWidth = currentStep.toFloat() / 10f
+
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth(activeTrackWidth)
+                                        .fillMaxHeight()
+                                        .clip(CircleShape)
+                                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.7f))
+                                )
+                                val colorScheme = MaterialTheme.colorScheme
+                                // 绘制11个刻度点
+                                Canvas(modifier = Modifier.fillMaxSize()) {
+                                    val pointCount = 11
+                                    val pointRadius = 1.5.dp.toPx()
+                                    val strokeWidth = 1.dp.toPx()
+
+                                    // 计算可用宽度：总宽度减去一个点的直径，这样第一个点和最后一个点距离边缘一个半径
+                                    val usableWidth = size.width - (pointRadius * 2)
+
+                                    for (i in 0 until pointCount) {
+                                        val fraction = i.toFloat() / (pointCount - 1)
+                                        // 从第一个点的中心位置开始计算，距离左边缘一个点的半径
+                                        val x = pointRadius + (fraction * usableWidth)
+                                        val y = size.height / 2
+
+                                        // 当前激活的点
+                                        val isActive = i <= currentStep
+
+                                        // 绘制点
+                                        drawCircle(
+                                            color = if (isActive) {
+                                                colorScheme.primary
+                                            } else {
+                                                colorScheme.onSurface.copy(alpha = 0.4f)
+                                            },
+                                            radius = pointRadius,
+                                            center = Offset(x, y)
+                                        )
+
+                                        // 为激活的点添加白色边框
+                                        if (isActive) {
+                                            drawCircle(
+                                                color = colorScheme.onPrimary,
+                                                radius = pointRadius - strokeWidth,
+                                                center = Offset(x, y)
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    TextButton(onClick = onDismiss) { Text("取消") }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Button(
+                        onClick = {
+                            onConfirmDuration(sliderPosition.toInt())
+                            onDismiss()
+                        },
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text("确认时长")
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -549,7 +781,7 @@ fun ManagerCredential(
     updateCredential: (StudentUpdate) -> Unit,
     showDialog: Boolean,
     onDismiss: () -> Unit,
-    onConfirm: (String, String) -> Unit,
+    onConfirm: (String, String, String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     if (!showDialog) return
@@ -576,7 +808,6 @@ fun ManagerCredential(
                     .fillMaxWidth()
                     .padding(16.dp)
             ) {
-                // 标题
                 Text(
                     text = "账户管理",
                     style = MaterialTheme.typography.titleLarge,
@@ -594,7 +825,6 @@ fun ManagerCredential(
                             RoundedCornerShape(8.dp)
                         )
                         .background(color = MaterialTheme.colorScheme.inversePrimary.copy(0.1f))
-                        .animateContentSize()
                 ) {
                     val currentUser =
                         studentInfos.firstOrNull { it.studentId == currentStudentId }
@@ -614,38 +844,47 @@ fun ManagerCredential(
                         )
                     }
 
-                    if (isUserListExpanded && otherStudents.isNotEmpty()) {
-                        HorizontalDivider(
-                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
-                            thickness = 1.dp,
-                            modifier = Modifier.padding(horizontal = 8.dp)
-                        )
-
-                        LazyColumn(
-                            modifier = Modifier
-                                .heightIn(max = 160.dp)
-                        ) {
-                            items(otherStudents) { studentInfo ->
-                                CredentialItem(
-                                    studentId = studentInfo.studentId,
-                                    nickName = studentInfo.nickName,
-                                    isExpanded = null,
-                                    clearCredential = { clearCredential(it) },
-                                    updateCredential = { updateCredential(it) },
-                                    modifier = Modifier.clickable { switchCurrentId(studentInfo.studentId) }
-                                )
-                                HorizontalDivider(
-                                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
-                                    thickness = 0.5.dp,
-                                    modifier = Modifier.padding(horizontal = 8.dp)
-                                )
+                    AnimatedVisibility(
+                        visible = isInputSectionVisible,
+                        // 只使用 fadeIn 和 fadeOut，去掉 expand/shrink
+                        enter = fadeIn(animationSpec = tween(durationMillis = 200)),
+                        exit = fadeOut(animationSpec = tween(durationMillis = 200))
+                    ) {
+                        Column {
+                            HorizontalDivider(
+                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
+                                thickness = 1.dp,
+                                modifier = Modifier.padding(horizontal = 8.dp)
+                            )
+                            LazyColumn(
+                                modifier = Modifier
+                                    .heightIn(max = 160.dp)
+                            ) {
+                                items(otherStudents) { studentInfo ->
+                                    CredentialItem(
+                                        studentId = studentInfo.studentId,
+                                        nickName = studentInfo.nickName,
+                                        isExpanded = null,
+                                        clearCredential = { clearCredential(it) },
+                                        updateCredential = { updateCredential(it) },
+                                        modifier = Modifier.clickable { switchCurrentId(studentInfo.studentId) }
+                                    )
+                                    HorizontalDivider(
+                                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
+                                        thickness = 0.5.dp,
+                                        modifier = Modifier.padding(horizontal = 8.dp)
+                                    )
+                                }
                             }
                         }
                     }
                 }
 
-
-                Spacer(modifier = Modifier.height(24.dp))
+                if (isInputSectionVisible) {
+                    Spacer(modifier = Modifier.height(24.dp))
+                } else {
+                    Spacer(modifier = Modifier.height(50.dp))
+                }
 
                 AnimatedVisibility(visible = isInputSectionVisible) {
                     Column {
@@ -693,7 +932,7 @@ fun ManagerCredential(
                             Spacer(modifier = Modifier.weight(0.1f))
                             Button(
                                 onClick = {
-                                    onConfirm(studentId, password)
+                                    onConfirm(studentId, password, nickname)
                                     isInputSectionVisible = false
                                     studentId = ""
                                     password = ""
@@ -708,9 +947,7 @@ fun ManagerCredential(
                             }
                         }
                     }
-
                 }
-
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Row(

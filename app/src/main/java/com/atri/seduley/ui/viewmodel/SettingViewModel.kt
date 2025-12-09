@@ -16,6 +16,7 @@ import com.atri.seduley.data.local.datastore.entity.getMsg
 import com.atri.seduley.domain.model.Credential
 import com.atri.seduley.domain.model.SystemConf
 import com.atri.seduley.domain.model.Task
+import com.atri.seduley.domain.model.randomRequestCode
 import com.atri.seduley.domain.result.Result
 import com.atri.seduley.domain.usecase.AuthUseCase
 import com.atri.seduley.domain.usecase.CourseUseCase
@@ -48,9 +49,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.io.File
 import java.time.LocalDateTime
-import java.util.UUID
 import javax.inject.Inject
-import kotlin.math.absoluteValue
 
 @HiltViewModel
 @RequiresApi(Build.VERSION_CODES.S)
@@ -94,6 +93,8 @@ class SettingViewModel @Inject constructor(
             initialValue = -1L
         )
 
+    val duration = systemConfUseCase.splashDurationFlow()
+
     @OptIn(ExperimentalCoroutinesApi::class)
     val updateTime = currentStudentId
         .filterNotNull()
@@ -121,7 +122,7 @@ class SettingViewModel @Inject constructor(
                 is SettingEvent.UpdateCourses -> updateCourses()
                 is SettingEvent.UpdateCover -> updateCover()
                 is SettingEvent.ResetCover -> resetCover()
-                is SettingEvent.UpdateSplash -> updateSplash()
+                is SettingEvent.UpdateSplash -> updateSplash(event.duration)
                 is SettingEvent.ResetSplash -> resetSplash()
                 is SettingEvent.SwitchNotificationDemand -> switchNotificationDemand(event.taskWay)
                 is SettingEvent.SwitchUpdateCourseDemand -> switchUpdateCourseDemand(event.taskWay)
@@ -140,60 +141,49 @@ class SettingViewModel @Inject constructor(
                 emitErr("请输入学号或密码")
                 return@launch
             }
-                        // 1.开始登录，立即显示加载框
-                        _uiState.value = Loading("正在验证 ${event.studentId} 的凭证...")
+            // 1.开始登录，立即显示加载框
+            _uiState.value = Loading("正在验证 ${event.studentId} 的凭证...")
 
-                        val studentLong = try {
-                            event.studentId.toLong()
-                        } catch (_: NumberFormatException) {
-                            _uiState.value = Idle
-                            emitErr("学号格式错误")
-                            return@launch
-                        }
-                        // 2.调用登录
-                        authUseCase.login(
-                            Credential(
-                                studentLong,
-                                event.password
-                            )
-                        ) {
-                            // 3.登录成功，更新加载框文本，准备拉取课表
-                            emitMsg("登录凭证有效，准备拉取课表...")
-                            _uiState.value =
-                                Loading(message = "正在拉取 $studentLong 的课表信息，请稍后...")
-
-                            // 4.开始拉取课表
-                            when (val courseInfo =
-                                courseUseCase.updateCourseFromRemote(
-                                    studentLong
-                                )) {
-                                is Result.Success -> emitMsg("拉取 $studentLong 的课表信息成功")
-                                is Result.Error -> emitErr(courseInfo.msg)
-                            }
-                        }.let { loginResult ->
-                            when (loginResult) {
-                                is Result.Success -> _uiState.value = Idle
-                                is Result.Error -> {
-                                    _uiState.value = Idle
-                                    emitErr(loginResult.msg)
-                                }
-                            }
-                        }
-
-            // 测试用直接插入数据库
-            /*studentUseCase.add(
-                Student(
-                    studentId = event.studentId.toLong(),
-                    semester = Semester(
-                        startDate = LocalDate.now(),
-                        endDate = LocalDate.now(),
-                        totalWeeks = 520
-                    ),
-                    nickName = "",
-                    courseUpdatedAt = LocalDateTime.now(),
-                    params = mapOf()
+            val studentLong = try {
+                event.studentId.toLong()
+            } catch (_: NumberFormatException) {
+                _uiState.value = Idle
+                emitErr("学号格式错误")
+                return@launch
+            }
+            // 2.调用登录
+            authUseCase.login(
+                Credential(
+                    studentLong,
+                    event.password
                 )
-            )*/
+            ) {
+                // 3.登录成功，更新加载框文本，准备拉取课表
+                emitMsg("登录凭证有效，准备拉取课表...")
+                _uiState.value =
+                    Loading(message = "正在拉取 $studentLong 的课表信息，请稍后...")
+
+                // 4.开始拉取课表
+                when (val courseInfo =
+                    courseUseCase.updateCourseFromRemote(
+                        studentLong
+                    )) {
+                    is Result.Success -> {
+                        // 在回调处更新 nickname
+                        studentUseCase.updateNickname(studentLong, event.nickname ?: "")
+                        emitMsg("拉取 $studentLong 的课表信息成功")
+                    }
+                    is Result.Error -> emitErr(courseInfo.msg)
+                }
+            }.let { loginResult ->
+                when (loginResult) {
+                    is Result.Success -> _uiState.value = Idle
+                    is Result.Error -> {
+                        _uiState.value = Idle
+                        emitErr(loginResult.msg)
+                    }
+                }
+            }
         }
     }
 
@@ -313,16 +303,24 @@ class SettingViewModel @Inject constructor(
         launchWithDelayedLoading {
             _coverVersion.value++
             val coverFile = File(context.cacheDir, Const.COVER_IMAGE_NAME)
-            if (!coverFile.exists()) emitErr("当前已为默认封面")
+            val coverGifFile = File(context.cacheDir, Const.GIF_COVER_IMAGE_NAME)
+            if (!coverFile.exists() || !coverGifFile.exists()) emitErr("当前已为默认封面")
             coverFile.delete()
+            coverGifFile.delete()
+            emitMsg("重置封面成功")
             systemConfUseCase.updateSeedColorByCover()  // 更新 datastore
         }
     }
 
     /** 更新开屏页 */
-    private fun updateSplash() {
+    private fun updateSplash(duration: Int?) {
         viewModelScope.launch {
-            emitMsg("更新开屏页成功")
+            if (duration == null) {
+                emitMsg("更新开屏页成功")
+                return@launch
+            }
+            systemConfUseCase.saveSplashDuration(duration)
+            emitMsg("更新开屏页持续时间成功")
         }
     }
 
@@ -330,9 +328,9 @@ class SettingViewModel @Inject constructor(
     private fun resetSplash() {
         launchWithDelayedLoading {
             val splashFile = File(context.cacheDir, Const.SPLASH_IMAGE_NAME)
-            if (!splashFile.exists()) emitErr("当前已为默认开屏页")
+            if (!splashFile.exists()) emitErr("当前未设置开屏页")
             splashFile.delete()
-            emitMsg("重置开屏页成功")
+            emitMsg("删除开屏页成功")
         }
     }
 
@@ -348,14 +346,13 @@ class SettingViewModel @Inject constructor(
                 val now = LocalDateTime.now()
                 taskUseCase.scheduleAlarm(
                     task = Task(
-                        requestCode = UUID.randomUUID().hashCode().absoluteValue,
                         triggerAt = TimeUtil.localTimeToLocalDateTime(Const.DAILY_COURSE_NOTIFICATION_TIME),
                         triggerMode = taskWay.toTriggerMode(),
                         callback = Callback.NOTIFICATION_COURSE,
                         state = TaskState.AWAIT,
-                        params = mapOf("windowMillis" to (15 * 60 * 1000).toString()),
+                        params = mapOf("windowMillis" to (5 * 60 * 1000).toString()),  // 5min 窗口
                         createdAt = now
-                    )
+                    ).randomRequestCode()
                 )
             } else {
                 taskUseCase.clearTaskByCallback(Callback.NOTIFICATION_COURSE)
@@ -384,14 +381,13 @@ class SettingViewModel @Inject constructor(
                 val now = LocalDateTime.now()
                 taskUseCase.scheduleAlarm(
                     task = Task(
-                        requestCode = UUID.randomUUID().hashCode().absoluteValue,
                         triggerAt = TimeUtil.localTimeToLocalDateTime(Const.DAILY_UPDATE_COURSE_TIME),
                         triggerMode = taskWay.toTriggerMode(),
                         callback = Callback.UPDATE_COURSE,
                         state = TaskState.AWAIT,
-                        params = mapOf("windowMillis" to (15 * 60 * 1000).toString()),
+                        params = mapOf("windowMillis" to (60 * 60 * 1000).toString()),  // 1h 窗口
                         createdAt = now
-                    )
+                    ).randomRequestCode()
                 )
             } else {
                 taskUseCase.clearTaskByCallback(Callback.UPDATE_COURSE)
@@ -439,10 +435,10 @@ class SettingViewModel @Inject constructor(
     /** 发送消息 */
     private suspend fun emitMsg(msg: String) = _event.emit(ShowMessage(msg))
 
-    private fun TaskWay.toTriggerMode(): TriggerMode? =
+    private fun TaskWay.toTriggerMode(): TriggerMode =
         when (this) {
             TaskWay.INEXACT_ALARM -> TriggerMode.INEXACT
             TaskWay.EXACT_ALARM -> TriggerMode.EXACT
-            else -> null
+            TaskWay.STOP -> TriggerMode.STOP
         }
 }

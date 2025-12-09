@@ -22,6 +22,9 @@ interface StudentRepository {
     /** 清除学生 */
     suspend fun clearStudent(studentId: Long)
 
+    /** 更新课表更新时间 */
+    suspend fun updateCourseUpdateAt(studentId: Long, updateTime: LocalDateTime)
+
     /** 观察更新时间 */
     fun observeUpdateTime(studentId: Long): Flow<LocalDateTime?>
 

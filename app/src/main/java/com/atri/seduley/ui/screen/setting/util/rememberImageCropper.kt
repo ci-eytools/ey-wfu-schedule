@@ -7,15 +7,14 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
+import com.atri.seduley.core.util.Const
 import com.yalantis.ucrop.UCrop
-import com.yalantis.ucrop.UCropActivity
 import java.io.File
 
 /**
  * 通用的选择 + 裁剪图片工具
  *
  * @param activity Activity 上下文
- * @param imageName 输出文件名
  * @param aspectRatioX 裁剪宽比 (默认 1f)
  * @param aspectRatioY 裁剪高比 (默认 1f)
  * @param onSuccess 成功回调
@@ -24,13 +23,13 @@ import java.io.File
 @Composable
 fun rememberImageCropper(
     activity: Activity,
-    imageName: String,
     aspectRatioX: Float = 1f,
     aspectRatioY: Float = 1f,
     onSuccess: (Uri?) -> Unit,
     onCancel: () -> Unit,
 ): () -> Unit {
-    // 1. 接收裁剪结果
+
+    // 1. UCrop 裁剪结果处理
     val cropLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
     ) { result ->
@@ -42,38 +41,53 @@ fun rememberImageCropper(
         }
     }
 
-    // 2. 选择图片后 -> 进入裁剪
+    // 2. 图片选择处理
     val pickImageLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
-        uri?.let {
-            val destUri = Uri.fromFile(File(activity.cacheDir, imageName))
 
-            // 配置 UCrop 外观
-            val options = UCrop.Options().apply {
-                setToolbarTitle("裁剪图片")
-                setToolbarColor(Color.BLACK)         // 工具栏背景
-                setActiveControlsWidgetColor(Color.BLACK) // 主题色
-                setToolbarWidgetColor(Color.WHITE)   // 返回和确认按钮颜色
-                setCompressionFormat(Bitmap.CompressFormat.JPEG)
-                setCompressionQuality(100)           // 清晰度
+        if (uri == null) {
+            onCancel()
+            return@rememberLauncherForActivityResult
+        }
 
-                setAllowedGestures(
-                    UCropActivity.SCALE,
-                    UCropActivity.NONE,
-                    UCropActivity.ALL
-                )
+        val mimeType = activity.contentResolver.getType(uri)
+
+        // GIF 直接保存，不裁剪
+        if (mimeType == "image/gif") {
+            val destFile = File(activity.cacheDir, Const.GIF_COVER_IMAGE_NAME)
+            val destUri = Uri.fromFile(destFile)
+
+            activity.contentResolver.openInputStream(uri)?.use { input ->
+                destFile.outputStream().use { output ->
+                    input.copyTo(output)
+                }
             }
 
-            val intent = UCrop.of(it, destUri)
-                .withAspectRatio(aspectRatioX, aspectRatioY)
-                .withOptions(options)
-                .getIntent(activity)
-
-            cropLauncher.launch(intent)
+            onSuccess(destUri)
+            return@rememberLauncherForActivityResult
         }
+
+        // 其他图片走 UCrop
+        val destUri = Uri.fromFile(File(activity.cacheDir, Const.COVER_IMAGE_NAME))
+
+        val options = UCrop.Options().apply {
+            setToolbarTitle("裁剪图片")
+            setToolbarColor(Color.BLACK)
+            setActiveControlsWidgetColor(Color.BLACK)
+            setToolbarWidgetColor(Color.WHITE)
+            setCompressionFormat(Bitmap.CompressFormat.JPEG)
+            setCompressionQuality(100)
+        }
+
+        val intent = UCrop.of(uri, destUri)
+            .withAspectRatio(aspectRatioX, aspectRatioY)
+            .withOptions(options)
+            .getIntent(activity)
+
+        cropLauncher.launch(intent)
     }
 
-    // 3. 返回触发方法
+    /** 3. 调用方法 */
     return { pickImageLauncher.launch("image/*") }
 }

@@ -40,26 +40,11 @@ class AlarmSchedulerImpl @Inject constructor(
                 )
             }
 
-            /*AlarmBackend.INEXACT_REPEAT -> {
-                alarmManager.setInexactRepeating(
-                    AlarmManager.RTC_WAKEUP,
-                    triggerMillis,
-                    AlarmManager.INTERVAL_DAY,
-                    pendingIntent
-                )
-            }*/
-
             AlarmBackend.EXACT_ALARM -> {
                 // 精确闹钟
-                /*alarmManager.setExactAndAllowWhileIdle(
+                alarmManager.setExactAndAllowWhileIdle(
                     AlarmManager.RTC_WAKEUP,
                     triggerMillis,
-                    pendingIntent
-                )*/
-                alarmManager.setInexactRepeating(
-                    AlarmManager.RTC_WAKEUP,
-                    triggerMillis,
-                    AlarmManager.INTERVAL_DAY,
                     pendingIntent
                 )
             }

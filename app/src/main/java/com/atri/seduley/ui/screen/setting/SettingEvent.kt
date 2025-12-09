@@ -11,7 +11,8 @@ sealed class SettingEvent {
     /** 保存用户凭证 */
     data class SaveCredential(
         val studentId: String,
-        val password: String
+        val password: String,
+        val nickname: String? = null
     ) : SettingEvent()
 
     /** 切换当前登录凭证 */
@@ -36,7 +37,7 @@ sealed class SettingEvent {
     data object ResetCover : SettingEvent()
 
     /** 更新开屏页 */
-    data object UpdateSplash : SettingEvent()
+    data class UpdateSplash(val duration: Int?) : SettingEvent()
 
     /** 重置开屏页 */
     data object ResetSplash : SettingEvent()

@@ -1,5 +1,10 @@
 package com.atri.seduley.core.network.util
 
+import android.Manifest
+import android.content.Context
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
+import androidx.annotation.RequiresPermission
 import okhttp3.JavaNetCookieJar
 import okhttp3.OkHttpClient
 import java.net.CookieManager
@@ -41,5 +46,17 @@ object NetworkUtils {
         return OkHttpClient.Builder()
             .cookieJar(JavaNetCookieJar(cookieManager))
             .build()
+    }
+
+    /** 判断当前设备是否联网 */
+    @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
+    fun Context.isNetworkAvailable(): Boolean {
+        val cm = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+
+        val network = cm.activeNetwork ?: return false
+        val caps = cm.getNetworkCapabilities(network) ?: return false
+
+        return caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
+                caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
     }
 }

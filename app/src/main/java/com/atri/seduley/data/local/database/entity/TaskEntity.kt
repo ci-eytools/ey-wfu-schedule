@@ -31,8 +31,9 @@ enum class Callback(val value: Int) {
 }
 
 enum class TriggerMode(val value: Int) {
-    INEXACT(0),
-    EXACT(1),
+    STOP(0),
+    INEXACT(1),
+    EXACT(2),
 }
 
 enum class TaskState(val value: Int) {

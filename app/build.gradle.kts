@@ -1,4 +1,5 @@
 import org.gradle.kotlin.dsl.implementation
+import org.gradle.kotlin.dsl.main
 
 plugins {
     alias(libs.plugins.android.application)
@@ -111,7 +112,6 @@ dependencies {
     implementation(libs.jsoup)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.tensorflow.lite)
-    implementation(libs.tensorflow.lite.gpu)
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.androidx.security.crypto)
     implementation(libs.androidx.palette)
@@ -122,6 +122,8 @@ dependencies {
     implementation(libs.ucrop.v2211)
     implementation(libs.coil.compose)
     implementation(libs.accompanist.navigation.animation)
+    implementation(libs.coil.compose.v260)
+    implementation(libs.coil.gif)
 
     // ============ Testing ============
     testImplementation(libs.junit)

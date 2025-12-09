@@ -26,7 +26,7 @@ class TaskUseCase @Inject constructor(
                     requestCode = task.requestCode,
                     triggerAt = task.triggerAt,
                     windowMillis = task.params["windowMillis"]?.toLong(),
-                    backend = task.triggerMode?.toBackend() ?: AlarmBackend.INEXACT_ALARM
+                    backend = task.triggerMode.toBackend()
                 )
             )
         }
@@ -34,18 +34,14 @@ class TaskUseCase @Inject constructor(
 
     /** 启动定时任务 */
     suspend fun scheduleAlarm(task: Task) {
-        var mode = task.triggerMode
-        if (task.triggerMode == null) {
-            mode = determineTriggerMode()
-            task.copy(triggerMode = mode)
-        }
+        if (task.triggerMode == TriggerMode.STOP) return
         taskRepository.saveTask(task)
         alarmScheduler.schedule(
             AlarmConfig(
                 requestCode = task.requestCode,
                 triggerAt = task.triggerAt,
                 windowMillis = task.params["windowMillis"]?.toLong(),
-                backend = mode.toBackend()
+                backend = task.triggerMode.toBackend()
             )
         )
     }
@@ -58,10 +54,19 @@ class TaskUseCase @Inject constructor(
         }
     }
 
+    /** 更新闹钟，仅更新数据库 */
+    suspend fun updateTask(task: Task) = taskRepository.updateTask(task)
+
+    /** 获取闹钟 */
+    suspend fun getTask(requestCode: Int) = taskRepository.getTask(requestCode)
+
     /** 检查定时任务是否正常触发 */
     suspend fun checkTask(task: Task): Boolean {
         // 如果触发时间为空，检查目标触发时间是否在 今天-2天 前
-        if (task.actualTriggerAt == null && task.triggerAt.isBefore(LocalDateTime.now().minusDays(2))) {
+        if (task.actualTriggerAt == null && task.triggerAt.isBefore(
+                LocalDateTime.now().minusDays(2)
+            )
+        ) {
             taskRepository.updateTask(task.toTimeOut())
             alarmScheduler.cancel(task.requestCode)
             return false
@@ -69,21 +74,9 @@ class TaskUseCase @Inject constructor(
         return true
     }
 
-    /** 根据最新的任务判断模式 */
-    suspend fun determineTriggerMode(): TriggerMode {
-        val lastestTask = taskRepository.getAllAwaitingTasks()
-            .filter { it.triggerAt.isBefore(LocalDateTime.now().minusDays(1)) }
-            .maxByOrNull { it.triggerAt }
-        return when {
-            lastestTask == null -> TriggerMode.INEXACT
-            lastestTask.actualTriggerAt != null -> TriggerMode.INEXACT
-            else -> TriggerMode.EXACT
-        }
+    private fun TriggerMode.toBackend() = when (this) {
+        TriggerMode.INEXACT -> AlarmBackend.INEXACT_ALARM
+        TriggerMode.EXACT -> AlarmBackend.EXACT_ALARM
+        TriggerMode.STOP -> throw IllegalStateException("STOP mode should not be passed to toBackend()")
     }
-
-    private fun TriggerMode.toBackend() =
-        when (this) {
-            TriggerMode.INEXACT -> AlarmBackend.INEXACT_ALARM
-            TriggerMode.EXACT -> AlarmBackend.EXACT_ALARM
-        }
 }

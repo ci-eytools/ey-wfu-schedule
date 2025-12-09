@@ -4,12 +4,14 @@ import com.atri.seduley.data.local.database.entity.Callback
 import com.atri.seduley.data.local.database.entity.TaskState
 import com.atri.seduley.data.local.database.entity.TriggerMode
 import java.time.LocalDateTime
+import java.util.UUID
+import kotlin.math.absoluteValue
 
 data class Task(
-    val requestCode: Int,
+    val requestCode: Int = -1,
     val triggerAt: LocalDateTime,
     val actualTriggerAt: LocalDateTime? = null,
-    val triggerMode: TriggerMode?,
+    val triggerMode: TriggerMode,
     val callback: Callback,
     val state: TaskState,
     val params: Map<String, String>,
@@ -20,7 +22,7 @@ fun Task.copyWithNewParams(
     requestCode: Int = this.requestCode,
     triggerAt: LocalDateTime = this.triggerAt,
     actualTriggerAt: LocalDateTime? = this.actualTriggerAt,
-    triggerMode: TriggerMode? = this.triggerMode,
+    triggerMode: TriggerMode = this.triggerMode,
     callback: Callback = this.callback,
     state: TaskState = this.state,
     newParams: Map<String, String>, // 专门用于接收新的参数
@@ -50,3 +52,5 @@ fun Task.toTimeOut() = copy(state = TaskState.TIME_OUT)
 
 /** 仅将状态改为 toClear */
 fun Task.toClear() = copy(state = TaskState.CLEAR)
+
+fun Task.randomRequestCode() = copy(requestCode = UUID.randomUUID().hashCode().absoluteValue)

@@ -11,7 +11,11 @@ object PendingIntentFactory {
         context: Context,
         requestCode: Int
     ): PendingIntent {
-        val intent = Intent(context, AlarmReceiver::class.java)
+        val intent = Intent(context, AlarmReceiver::class.java).apply {
+            action = ACTION
+            putExtra("requestCode", requestCode)
+        }
+
         return PendingIntent.getBroadcast(
             context,
             requestCode,

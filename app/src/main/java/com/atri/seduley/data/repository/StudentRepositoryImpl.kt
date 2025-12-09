@@ -40,6 +40,14 @@ class StudentRepositoryImpl @Inject constructor(
         studentDao.clearStudent(studentId)
     }
 
+    /** 更新课表更新时间 */
+    override suspend fun updateCourseUpdateAt(
+        studentId: Long,
+        updateTime: LocalDateTime
+    ) {
+        studentDao.updateStudentId(studentId, updateTime)
+    }
+
     /** 观察更新时间 */
     override fun observeUpdateTime(studentId: Long): Flow<LocalDateTime?> {
         return studentDao.observeUpdateTime(studentId)

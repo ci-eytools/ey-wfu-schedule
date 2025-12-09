@@ -2,7 +2,6 @@ package com.atri.seduley.ui.screen.setting.components
 
 import android.app.Activity
 import android.net.Uri
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -14,7 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
-import coil.compose.rememberAsyncImagePainter
+import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.atri.seduley.R
 import com.atri.seduley.core.util.Const
@@ -32,21 +31,37 @@ fun FlowBackground(
     val context = LocalContext.current
     val activity = context as Activity
     val coverFile = File(activity.cacheDir, Const.COVER_IMAGE_NAME)
+    val coverGifFile = File(activity.cacheDir, Const.GIF_COVER_IMAGE_NAME)
 
     var imageUri by remember { mutableStateOf<Uri?>(null) }
     var showUpdateCoverDialog by remember { mutableStateOf(false) }
 
     // 初始化封面
     LaunchedEffect(coverVersion) {
-        imageUri = if (coverFile.exists()) Uri.fromFile(coverFile) else null
+        imageUri = when {
+            coverFile.exists() -> Uri.fromFile(coverFile)
+            coverGifFile.exists() -> Uri.fromFile(coverGifFile)
+            else -> null
+        }
     }
 
     val startCrop = rememberImageCropper(
         activity = activity,
-        imageName = Const.COVER_IMAGE_NAME,
         aspectRatioX = 16f,
-        aspectRatioY = 9f,
+        aspectRatioY = 12f,
         onSuccess = { newUri ->
+            // 如果 newUri 为 null，直接返回，不做任何操作
+            if (newUri == null) return@rememberImageCropper
+
+            // 通过判断文件名后缀来识别GIF
+            if (newUri.toString().endsWith(".gif")) {
+                // 如果成功保存的是 GIF，则删除旧的普通图片封面
+                coverFile.delete()
+            } else {
+                // 如果成功裁剪的是普通图片，则删除旧的 GIF 封面
+                coverGifFile.delete()
+            }
+
             imageUri = newUri
             // 通知 ViewModel 更新 DataStore 和主题
             onEvent(SettingEvent.UpdateCover)
@@ -54,21 +69,23 @@ fun FlowBackground(
         onCancel = { /* 用户取消裁剪，不做操作 */ }
     )
 
-    Image(
-        painter = rememberAsyncImagePainter(
-            model = ImageRequest.Builder(context)
-                .data(imageUri?.toString()?.plus("?v=$coverVersion") ?: R.drawable.default_cover)
-                .crossfade(true)
-                .build()
-        ),
+    AsyncImage(
+        model = ImageRequest.Builder(context)
+            .data(
+                imageUri?.toString()?.plus("?v=$coverVersion")
+                    ?: R.drawable.default_cover
+            )
+            .decoderFactory(coil.decode.GifDecoder.Factory())
+            .crossfade(true)
+            .build(),
         contentDescription = "Cover",
         contentScale = ContentScale.Crop,
         modifier = modifier.clickable { showUpdateCoverDialog = true }
     )
 
-
     ConfirmDialog(
         text = "是否读取相册更新封面",
+        describe = "不支持裁剪 gif",
         showDialog = showUpdateCoverDialog,
         onDismiss = { showUpdateCoverDialog = false },
         onConfirm = { startCrop() }

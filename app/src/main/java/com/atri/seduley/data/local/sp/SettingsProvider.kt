@@ -12,16 +12,19 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * 主题颜色存储库实现，基于 SharedPreferences
+ * 应用配置存储
  */
 @Singleton
-class ThemeProvider @Inject constructor(@ApplicationContext context: Context) {
+class SettingsProvider @Inject constructor(
+    @ApplicationContext context: Context
+) {
 
     private val prefs: SharedPreferences =
-        context.getSharedPreferences("theme_prefs", Context.MODE_PRIVATE)
+        context.getSharedPreferences("app_settings", Context.MODE_PRIVATE)
 
     companion object {
         private const val KEY_SEED_COLOR = "seed_color"
+        private const val KEY_SPLASH_DURATION = "splash_duration"
     }
 
     private val _seedColorFlow = MutableStateFlow(
@@ -32,8 +35,21 @@ class ThemeProvider @Inject constructor(@ApplicationContext context: Context) {
 
     fun saveSeedColor(color: Int) {
         _seedColorFlow.value = color
-        prefs.edit(commit = false) {
-            putInt(KEY_SEED_COLOR, color)
-        }
+        prefs.edit(commit = false) { putInt(KEY_SEED_COLOR, color) }
+    }
+
+    private val _splashDurationFlow = MutableStateFlow(
+        prefs.getInt(KEY_SPLASH_DURATION, Const.DEFAULT_SPLASH_DURATION)
+    )
+
+    val splashDurationFlow: StateFlow<Int> = _splashDurationFlow.asStateFlow()
+
+    fun saveSplashDuration(durationMs: Int) {
+        _splashDurationFlow.value = durationMs
+        prefs.edit(commit = false) { putInt(KEY_SPLASH_DURATION, durationMs) }
+    }
+
+    fun getSplashDuration(): Int {
+        return prefs.getInt(KEY_SPLASH_DURATION, Const.DEFAULT_SPLASH_DURATION)
     }
 }

@@ -1,6 +1,8 @@
 package com.atri.seduley.ui.screen.schedule
 
+import android.annotation.SuppressLint
 import android.os.Build
+import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -9,10 +11,12 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.atri.seduley.ui.navigation.Screen
@@ -23,6 +27,7 @@ import com.atri.seduley.ui.screen.schedule.components.ToTodayButton
 import com.atri.seduley.ui.viewmodel.ScheduleViewModel
 import java.time.LocalDate
 
+@SuppressLint("ResourceType")
 @RequiresApi(Build.VERSION_CODES.S)
 @Composable
 fun DailyScheduleScreen(
@@ -31,6 +36,13 @@ fun DailyScheduleScreen(
 ) {
 
     val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
+
+    LaunchedEffect(viewModel.toastEvent) {
+        viewModel.toastEvent.collect { message ->
+            Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+        }
+    }
 
     Scaffold(
         topBar = {

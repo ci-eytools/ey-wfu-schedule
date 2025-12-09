@@ -64,19 +64,18 @@ class AlarmReceiver : BroadcastReceiver() {
                 }
 
                 // 2. 分发对应回调
-                val newTask = dispatchCallback(context, task)
+                task = dispatchCallback(context, task)
 
                 // 3. 更新任务
-                taskUseCase.scheduleAlarm(newTask)
+                taskUseCase.scheduleAlarm(task)
             } catch (e: Exception) {
                 val eStr = e.toString()
                 if (task != null) {
-                    taskUseCase.updateTask(
-                        task.copyWithNewParams(
-                            state = TaskState.FAILED,
-                            newParams = mapOf("error" to eStr)
-                        )
+                    task = task.copyWithNewParams(
+                        state = TaskState.FAILED,
+                        newParams = mapOf("error" to eStr)
                     )
+                    taskUseCase.updateTask(task)
                 }
                 AppLogger.w(eStr)
             } finally {
@@ -86,7 +85,7 @@ class AlarmReceiver : BroadcastReceiver() {
                         TaskState.FAILED -> {
                             taskUseCase.scheduleAlarm(
                                 task.copy(
-                                    triggerAt = task.triggerAt.plusDays(1),
+                                    triggerAt = task.triggerAt.plusDays(1), // 尝试设置第二天的定时任务
                                     state = TaskState.AWAIT,
                                     params = task.params.filter {
                                         // 去除不需要的标记
@@ -99,9 +98,6 @@ class AlarmReceiver : BroadcastReceiver() {
                     }
                 }
 
-                if (task != null && task.state == TaskState.AWAIT) {
-                    taskUseCase.scheduleAlarm(task)
-                }
                 AppLogger.i("结束后台任务 requestCode -> $requestCode")
                 pendingResult.finish()
             }
@@ -127,7 +123,7 @@ class AlarmReceiver : BroadcastReceiver() {
                     val retryCount = (task.params["retryCount"]?.toIntOrNull() ?: 0) + 1
                     if (retryCount >= 3) {
                         // 连续失败三次不再重试，转为设置第二天的定时任务
-                        task.copyWithNewParams(newParams = mapOf("retryCount" to "")).nextDay()
+                        return task.copyWithNewParams(newParams = mapOf("retryCount" to "")).nextDay()
                     }
                     val now = LocalDateTime.now()
                     task.copyWithNewParams(

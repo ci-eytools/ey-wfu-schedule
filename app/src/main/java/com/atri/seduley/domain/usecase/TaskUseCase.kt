@@ -74,6 +74,12 @@ class TaskUseCase @Inject constructor(
         return true
     }
 
+    /** 获取所有定时任务 */
+    suspend fun getAllTasks() = taskRepository.getAllTasks()
+
+    /** 批量删除定时任务 */
+    suspend fun clearTasks(requestCode: List<Int>) = taskRepository.clearTasks(requestCode)
+
     private fun TriggerMode.toBackend() = when (this) {
         TriggerMode.INEXACT -> AlarmBackend.INEXACT_ALARM
         TriggerMode.EXACT -> AlarmBackend.EXACT_ALARM

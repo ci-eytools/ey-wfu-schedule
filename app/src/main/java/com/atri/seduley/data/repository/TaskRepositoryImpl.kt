@@ -27,6 +27,16 @@ class TaskRepositoryImpl @Inject constructor(
         return taskDao.getAllAwaitingTasks().map { it.toDomain() }
     }
 
+    /** 获取所有任务 */
+    override suspend fun getAllTasks(): List<Task> {
+        return taskDao.getAllTasks().map { it.toDomain() }
+    }
+
+    /** 批量删除任务 */
+    override suspend fun clearTasks(requestCode: List<Int>) {
+        taskDao.clearTasks(requestCode)
+    }
+
     /** 更新任务 */
     override suspend fun updateTask(task: Task) {
         taskDao.insert(task.toEntity())

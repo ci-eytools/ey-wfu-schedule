@@ -14,6 +14,12 @@ interface TaskRepository {
     /** 获取所有等待中的任务 */
     suspend fun getAllAwaitingTasks(): List<Task>
 
+    /** 获取所有任务 */
+    suspend fun getAllTasks(): List<Task>
+
+    /** 批量删除任务 */
+    suspend fun clearTasks(requestCode: List<Int>)
+
     /** 更新任务 */
     suspend fun updateTask(task: Task)
 

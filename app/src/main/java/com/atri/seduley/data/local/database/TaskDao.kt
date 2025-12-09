@@ -17,6 +17,12 @@ interface TaskDao {
     @Update
     suspend fun update(task: TaskEntity)
 
+    @Query("SELECT * FROM tasks")
+    suspend fun getAllTasks(): List<TaskEntity>
+
+    @Query("DELETE FROM tasks WHERE requestCode IN (:requestCodes)")
+    suspend fun clearTasks(requestCodes: List<Int>)
+
     @Query(" SELECT * FROM tasks WHERE state = 0")
     suspend fun getAllAwaitingTasks(): List<TaskEntity>
 

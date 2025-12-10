@@ -69,12 +69,12 @@ data class SystemConfUseCase @Inject constructor(
     /** 生成主题种子颜色 */
     private suspend fun genSeedColor(): Int = withContext(Dispatchers.IO) {
         val defColor = Const.DEFAULT_SEED_COLOR_INT
-        val coverFile = File(context.cacheDir, Const.COVER_IMAGE_NAME)
-        val coverGifFile = File(context.cacheDir, Const.GIF_COVER_IMAGE_NAME)
+        val coverJpgFile = File(context.cacheDir, Const.COVER_IMAGE_NAME + ".jpg")
+        val coverGifFile = File(context.cacheDir, Const.COVER_IMAGE_NAME + ".gif")
 
         val targetFile = when {
             coverGifFile.exists() -> coverGifFile
-            coverFile.exists() -> coverFile
+            coverJpgFile.exists() -> coverJpgFile
             else -> null
         } ?: return@withContext defColor
 

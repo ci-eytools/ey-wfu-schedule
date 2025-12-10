@@ -9,10 +9,7 @@ import java.time.LocalTime
 object Const {
 
     /** 封面图片名 */
-    const val COVER_IMAGE_NAME = "cover.jpg"
-
-    // gif 封面图
-    const val GIF_COVER_IMAGE_NAME = "cover.gif"
+    const val COVER_IMAGE_NAME = "cover"
 
     /** 开屏页图片名 */
     const val SPLASH_IMAGE_NAME = "splash.jpg"

@@ -30,8 +30,8 @@ fun FlowBackground(
 ) {
     val context = LocalContext.current
     val activity = context as Activity
-    val coverFile = File(activity.cacheDir, Const.COVER_IMAGE_NAME)
-    val coverGifFile = File(activity.cacheDir, Const.GIF_COVER_IMAGE_NAME)
+    val coverJpgFile = File(activity.cacheDir, Const.COVER_IMAGE_NAME + ".jpg")
+    val coverGifFile = File(activity.cacheDir, Const.COVER_IMAGE_NAME + ".gif")
 
     var imageUri by remember { mutableStateOf<Uri?>(null) }
     var showUpdateCoverDialog by remember { mutableStateOf(false) }
@@ -39,7 +39,7 @@ fun FlowBackground(
     // 初始化封面
     LaunchedEffect(coverVersion) {
         imageUri = when {
-            coverFile.exists() -> Uri.fromFile(coverFile)
+            coverJpgFile.exists() -> Uri.fromFile(coverJpgFile)
             coverGifFile.exists() -> Uri.fromFile(coverGifFile)
             else -> null
         }
@@ -49,6 +49,7 @@ fun FlowBackground(
         activity = activity,
         aspectRatioX = 16f,
         aspectRatioY = 12f,
+        filename = Const.COVER_IMAGE_NAME,
         onSuccess = { newUri ->
             // 如果 newUri 为 null，直接返回，不做任何操作
             if (newUri == null) return@rememberImageCropper
@@ -56,7 +57,7 @@ fun FlowBackground(
             // 通过判断文件名后缀来识别GIF
             if (newUri.toString().endsWith(".gif")) {
                 // 如果成功保存的是 GIF，则删除旧的普通图片封面
-                coverFile.delete()
+                coverJpgFile.delete()
             } else {
                 // 如果成功裁剪的是普通图片，则删除旧的 GIF 封面
                 coverGifFile.delete()

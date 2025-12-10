@@ -479,6 +479,7 @@ fun CommonOptions(
             activity = activity,
             aspectRatioX = aspectX,
             aspectRatioY = aspectY,
+            filename = Const.SPLASH_IMAGE_NAME,
             onSuccess = { updateSplash(null) },
             onCancel = { }
         )

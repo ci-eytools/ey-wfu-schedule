@@ -4,10 +4,10 @@ import android.app.Activity
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.net.Uri
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
-import com.atri.seduley.core.util.Const
 import com.yalantis.ucrop.UCrop
 import java.io.File
 
@@ -25,6 +25,8 @@ fun rememberImageCropper(
     activity: Activity,
     aspectRatioX: Float = 1f,
     aspectRatioY: Float = 1f,
+    filename: String,
+    isAllowGif: Boolean = false,
     onSuccess: (Uri?) -> Unit,
     onCancel: () -> Unit,
 ): () -> Unit {
@@ -53,9 +55,18 @@ fun rememberImageCropper(
 
         val mimeType = activity.contentResolver.getType(uri)
 
+        if (!isAllowGif && mimeType == "image/gif") {
+            Toast.makeText(activity, "不允许使用 gif", Toast.LENGTH_SHORT).show()
+            onCancel()
+            return@rememberLauncherForActivityResult
+        }
+
         // GIF 直接保存，不裁剪
         if (mimeType == "image/gif") {
-            val destFile = File(activity.cacheDir, Const.GIF_COVER_IMAGE_NAME)
+            val destFile = File(
+                activity.cacheDir, if (filename.endsWith(".gif")) filename else
+                    "$filename.gif"
+            )
             val destUri = Uri.fromFile(destFile)
 
             activity.contentResolver.openInputStream(uri)?.use { input ->
@@ -69,7 +80,12 @@ fun rememberImageCropper(
         }
 
         // 其他图片走 UCrop
-        val destUri = Uri.fromFile(File(activity.cacheDir, Const.COVER_IMAGE_NAME))
+        val destUri = Uri.fromFile(
+            File(
+                activity.cacheDir, if (filename.endsWith(".jpg")) filename else
+                    "$filename.jpg"
+            )
+        )
 
         val options = UCrop.Options().apply {
             setToolbarTitle("裁剪图片")

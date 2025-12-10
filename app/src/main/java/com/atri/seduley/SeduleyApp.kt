@@ -41,8 +41,7 @@ class SeduleyApp : Application() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 requestHelper.get(ApiUrls.LOGIN.toUrl())
-            } catch (_: Exception) { /* 预热失败无需处理 */
-            }
+            } catch (_: Exception) { /* 预热失败无需处理 */ }
         }
 
         // 确定后台任务数据库数量，超过一定值删除

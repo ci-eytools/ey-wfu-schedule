@@ -302,10 +302,10 @@ class SettingViewModel @Inject constructor(
     private fun resetCover() {
         launchWithDelayedLoading {
             _coverVersion.value++
-            val coverFile = File(context.cacheDir, Const.COVER_IMAGE_NAME)
-            val coverGifFile = File(context.cacheDir, Const.GIF_COVER_IMAGE_NAME)
-            if (!coverFile.exists() || !coverGifFile.exists()) emitErr("当前已为默认封面")
-            coverFile.delete()
+            val coverJpgFile = File(context.cacheDir, Const.COVER_IMAGE_NAME + ".jpg")
+            val coverGifFile = File(context.cacheDir, Const.COVER_IMAGE_NAME + ".gif")
+            if (!coverJpgFile.exists() || !coverGifFile.exists()) emitErr("当前已为默认封面")
+            coverJpgFile.delete()
             coverGifFile.delete()
             emitMsg("重置封面成功")
             systemConfUseCase.updateSeedColorByCover()  // 更新 datastore

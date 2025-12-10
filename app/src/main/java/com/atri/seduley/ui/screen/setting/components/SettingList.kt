@@ -10,8 +10,12 @@ import androidx.annotation.RequiresApi
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -846,10 +850,20 @@ fun ManagerCredential(
                     }
 
                     AnimatedVisibility(
-                        visible = isInputSectionVisible,
-                        // 只使用 fadeIn 和 fadeOut，去掉 expand/shrink
-                        enter = fadeIn(animationSpec = tween(durationMillis = 200)),
-                        exit = fadeOut(animationSpec = tween(durationMillis = 200))
+                        visible = isUserListExpanded,
+                        enter = fadeIn(tween(200)) +
+                                expandVertically(
+                                    expandFrom = Alignment.Top,
+                                    animationSpec = tween(200)
+                                ) +
+                                slideInVertically(initialOffsetY = { it / 4 }),
+
+                        exit = fadeOut(tween(180)) +
+                                shrinkVertically(
+                                    shrinkTowards = Alignment.Top,
+                                    animationSpec = tween(180)
+                                ) +
+                                slideOutVertically(targetOffsetY = { it / 4 })
                     ) {
                         Column {
                             HorizontalDivider(
@@ -887,7 +901,22 @@ fun ManagerCredential(
                     Spacer(modifier = Modifier.height(50.dp))
                 }
 
-                AnimatedVisibility(visible = isInputSectionVisible) {
+                AnimatedVisibility(
+                    visible = isInputSectionVisible,
+                    enter = fadeIn(tween(200)) +
+                            expandVertically(
+                                expandFrom = Alignment.Top,
+                                animationSpec = tween(200)
+                            ) +
+                            slideInVertically(initialOffsetY = { it / 4 }),
+
+                    exit = fadeOut(tween(180)) +
+                            shrinkVertically(
+                                shrinkTowards = Alignment.Top,
+                                animationSpec = tween(180)
+                            ) +
+                            slideOutVertically(targetOffsetY = { it / 4 })
+                ) {
                     Column {
                         OutlinedTextField(
                             value = studentId,

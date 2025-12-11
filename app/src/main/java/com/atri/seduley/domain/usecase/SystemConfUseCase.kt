@@ -81,54 +81,66 @@ data class SystemConfUseCase @Inject constructor(
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             try {
                 val source = ImageDecoder.createSource(targetFile)
-                val bitmap = ImageDecoder.decodeBitmap(source) { decoder, info, _ ->
+                val bitmap = ImageDecoder.decodeBitmap(source) { decoder, _, _ ->
                     decoder.allocator = ImageDecoder.ALLOCATOR_SOFTWARE
                     decoder.isMutableRequired = true
                 }
 
-                // 裁剪成 16:9
-                val width = bitmap.width
-                val height = bitmap.height
-                val targetRatio = 16f / 9f
-                val cropWidth: Int
-                val cropHeight: Int
+                val cropped = cropCenter16x9(bitmap)
+                val color = extractDominantColor(cropped).toArgb()
 
-                if (width.toFloat() / height > targetRatio) {
-                    cropHeight = height
-                    cropWidth = (height * targetRatio).toInt()
-                } else {
-                    cropWidth = width
-                    cropHeight = (width / targetRatio).toInt()
-                }
-
-                val x = (width - cropWidth) / 2
-                val y = (height - cropHeight) / 2
-                val cropped = Bitmap.createBitmap(bitmap, x, y, cropWidth, cropHeight)
-
-                val color = extractDominantColor(cropped, defColor).toArgb()
                 bitmap.recycle()
                 cropped.recycle()
-                color
+                return@withContext color
             } catch (_: Exception) {
-                defColor
+                return@withContext defColor
             }
         } else {
-            // 安卓版本过低，直接整体生成
-            genCommonSeedColor(targetFile)
+            return@withContext genCommonSeedColor(targetFile)
         }
     }
 
+    /** Android 9 以下的 fallback */
     private suspend fun genCommonSeedColor(file: File): Int {
         val defColor = Const.DEFAULT_SEED_COLOR_INT
-        if (file.exists()) {
+        if (!file.exists()) return defColor
+
+        return try {
             FileInputStream(file).use { stream ->
                 val bitmap = BitmapFactory.decodeStream(stream) ?: return defColor
+                val cropped = cropCenter16x9(bitmap)
 
-                val color = extractDominantColor(bitmap, defColor).toArgb()
+                val color = extractDominantColor(cropped).toArgb()
+
                 bitmap.recycle()
+                cropped.recycle()
                 color
             }
+        } catch (_: Exception) {
+            defColor
         }
-        return defColor
+    }
+
+    /** 从中心裁剪为 16:9 */
+    private fun cropCenter16x9(bitmap: Bitmap): Bitmap {
+        val width = bitmap.width
+        val height = bitmap.height
+
+        val targetRatio = 16f / 9f
+        val cropWidth: Int
+        val cropHeight: Int
+
+        if (width.toFloat() / height > targetRatio) {
+            cropHeight = height
+            cropWidth = (height * targetRatio).toInt()
+        } else {
+            cropWidth = width
+            cropHeight = (width / targetRatio).toInt()
+        }
+
+        val x = (width - cropWidth) / 2
+        val y = (height - cropHeight) / 2
+
+        return Bitmap.createBitmap(bitmap, x, y, cropWidth, cropHeight)
     }
 }

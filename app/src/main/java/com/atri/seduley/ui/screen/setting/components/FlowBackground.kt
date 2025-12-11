@@ -49,6 +49,7 @@ fun FlowBackground(
         activity = activity,
         aspectRatioX = 16f,
         aspectRatioY = 12f,
+        isAllowGif = true,
         filename = Const.COVER_IMAGE_NAME,
         onSuccess = { newUri ->
             // 如果 newUri 为 null，直接返回，不做任何操作

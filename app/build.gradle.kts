@@ -1,5 +1,5 @@
-import org.gradle.kotlin.dsl.implementation
-import org.gradle.kotlin.dsl.main
+import java.io.FileInputStream
+import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
@@ -12,6 +12,13 @@ plugins {
 
 hilt {
     enableAggregatingTask = false
+}
+
+val localProps = Properties().apply {
+    val localFile = rootProject.file("local.properties")
+    if (localFile.exists()) {
+        load(FileInputStream(localFile))
+    }
 }
 
 android {
@@ -30,14 +37,14 @@ android {
 
     signingConfigs {
         create("release") {
-            val keystorePath = project.findProperty("KEYSTORE_FILE")?.toString()
+            val keystorePath = localProps["KEYSTORE_FILE"]?.toString()
             if (!keystorePath.isNullOrEmpty()) {
                 storeFile = file(keystorePath)
-                storePassword = project.findProperty("KEYSTORE_PASSWORD") as String?
-                keyAlias = project.findProperty("KEY_ALIAS") as String?
-                keyPassword = project.findProperty("KEY_PASSWORD") as String?
+                storePassword = localProps["KEYSTORE_PASSWORD"] as String?
+                keyAlias = localProps["KEY_ALIAS"] as String?
+                keyPassword = localProps["KEY_PASSWORD"] as String?
             } else {
-                println("未检测到 keystore 配置, 将使用默认 debug 签名")
+                println("未检测到 keystore 配置, release 构建将失败")
             }
         }
     }
